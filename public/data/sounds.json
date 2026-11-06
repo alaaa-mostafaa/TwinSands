@@ -1,0 +1,86 @@
+{
+ "mars_laser": {
+  "title": "First acoustic recording of laser shots on Mars",
+  "author": "NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:First_acoustic_recording_of_laser_shots_on_Mars.oga"
+ },
+ "mars_drive": {
+  "title": "Sounds of Perseverance Mars rover driving highlights",
+  "author": "NASA/JPL-Caltech",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Sounds_of_Perseverance_Mars_rover_driving_highlights.oga"
+ },
+ "mars_moxie": {
+  "title": "The Sound of MOXIE at Work on Mars",
+  "author": "NASA/JPL-Caltech/CNES/IRAP",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:The_Sound_of_MOXIE_at_Work_on_Mars.oga"
+ },
+ "moon_orange_soil": {
+  "title": "A17-soil",
+  "author": "NASA",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:A17-soil.ogg"
+ },
+ "moon_small_step": {
+  "title": "Armstrong Small Step",
+  "author": "Neil Armstrong/NASA",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Armstrong_Small_Step.ogg"
+ },
+ "moon_hammer_feather": {
+  "title": "A15-test",
+  "author": "",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:A15-test.ogg"
+ },
+ "earth_stream": {
+  "title": "Hemlock stream",
+  "author": "Dirtslayer",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Hemlock_stream.ogg"
+ },
+ "earth_gravel": {
+  "title": "Footstep on Gravel (Gravity Sound)",
+  "author": "Gravity Sound",
+  "license": "CC BY 4.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Footstep_on_Gravel_(Gravity_Sound).mp3"
+ },
+ "earth_st_helens": {
+  "title": "Eruption of Mount St. Helens, heard from 140 miles away (filtered and amplified)",
+  "author": "Freesound user \"Digifish\", based on a recording by Freesound user \"DaveInCamas\"",
+  "license": "CC BY 3.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Eruption_of_Mount_St._Helens,_heard_from_140_miles_away_(filtered_and_amplified).wav"
+ },
+ "earth_storm_wind": {
+  "title": "Wind in Swedish pine forest at 25 mps",
+  "author": "W.carter",
+  "license": "CC BY-SA 4.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Wind_in_Swedish_pine_forest_at_25_mps.ogg"
+ },
+ "earth_ice_crack": {
+  "title": "Sound of cracking ice",
+  "author": "Amada44",
+  "license": "CC BY-SA 3.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Sound_of_cracking_ice.ogg"
+ },
+ "earth_arctic_night": {
+  "title": "20221229 - Abisko Turiststation at night - Wind and snow",
+  "author": "Fabricio Cardenas",
+  "license": "CC BY-SA 4.0",
+  "url": "https://commons.wikimedia.org/wiki/File:20221229_-_Abisko_Turiststation_at_night_-_Wind_and_snow.wav"
+ },
+ "mars_dustdevil": {
+  "title": "NASA's Perseverance Records a Martian Dust Devil",
+  "author": "NASA/JPL-Caltech/LANL/CNES/CNRS/INTA-CSIC/Space Science Institute/ISAE-Supaero",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:NASA%27s_Perseverance_Records_a_Martian_Dust_Devil.oga"
+ },
+ "mars_wind": {
+  "title": "Perseverance rover's SuperCam records wind on Mars",
+  "author": "NASA/JPL-Caltech/LANL/CNES/CNRS/ISAE-Supaero",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Perseverance_rover%27s_SuperCam_records_wind_on_Mars.oga"
+ }
+}

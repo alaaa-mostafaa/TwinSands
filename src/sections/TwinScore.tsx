@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Radar from '../components/Radar';
-import { REGION_NAME, TARGET_NICK } from '../content';
+import { plain, REGION_NAME, TARGET_NICK } from '../content';
 import { useTwins, type Ranked, type Site } from '../data';
 
 const ANSWER_NAMES: Record<string, string> = {
@@ -57,21 +57,22 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
   return (
     <section className="score" id="score">
       <header className="chapter-head">
-        <span className="chapter-num">03</span>
+        <span className="chapter-num">04</span>
         <h2>Twin Score</h2>
-        <p>We measured {r.pool} windows of Earth, each 12 km across on the same 30 m grid as the Mars and Moon sites, and asked which ones come closest on every axis we can measure.</p>
+        <p>Pick a place on Mars or the Moon. We compared it with {r.pool} patches of Earth, each 12 km wide, and scored how alike they are out of 100.</p>
       </header>
 
       <div className="score__targets">
-        <div><span className="kicker">Mars</span>{mars.map((x) => <button key={x.id} className={`chip chip--mars${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
-        <div><span className="kicker">Moon south pole</span>{moon.map((x) => <button key={x.id} className={`chip chip--moon${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
+        <div><span className="kicker">1 · Pick a place on Mars</span>{mars.map((x) => <button key={x.id} className={`chip chip--mars${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
+        <div><span className="kicker">or the Moon’s south pole</span>{moon.map((x) => <button key={x.id} className={`chip chip--moon${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
       </div>
 
       <div className="score__grid">
         <div className="score__pair">
           <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} />
           <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" />
-          <p className="score__pairnote">Same 12 × 12 km window, same 30 m grid, light from the same direction. Real elevation models: {t.body === 'mars' ? 'MRO CTX' : 'LRO LOLA'} and Copernicus DEM.</p>
+          <p className="score__pairnote">Real 3D height maps of both places, same size, lit the same way. Do they look alike?</p>
+          <details className="feat__wrap"><summary>See the numbers</summary>
           <table className="feat">
             <thead><tr><th /><th style={{ color: col }}>{t.body}</th><th style={{ color: 'var(--earth)' }}>earth</th></tr></thead>
             <tbody>
@@ -81,17 +82,21 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
               {t.lunar && <tr><td>Ice-stable area (Diviner model)</td><td>{Math.round((t.lunar.lunar_ice_stable_area_fraction ?? 0) * 100)}%</td><td>n/a</td></tr>}
             </tbody>
           </table>
+          <p className="score__pairnote">Height maps: {t.body === 'mars' ? 'MRO CTX' : 'LRO LOLA'} and Copernicus DEM, 30 m grid.</p>
+          </details>
         </div>
 
         <div className="score__radar">
           <div className="score__big">
             <span className="score__num">{chosen.score.toFixed(0)}</span>
-            <span className="score__of">Twin Score<br /><em>{chosen.n_axes} of {d.axes.length} axes measured</em></span>
+            <span className="score__of">out of 100<br /><em>{earthLabel(e)}</em></span>
           </div>
-          <Radar axes={d.axes} ghost={d.unmeasured_axes} series={[{ label: earthLabel(e), color: '#7ec8ff', values: d.axes.map((a) => chosen.axes[a]) }]} />
-          <p className="score__explain">Each axis: how many Earth windows this one beats. <b>96</b> on Relief means its relief is closer to the target’s than 96% of all {r.pool} windows. Hollow dots were not measured for this pair and count as 50 (the middle). Dust, ice and sunlight are next.</p>
+          <Radar axes={d.axes} labels={plain} ghost={d.unmeasured_axes} series={[{ label: earthLabel(e), color: '#7ec8ff', values: d.axes.map((a) => chosen.axes[a]) }]} />
+          <p className="score__explain">Each spoke is one thing we measured. <b>Further out = more alike.</b> A score of 90 on a spoke means this place is closer than 90% of Earth. Grey spokes are next on our list.</p>
         </div>
 
+        <div className="score__listwrap">
+        <p className="kicker">2 · Best matches on Earth</p>
         <ol className="score__list">
           {list.map((x, i) => {
             const s = earthById.get(x.id);
@@ -101,17 +106,18 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
                   <span className="rank">{i + 1}</span>
                   <span className="who">{earthLabel(s)}{s?.kind === 'earth_named' && <sup>known</sup>}</span>
                   <span className="sc">{x.score.toFixed(0)}</span>
-                  <span className="ax">{x.n_axes}/7</span>
+
                 </button>
               </li>
             );
           })}
         </ol>
+        </div>
       </div>
 
       <div className="score__map">
         <div className="flatmap">
-          <img src="tex/earth_base.jpg" alt="Earth map" />
+          <img src="tex/earth_base.webp" alt="Earth map" />
           {d.earth_all.map(([id, la, lo]) => (
             <i key={id} className="flatmap__dot" style={{ left: `${((lo + 180) / 360) * 100}%`, top: `${((90 - la) / 180) * 100}%` }} />
           ))}
@@ -126,8 +132,8 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
           })}
         </div>
         <div className="answer">
-          <h4>Answer key: does it find the famous analogs?</h4>
-          <p>Known analog sites are ranked like any other window, out of {r.pool}. A good method should not need to be told where they are.</p>
+          <h4>Does it find the famous test sites?</h4>
+          <p>NASA already tests gear at these places. We never told the scorer, so where do they land out of {r.pool}? Further left = higher on the list.</p>
           <ul>
             {Object.keys(ANSWER_NAMES).map((id) => {
               const rk = rankOf(id);
@@ -142,13 +148,11 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
               );
             })}
           </ul>
-          <p className="answer__read">{t.body === 'moon'
-            ? 'For the lunar south pole, the scorer independently puts Mauna Kea (where NASA tested lunar resource extraction) and the Dry Valleys region near the top.'
-            : 'For Mars, the classic analogs land mid-pack: they earned their fame through chemistry, climate and life, not 12 km landform shape. That is why we score more than terrain.'}</p>
+          {t.body === 'moon' && <p className="answer__read">For the lunar south pole, the scorer independently puts Mauna Kea (where NASA tested lunar resource extraction) and the Dry Valleys region near the top.</p>}
         </div>
       </div>
       <details className="method">
-        <summary>How the score works, exactly</summary>
+        <summary>How the score works (for the curious)</summary>
         <pre>{d.method}</pre>
         <p>{d.source}.</p>
       </details>

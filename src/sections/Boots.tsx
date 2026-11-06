@@ -39,7 +39,7 @@ export function Boots() {
           <div className="field" key={p.slot}>
             <FieldSlot slot={p.slot} prompt={p.prompt} />
             <div className="field__img">
-              <img src={`photos/${p.rover}.jpg`} alt={p.caption} loading="lazy" />
+              <img src={`photos/${p.rover}.webp`} alt={p.caption} loading="lazy" />
               <span className="field__tag field__tag--mars">{p.caption}{photos?.[p.rover] ? ` · ${photos[p.rover].date?.slice(0, 4)}` : ''}</span>
             </div>
           </div>

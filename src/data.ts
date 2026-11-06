@@ -35,3 +35,15 @@ export type Volcanoes = { source: string; volcanoes: [number, number, string, st
 
 export const useTwins = () => useJSON<Twins>('data/twins.json');
 export const usePhotos = () => useJSON<Photos>('data/photos.json');
+
+export type PhotoMeta = { title: string; author?: string; license?: string; source?: string; url: string };
+
+/** NASA chapter photos + Neighborhood postcard photos, one lookup by key. */
+export function useAllPhotos(): Record<string, PhotoMeta> | null {
+  const a = usePhotos();
+  const b = useJSON<Record<string, PhotoMeta>>('data/postcards.json');
+  if (!a && !b) return null;
+  const out: Record<string, PhotoMeta> = {};
+  for (const [k, v] of Object.entries(a ?? {})) out[k] = { title: v.title, author: 'NASA', license: 'Public domain', source: 'NASA', url: v.url };
+  return { ...out, ...(b ?? {}) };
+}

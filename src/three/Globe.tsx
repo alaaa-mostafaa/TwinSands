@@ -3,6 +3,7 @@ import { Html, OrbitControls, useTexture } from '@react-three/drei';
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
 import type { LatLon, Pin } from '../content';
+import Safe3D from '../components/Safe3D';
 
 const D2R = Math.PI / 180;
 
@@ -46,18 +47,39 @@ export function Atmosphere({ color, scale = 1.1, strength = 0.6, power = 3.5 }: 
   );
 }
 
-export function Surface({ tex, shade = 0.55 }: { tex: string; shade?: number }) {
+export function Surface({ tex, shade = 0.55, hiTex, segments = 96 }: { tex: string; shade?: number; hiTex?: string; segments?: number }) {
   const map = useTexture(tex);
+  const mat = useRef<THREE.MeshStandardMaterial>(null);
   useEffect(() => {
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = 8;
     map.needsUpdate = true;
   }, [map]);
+  // Progressive: show the 2K map at once, swap in the 4K one when it has downloaded.
+  useEffect(() => {
+    if (!hiTex) return;
+    let live = true;
+    let hi: THREE.Texture | null = null;
+    new THREE.TextureLoader().load(hiTex, (t) => {
+      if (!live || !mat.current) return t.dispose();
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      hi = t;
+      mat.current.map = t;
+      mat.current.emissiveMap = t;
+      mat.current.needsUpdate = true;
+    });
+    return () => {
+      live = false;
+      if (mat.current) { mat.current.map = map; mat.current.emissiveMap = map; mat.current.needsUpdate = true; }
+      hi?.dispose();
+    };
+  }, [hiTex, map]);
   return (
     <mesh>
-      <sphereGeometry args={[1, 128, 128]} />
+      <sphereGeometry args={[1, segments, segments]} />
       {/* emissive keeps data colours readable on the night side; the light adds the 3D terminator */}
-      <meshStandardMaterial map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={shade} roughness={1} metalness={0} />
+      <meshStandardMaterial ref={mat} map={map} emissiveMap={map} emissive="#ffffff" emissiveIntensity={shade} roughness={1} metalness={0} />
     </mesh>
   );
 }
@@ -159,6 +181,7 @@ export function GlobeCanvas({ children, camZ = 3.3, controls = true, className =
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
+  // (R3F frees each canvas's GPU context itself when it unmounts.)
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -169,12 +192,14 @@ export function GlobeCanvas({ children, camZ = 3.3, controls = true, className =
   return (
     <div ref={box} className={`globe ${className}`}>
       {on && (
-        <Canvas dpr={[1, 2]} camera={{ position: [0, 0, camZ], fov }} gl={{ antialias: true, alpha: true }}>
+        <Safe3D fallback={<div className="no3d">3D view unavailable in this browser</div>}>
+        <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, camZ], fov }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}>
           <ambientLight intensity={0.35} />
           <directionalLight position={[-3, 2, 4]} intensity={1.6} />
           <Suspense fallback={null}>{children}</Suspense>
           {controls && <OrbitControls enablePan={false} enableZoom minDistance={1.6} maxDistance={6} rotateSpeed={0.5} zoomSpeed={0.6} />}
         </Canvas>
+        </Safe3D>
       )}
     </div>
   );

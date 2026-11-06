@@ -1,7 +1,7 @@
 type Series = { label: string; color: string; values: (number | null)[] };
 
 /** Radar of closeness (0–100) per axis. Null values are drawn hollow; ghost axes are "not measured yet". */
-export default function Radar({ axes, ghost = [], series, size = 420 }: { axes: string[]; ghost?: string[]; series: Series[]; size?: number }) {
+export default function Radar({ axes, ghost = [], series, size = 420, labels = (a: string) => a }: { axes: string[]; ghost?: string[]; series: Series[]; size?: number; labels?: (a: string) => string }) {
   const all = [...axes, ...ghost];
   const V = 400; // fixed drawing space; `size` only caps the rendered width so labels stay proportional
   const n = all.length, c = V / 2, R = V / 2 - 78;
@@ -22,7 +22,7 @@ export default function Radar({ axes, ghost = [], series, size = 420 }: { axes: 
           <g key={a} className={isGhost ? 'radar__ghost' : ''}>
             <line x1={c} y1={c} x2={x} y2={y} className="radar__spoke" />
             <text x={lx} y={ly} textAnchor={Math.abs(lx - c) < 8 ? 'middle' : lx > c ? 'start' : 'end'} dominantBaseline="middle" className="radar__label">
-              {a}{isGhost && <tspan x={lx} dy="1.2em" className="radar__sub">not measured yet</tspan>}
+              {labels(a)}{isGhost && <tspan x={lx} dy="1.2em" className="radar__sub">coming soon</tspan>}
             </text>
           </g>
         );
