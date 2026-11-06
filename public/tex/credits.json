@@ -1,0 +1,65 @@
+{
+ "earth_base": {
+  "credit": "NASA Blue Marble Next Generation (GIBS)"
+ },
+ "earth_relief": {
+  "credit": "NASA/METI ASTER GDEM colour shaded relief (GIBS)"
+ },
+ "earth_lst_day": {
+  "credit": "MODIS Terra land surface temperature, monthly day, July 2024 (GIBS)"
+ },
+ "earth_lst_night": {
+  "credit": "MODIS Terra land surface temperature, monthly night, July 2024 (GIBS)"
+ },
+ "earth_dust": {
+  "credit": "MERRA-2 dust surface mass concentration, monthly, June 2024 (GIBS)"
+ },
+ "earth_snow": {
+  "credit": "MODIS Terra snow cover, monthly average, January 2024 (GIBS)"
+ },
+ "earth_volcano": {
+  "credit": "NASA SEDAC volcano hazard frequency 1979-2000 (GIBS)"
+ },
+ "earth_land": {
+  "credit": "OpenStreetMap land mask (GIBS)"
+ },
+ "mars_base": {
+  "credit": "Viking MDIM 2.1 colour mosaic (NASA/USGS, Mars Trek)"
+ },
+ "mars_mola": {
+  "credit": "MGS MOLA colour hillshade (NASA/GSFC, Mars Trek)"
+ },
+ "mars_ti": {
+  "credit": "MGS TES thermal inertia, Putzig et al. 2005 (Mars Trek)"
+ },
+ "mars_dust": {
+  "credit": "MGS TES dust cover index, Ruff & Christensen 2002 (Mars Trek)"
+ },
+ "mars_rough": {
+  "credit": "MOLA kilometre-scale roughness, Kreslavsky & Head 2000 (Mars Trek)"
+ },
+ "mars_albedo": {
+  "credit": "MGS TES albedo (Mars Trek)"
+ },
+ "moon_base": {
+  "credit": "LRO LROC WAC global mosaic (NASA/GSFC/ASU, Moon Trek)"
+ },
+ "moon_lola": {
+  "credit": "LRO LOLA colour hillshade (Moon Trek)"
+ },
+ "moon_fe": {
+  "credit": "Lunar Prospector GRS iron abundance (Moon Trek)"
+ },
+ "moon_feo": {
+  "credit": "Clementine UVVIS FeO weight percent (Moon Trek)"
+ },
+ "moon_h": {
+  "credit": "Lunar Prospector neutron spectrometer hydrogen (Moon Trek)"
+ },
+ "moon_temp": {
+  "credit": "LRO Diviner average surface temperature (Moon Trek)"
+ },
+ "moon_rock": {
+  "credit": "LRO Diviner rock abundance, Bandfield et al. (Moon Trek)"
+ }
+}
