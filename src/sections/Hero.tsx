@@ -47,7 +47,7 @@ function HeroPlanet({ id, slot }: { id: WorldId; slot: Slot }) {
   );
 }
 
-export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void }) {
+export default function Hero() {
   const recover = useContextRecovery();
   const [i, setI] = useState(1);
   const cur = ORDER[i];
@@ -71,11 +71,13 @@ export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void })
     <section className="hero" id="top">
       <div className="hero__canvas">
         <Safe3D>
-        <Canvas key={recover.key} onCreated={recover.onCreated} dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }} gl={{ antialias: true }}>
-          <color attach="background" args={['#030305']} />
+        <Canvas key={recover.key} onCreated={recover.onCreated} dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }} gl={{ antialias: true, alpha: true }}>
           <ambientLight intensity={0.18} />
           <directionalLight position={[-1.5, 6, 5]} intensity={2.2} />
-          <Stars radius={60} depth={30} count={2500} factor={2.2} saturation={0} fade speed={0.4} />
+          {/* three star layers: many faint, some tinted, a few bright */}
+          <Stars radius={70} depth={40} count={6000} factor={1.6} saturation={0} fade speed={0.3} />
+          <Stars radius={55} depth={25} count={1200} factor={2.6} saturation={0.6} fade speed={0.5} />
+          <Stars radius={40} depth={10} count={180} factor={4.5} saturation={0.2} fade speed={0.8} />
           <Suspense fallback={null}>
             {ORDER.map((id) => <HeroPlanet key={id} id={id} slot={slotOf(id)} />)}
           </Suspense>
@@ -91,9 +93,6 @@ export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void })
       </button>
 
       <div className="hero__center">
-        <div className="hero__eyebrow">
-          <span>{w.index}</span><i /><span>World</span><i /><span>03</span>
-        </div>
         <div className="hero__titlerow">
           <button className="arrow" onClick={() => go(-1)} aria-label="Previous world">◀</button>
           <AnimatePresence mode="wait">
@@ -110,7 +109,6 @@ export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void })
             {w.tagline}
           </motion.p>
         </AnimatePresence>
-        <button className="pill" onClick={() => onExplore(cur)}>{cur === 'earth' ? 'Meet Mars' : `Explore ${w.name}`}</button>
       </div>
 
       <AnimatePresence mode="wait">

@@ -50,8 +50,25 @@ p { margin: 0; }
 
 /* ------------------------------------------------------------ hero */
 .hero { position: relative; height: 100vh; min-height: 640px; overflow: hidden; background: #030305; }
-.hero__canvas { position: absolute; inset: 0; }
-.hero__center { position: absolute; left: 50%; top: 21%; transform: translateX(-50%); width: min(1100px, 92vw); text-align: center; z-index: 2; pointer-events: none; }
+.hero__canvas { position: absolute; inset: 0; z-index: 1; }
+/* faint galaxy haze behind the stars: a few soft purple and blue clouds, and a dusty band */
+.hero { background:
+  radial-gradient(ellipse 55% 40% at 18% 22%, rgba(118, 70, 210, .24), transparent 70%),
+  radial-gradient(ellipse 45% 35% at 82% 30%, rgba(40, 110, 220, .2), transparent 70%),
+  radial-gradient(ellipse 60% 30% at 60% 75%, rgba(160, 60, 180, .12), transparent 70%),
+  linear-gradient(160deg, transparent 30%, rgba(90, 80, 200, .06) 45%, rgba(60, 120, 230, .05) 55%, transparent 70%),
+  #030308 !important; }
+.hero::before { content: ''; position: absolute; inset: -10%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.7), transparent),
+    radial-gradient(1px 1px at 33% 64%, rgba(200,210,255,.6), transparent),
+    radial-gradient(1px 1px at 71% 12%, rgba(255,230,255,.6), transparent),
+    radial-gradient(1.5px 1.5px at 88% 52%, rgba(190,220,255,.7), transparent),
+    radial-gradient(1px 1px at 52% 34%, rgba(255,255,255,.5), transparent);
+  background-size: 340px 340px, 260px 260px, 410px 410px, 300px 300px, 220px 220px;
+  opacity: .5; animation: drift 120s linear infinite; }
+@keyframes drift { to { transform: translate3d(-60px, -30px, 0); } }
+.hero__center { z-index: 2; position: absolute; left: 50%; top: 21%; transform: translateX(-50%); width: min(1100px, 92vw); text-align: center; z-index: 2; pointer-events: none; }
 .hero__center button { pointer-events: auto; }
 .hero__eyebrow { display: inline-flex; align-items: center; gap: 18px; font: 500 13px/1 var(--cond); letter-spacing: 0.4em; text-transform: uppercase; color: var(--ink-2); }
 .hero__eyebrow i { width: 70px; height: 1px; background: var(--line-2); }
@@ -74,13 +91,32 @@ p { margin: 0; }
 
 /* ------------------------------------------------------------ chapter heads */
 section { position: relative; }
-.chapter-head { padding: 0 var(--gutter); display: grid; grid-template-columns: auto 1fr; column-gap: 28px; align-items: end; max-width: 1400px; margin: 0 auto 40px; }
+.chapter-head { padding: 0 var(--gutter); display: grid; grid-template-columns: 1fr; column-gap: 28px; align-items: end; max-width: 1400px; margin: 0 auto 40px; }
 .chapter-num { font: 400 13px/1 var(--cond); letter-spacing: 0.4em; color: var(--accent); grid-row: span 2; align-self: start; padding-top: 14px; }
 .chapter-head h2 { font: 700 clamp(30px, 5vw, 64px)/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
-.chapter-head p { grid-column: 2; margin-top: 18px; max-width: 640px; color: var(--ink-2); }
+.chapter-head p { grid-column: 1; margin-top: 18px; max-width: 640px; color: var(--ink-2); }
 
 /* ------------------------------------------------------------ meet mars */
-.meet { height: 560vh; background: radial-gradient(ellipse at 50% 40%, #0d0d16 0%, var(--bg) 70%); }
+.meet { height: 560vh; background: #0a0607; }
+/* Meet Mars backdrop: dusty Mars evening, sky fading into an orange horizon haze, dunes, drifting dust */
+.meet__bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(5,4,8,.72) 0%, rgba(5,4,8,.38) 30%, rgba(5,4,8,.12) 55%, rgba(5,4,8,.45) 100%),
+    var(--meet-img) center 80% / cover no-repeat; }
+.meet__dust { position: absolute; inset: -20%; opacity: .7;
+  background:
+    radial-gradient(1.2px 1.2px at 20% 30%, rgba(255,190,140,.7), transparent),
+    radial-gradient(1px 1px at 60% 70%, rgba(255,170,120,.6), transparent),
+    radial-gradient(1.6px 1.6px at 80% 20%, rgba(255,200,160,.5), transparent),
+    radial-gradient(1px 1px at 40% 55%, rgba(255,180,130,.6), transparent);
+  background-size: 180px 180px, 240px 240px, 300px 300px, 210px 210px;
+  animation: dust 60s linear infinite; }
+.meet__dust::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(210,120,70,.08) 40%, transparent 60%);
+  animation: haze 18s ease-in-out infinite alternate; }
+@keyframes dust { to { transform: translate3d(240px, -40px, 0); } }
+@keyframes haze { from { transform: translateX(-20%); } to { transform: translateX(20%); } }
+.meet__sticky > *:not(.meet__bg) { position: relative; z-index: 1; }
 .meet__sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; padding: 100px 0 70px; display: flex; flex-direction: column; }
 .meet__sticky .chapter-head { margin-bottom: 0; width: 100%; }
 .meet__stage { flex: 1; min-height: 0; }
@@ -580,9 +616,73 @@ details[open] > summary::before { content: '− '; }
 .thermo-pair { gap: 48px; height: 58%; }
 .thermo-k { display: block; font: 600 11px/1 var(--cond); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
 .feel-big--pair { font-size: clamp(18px, 1.7vw, 26px) !important; }
-.windglobe { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #0b1020, #040406 70%); cursor: grab; }
+.windglobe { position: absolute; inset: 0; background: transparent; cursor: grab; }
 .windlegend { position: absolute; left: 14px; bottom: 14px; margin: 0; padding: 10px 12px; list-style: none; display: grid; gap: 6px; border-radius: 12px; background: rgba(0,0,0,.6); backdrop-filter: blur(6px); pointer-events: none; }
 .windlegend li { display: flex; align-items: center; gap: 8px; font: 600 11px/1 var(--cond); letter-spacing: .12em; text-transform: uppercase; color: #fff; }
 .windlegend i { width: 14px; height: 2px; border-radius: 2px; }
 .windlegend span { color: var(--muted); }
 .trail__note { text-align: center; margin-top: 14px !important; font-size: 13px; color: var(--muted); }
+
+/* Twin Trails backdrop: the user's Mars valley photo, darkened so panels and text stay readable */
+.trails { position: relative; isolation: isolate; background:
+  linear-gradient(180deg, rgba(10,6,6,.82) 0%, rgba(10,6,8,.62) 30%, rgba(8,6,10,.7) 65%, rgba(6,6,10,.92) 100%),
+  var(--trails-img) center 70% / cover no-repeat, #0a0608; }
+.trails .panel { background: linear-gradient(180deg, rgba(255, 246, 236, .13), rgba(255, 240, 228, .06));
+  border: 1px solid rgba(255, 244, 232, .28); backdrop-filter: blur(10px) saturate(1.1); -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18); }
+.trails .panel__layer, .trails .legend__ends { color: rgba(255, 240, 228, .75); }
+.trails .panel__world { text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+.trails .story__photo { border: 1px solid rgba(255, 244, 232, .28); box-shadow: 0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18); }
+.trails .story__photo:has(.windglobe) { aspect-ratio: 1 / 1; background: linear-gradient(180deg, rgba(255, 246, 236, .13), rgba(255, 240, 228, .06));
+  backdrop-filter: blur(10px) saturate(1.1); -webkit-backdrop-filter: blur(10px) saturate(1.1); }
+
+/* ------------------------------------------------------------ Explore: walk real terrain */
+.explore { padding: 120px 0; background: radial-gradient(ellipse 70% 40% at 30% 20%, rgba(214,102,48,.12), transparent 70%), radial-gradient(ellipse 60% 40% at 80% 70%, rgba(110,120,200,.1), transparent 70%), #06060b; }
+.explore > *:not(.chapter-head):not(.xmodal) { max-width: 1400px; margin-left: auto; margin-right: auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+.explore__worlds { display: grid !important; grid-template-columns: 1fr 1fr; gap: 18px; }
+.xworld { position: relative; height: 260px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,244,232,.22); text-align: left; transition: transform .3s, box-shadow .3s; }
+.xworld img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s; filter: brightness(.7); }
+.xworld span { position: absolute; left: 26px; bottom: 22px; font: 700 clamp(22px, 2.6vw, 36px)/1 var(--display); text-transform: uppercase; color: #fff; text-shadow: 0 2px 16px #000; }
+.xworld:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+.xworld:hover img { transform: scale(1.05); filter: brightness(.85); }
+.xworld.is-on { border-color: var(--go); box-shadow: 0 0 0 2px var(--go); }
+.explore__regions { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px !important; }
+.xregion { display: grid; gap: 8px; padding: 10px 10px 16px; border-radius: 16px; text-align: left; background: rgba(255,246,236,.06); border: 1px solid rgba(255,244,232,.16); transition: background .2s, transform .2s; }
+.xregion:hover { background: rgba(255,246,236,.12); transform: translateY(-2px); }
+.xregion img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; filter: sepia(.35) contrast(1.1); }
+.xregion b { font: 700 15px/1.2 var(--display); text-transform: uppercase; padding: 0 4px; }
+.xregion span { font-size: 13px; color: var(--ink-2); padding: 0 4px; }
+.xmodal { position: fixed; inset: 0; z-index: 100; background: #000; }
+.xtwin { position: absolute; inset: 0; }
+.xtwin > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: kenburns 14s ease-out both; }
+@keyframes kenburns { from { transform: scale(1.12); } to { transform: scale(1); } }
+.xtwin::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 45%, transparent 75%); }
+.xtwin__body { position: absolute; z-index: 2; left: clamp(20px, 6vw, 90px); top: 50%; transform: translateY(-50%); max-width: 520px; display: grid; gap: 16px; }
+.xtwin__body h3 { font: 700 clamp(30px, 4vw, 56px)/1.05 var(--display); text-transform: uppercase; }
+.xtwin__body p { font: 300 20px/1.5 var(--body); }
+.xgo { justify-self: start; margin-top: 8px; padding: 16px 28px; border-radius: 999px; background: var(--go); color: #140f03; font: 600 14px/1 var(--cond); letter-spacing: .22em; text-transform: uppercase; transition: transform .2s; }
+.xgo:hover { transform: translateX(4px); }
+.xtwin__credit { font-size: 11px; color: rgba(255,255,255,.55); text-decoration: none; }
+.xtwin__x { z-index: 3; }
+.walk { position: absolute; inset: 0; }
+.walk__canvas { position: absolute; inset: 0; cursor: grab; touch-action: none; }
+.walk__canvas.is-grab { cursor: grabbing; }
+.walk__loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); font: 500 14px var(--cond); letter-spacing: .24em; text-transform: uppercase; }
+.walk__top { position: absolute; left: 20px; right: 20px; top: 18px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+.walk__top div { display: grid; gap: 4px; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.45); backdrop-filter: blur(8px); }
+.walk__top b { font: 700 15px/1 var(--display); text-transform: uppercase; }
+.walk__top span { font-size: 12px; color: var(--ink-2); }
+.walk__x { position: absolute; right: 20px; top: 18px; width: 46px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.3); font-size: 18px; pointer-events: auto; }
+.walk__top .walk__x { position: static; }
+.walk__hud { position: absolute; right: 20px; bottom: 20px; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.45); backdrop-filter: blur(8px); font: 500 12px var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.walk__hud b { color: #fff; }
+.walk__sound { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); font: 600 11px var(--cond); letter-spacing: .14em; text-transform: uppercase; }
+.walk__help { position: absolute; left: 20px; bottom: 20px; display: grid; gap: 6px; max-width: 560px; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.45); backdrop-filter: blur(8px); font-size: 12.5px; color: var(--ink); }
+.walk__help em { font-style: normal; color: var(--ink-2); font-size: 12px; }
+.walk__help kbd { display: inline-block; min-width: 20px; padding: 2px 5px; margin: 0 1px; border-radius: 4px; border: 1px solid rgba(255,255,255,.35); font: 600 11px var(--cond); text-align: center; }
+.walk__pad { display: none; position: absolute; right: 22px; bottom: 90px; width: 150px; height: 150px; }
+.walk__pad button { position: absolute; width: 50px; height: 50px; border-radius: 12px; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.3); font-size: 16px; touch-action: none; }
+.pad-up { left: 50px; top: 0; } .pad-down { left: 50px; bottom: 0; } .pad-l { left: 0; top: 50px; } .pad-r { right: 0; top: 50px; }
+@media (hover: none), (max-width: 760px) { .walk__pad { display: block; } .walk__help span { display: none; } .walk__hud { top: 84px; bottom: auto; right: 20px; left: 20px; justify-content: space-between; } .walk__help { right: 20px; } }
+@media (max-width: 900px) { .explore__regions { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .explore__worlds { grid-template-columns: 1fr; } .xworld { height: 180px; } }

@@ -102,7 +102,7 @@ export default function TrailStory({ story }: { story: Story }) {
         </div>
         <AnimatePresence mode="wait">
           <motion.h4 key={i} className="story__title" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-            <span>{String(i + 1).padStart(2, '0')}</span>{step.title}
+            {step.title}
           </motion.h4>
         </AnimatePresence>
       </div>

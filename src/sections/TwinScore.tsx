@@ -57,7 +57,6 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
   return (
     <section className="score" id="score">
       <header className="chapter-head">
-        <span className="chapter-num">04</span>
         <h2>Twin Score</h2>
         <p>Pick a place on Mars or the Moon. We compared it with {r.pool} patches of Earth, each 12 km wide, and scored how alike they are out of 100.</p>
       </header>

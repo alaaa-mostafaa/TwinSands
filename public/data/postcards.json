@@ -232,5 +232,23 @@
   "url": "https://commons.wikimedia.org/wiki/File:Gebel_Kamil_-_Aerodynamic_Meteorite_Flange_(49796097546).png",
   "w": 773,
   "h": 1040
+ },
+ "pc_mauna_kea": {
+  "source": "Wikimedia Commons",
+  "title": "Pu'u on Mauna Kea.jpg",
+  "author": "S P Schmidt",
+  "license": "CC BY 4.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Pu%27u_on_Mauna_Kea.jpg",
+  "w": 1400,
+  "h": 933
+ },
+ "pc_ellesmere": {
+  "source": "Wikimedia Commons",
+  "title": "Grise Fiord, Nunavut (2008).jpg",
+  "author": "Xander",
+  "license": "CC BY 2.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Grise_Fiord,_Nunavut_(2008).jpg",
+  "w": 931,
+  "h": 1400
  }
 }

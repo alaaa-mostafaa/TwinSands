@@ -8,7 +8,6 @@ export default function FieldGuides({ onScore }: { onScore: (t: string) => void 
   return (
     <section className="guides" id="guides">
       <header className="chapter-head">
-        <span className="chapter-num">05</span>
         <h2>Field Guides</h2>
         <p>For every twin: what matches, what doesn’t, and what a crew could practise there. Places marked <span className="badge">new</span> have little or no planetary-analog research yet.</p>
       </header>

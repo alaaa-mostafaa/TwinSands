@@ -197,7 +197,7 @@ export function GlobeCanvas({ children, camZ = 3.3, controls = true, className =
           <ambientLight intensity={0.35} />
           <directionalLight position={[-3, 2, 4]} intensity={1.6} />
           <Suspense fallback={null}>{children}</Suspense>
-          {controls && <OrbitControls enablePan={false} enableZoom minDistance={1.6} maxDistance={6} rotateSpeed={0.5} zoomSpeed={0.6} />}
+          {controls && <OrbitControls enablePan={false} enableZoom={false} rotateSpeed={0.5} />}
         </Canvas>
         </Safe3D>
       )}

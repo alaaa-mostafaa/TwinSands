@@ -98,9 +98,8 @@ export default function Trails({ onScore }: { onScore: (target: string) => void 
     : t.earth;
 
   return (
-    <section className="trails" id="trails">
+    <section className="trails" id="trails" style={{ ['--trails-img' as string]: 'url(photos/trails_bg.webp)' }}>
       <header className="chapter-head">
-        <span className="chapter-num">02</span>
         <h2>Twin Trails</h2>
         <p>Six big questions, asked of Earth, Mars and the Moon. Look at the maps, then see, hear, smell and feel each world.</p>
       </header>

@@ -105,7 +105,7 @@ export default function WindGlobe({ world = 'earth' }: { world?: 'earth' | 'mars
   return (
     <div className="windglobe">
       <Safe3D fallback={<div className="no3d">3D view unavailable in this browser</div>}>
-        <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 3.2], fov: 35 }} gl={{ antialias: true, alpha: true }}>
+        <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 4.1], fov: 35 }} gl={{ antialias: true, alpha: true }}>
           <ambientLight intensity={0.4} />
           <directionalLight position={[-3, 2, 4]} intensity={1.4} />
           <Suspense fallback={null}><Scene world={world} field={world === 'mars' ? field ?? undefined : undefined} /></Suspense>

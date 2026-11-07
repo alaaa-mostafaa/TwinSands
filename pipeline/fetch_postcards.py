@@ -43,6 +43,8 @@ COMMONS = {
     "pc_transantarctic": "File:Transantarctic mountain hg.jpg",
     "pc_sudbury": "File:Melted Chaos from Sudbury Impact Crater .jpg",
     "pc_mistastin": "File:Mistastin crater L1C T20UMG T20VMH A026091 20200620T152632.jpg",
+    "pc_mauna_kea": "File:Pu'u on Mauna Kea.jpg",
+    "pc_ellesmere": "File:Grise Fiord, Nunavut (2008).jpg",
     "pc_pahoehoe": "File:Pāhoehoe Lava flow.JPG",
 }
 NASA = {

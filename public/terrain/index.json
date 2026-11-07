@@ -1,0 +1,66 @@
+{
+ "mars-gale": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -4509.27,
+  "max": -3401.75,
+  "valid_fraction": 0.9993,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W_dtm.tif"
+ },
+ "mars-jezero": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -2645.12,
+  "max": -2096.85,
+  "valid_fraction": 1.0,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W_dtm.tif"
+ },
+ "mars-meridiani": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -1221.65,
+  "max": -984.05,
+  "valid_fraction": 0.9771,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W_dtm.tif"
+ },
+ "mars-utopia-zhurong": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -4218.9,
+  "max": -4059.13,
+  "valid_fraction": 1.0,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W_dtm.tif"
+ },
+ "moon-shackleton-rim": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -2294.69,
+  "max": 1736.96,
+  "valid_fraction": 0.9721,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site04/Site04.tif"
+ },
+ "moon-malapert-massif": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": 2775.37,
+  "max": 5172.81,
+  "valid_fraction": 1.0,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site23/Site23.tif"
+ },
+ "moon-haworth": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": 850.68,
+  "max": 2234.64,
+  "valid_fraction": 1.0,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Haworth/Haworth.tif"
+ },
+ "moon-de-gerlache-rim": {
+  "n": 256,
+  "size_m": 12000.0,
+  "min": -358.89,
+  "max": 1814.21,
+  "valid_fraction": 1.0,
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site11/Site11.tif"
+ }
+}

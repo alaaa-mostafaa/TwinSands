@@ -50,7 +50,6 @@ export default function Neighborhoods({ world, setWorld, onScore }: { world: 'ma
   return (
     <section className="hoods" id="hoods">
       <header className="chapter-head">
-        <span className="chapter-num">03</span>
         <h2>Neighborhoods</h2>
         <p>Places on Mars and the Moon, each next to its real twin on Earth.</p>
       </header>

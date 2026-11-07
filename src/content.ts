@@ -696,3 +696,30 @@ export const STORIES: Record<string, Story> = {
     ],
   },
 };
+
+// ---------------------------------------------------------------- Explore: walk real terrain
+// Terrain: 12 x 12 km windows from MRO CTX DTMs (Mars) and Barker et al. LOLA south-pole DEMs (Moon), via
+// USGS Astrogeology analysis-ready data (pipeline/fetch_terrain.py). Earth twins: Twin Score top matches where
+// we have a photo, otherwise the story twin (marked "looks like").
+export type Region = {
+  id: string; world: 'mars' | 'moon'; name: string; line: string;
+  twin: { img: string; name: string; line: string };
+};
+export const REGIONS: Region[] = [
+  { id: 'mars-gale', world: 'mars', name: 'Gale crater', line: 'Curiosity’s landing plain. Mount Sharp’s layers rise to the south.',
+    twin: { img: 'pc_danakil', name: 'Danakil desert, Ethiopia', line: 'Our Twin Score’s best match: the same slopes, and the same rusty and salty minerals.' } },
+  { id: 'mars-jezero', world: 'mars', name: 'Jezero crater', line: 'An old lake bed where Perseverance hunts for signs of ancient life.',
+    twin: { img: 'pc_lake_qarun', name: 'Lake Qarun, Fayoum, Egypt', line: 'Another desert basin that once held a big lake, now mostly dry.' } },
+  { id: 'mars-meridiani', world: 'mars', name: 'Meridiani Planum', line: 'Flat plains scattered with iron “blueberries”. Opportunity drove here for 14 years.',
+    twin: { img: 'pc_moqui', name: 'Moqui marbles, Utah', line: 'Looks like: iron balls grown by groundwater, just like Mars’ blueberries.' } },
+  { id: 'mars-utopia-zhurong', world: 'mars', name: 'Utopia Planitia', line: 'A vast cold plain where China’s Zhurong rover landed in 2021.',
+    twin: { img: 'pc_white_desert', name: 'White Desert, Egypt', line: 'Looks like: a flat, wind-shaped desert floor that goes on forever.' } },
+  { id: 'moon-shackleton-rim', world: 'moon', name: 'Shackleton rim', line: 'Stand on the edge of a crater 4 km deep whose floor never sees the Sun.',
+    twin: { img: 'pc_transantarctic', name: 'Transantarctic Mountains', line: 'Our Twin Score’s best match for the lunar south pole: steep, icy polar ridges.' } },
+  { id: 'moon-malapert-massif', world: 'moon', name: 'Malapert massif', line: 'A 5 km mountain and a candidate Artemis landing region.',
+    twin: { img: 'pc_mauna_kea', name: 'Mauna Kea, Hawaiʻi', line: 'Ranked #2 of 469 places on Earth for this site. NASA tested Moon mining gear here.' } },
+  { id: 'moon-haworth', world: 'moon', name: 'Haworth', line: 'A dark, ice-trapping crater next to sunlit ridges.',
+    twin: { img: 'pc_wright_valley', name: 'McMurdo Dry Valleys, Antarctica', line: 'Right next to our best-match cell: cold, dry, and almost lifeless.' } },
+  { id: 'moon-de-gerlache-rim', world: 'moon', name: 'de Gerlache rim', line: 'A crater rim that stays lit for much of the lunar year.',
+    twin: { img: 'pc_ellesmere', name: 'Ellesmere Island, Canada', line: 'Near our #2 match: a rocky Arctic desert where the Sun skims the horizon.' } },
+];

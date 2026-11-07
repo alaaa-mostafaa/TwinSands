@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { WorldId } from './content';
 import { Boots, Footer } from './sections/Boots';
+import Explore from './sections/Explore';
 import FieldGuides from './sections/FieldGuides';
 import Hero from './sections/Hero';
 import MeetMars from './sections/MeetMars';
@@ -9,7 +9,7 @@ import Trails from './sections/Trails';
 import TwinScore from './sections/TwinScore';
 
 const NAV = [
-  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['hoods', 'Neighborhoods'], ['score', 'Twin Score'], ['guides', 'Field Guides'], ['boots', 'Our Trip'],
+  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['hoods', 'Neighborhoods'], ['explore', 'Explore'], ['score', 'Twin Score'], ['guides', 'Field Guides'], ['boots', 'Our Trip'],
 ] as const;
 
 const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -37,11 +37,6 @@ export default function App() {
   }, []);
 
   const score = (t: string) => { setTarget(t); go('score'); };
-  const explore = (w: WorldId) => {
-    if (w === 'earth') return go('meet');
-    setHoodWorld(w);
-    go('hoods');
-  };
 
   return (
     <>
@@ -57,10 +52,11 @@ export default function App() {
         <button className="nav__menu" onClick={() => setMenu((m) => !m)} aria-label="Menu"><i /><i /><i /></button>
       </nav>
       <main>
-        <Hero onExplore={explore} />
+        <Hero />
         <MeetMars />
         <Trails onScore={score} />
         <Neighborhoods world={hoodWorld} setWorld={setHoodWorld} onScore={score} />
+        <Explore />
         <TwinScore target={target} setTarget={setTarget} />
         <FieldGuides onScore={score} />
         <Boots />

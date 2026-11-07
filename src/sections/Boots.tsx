@@ -30,7 +30,6 @@ export function Boots() {
   return (
     <section className="boots" id="boots">
       <header className="chapter-head">
-        <span className="chapter-num">06</span>
         <h2>Boots on the Ground</h2>
         <p>Our own photos from Egypt’s Western Desert and Fayoum, each next to the rover picture it echoes. Same question, two worlds.</p>
       </header>
