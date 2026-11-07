@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FIELD_PAIRS, SOURCES } from '../content';
+import { FIELD_PAIRS } from '../content';
 import { usePhotos } from '../data';
 
 /** One field slot: loads public/field/<slot>.jpg if the team has added it; otherwise a drop zone (local preview only). */
@@ -58,12 +58,6 @@ export function Footer() {
           <p className="foot__team">Team Phobos &amp; Deimos · NASA Space Apps Cairo 2026</p>
           <p className="foot__note">A similarity score is a ranking aid, not a probability, and nothing here identifies a safe landing or habitat site. Earth twin coordinates are approximate unless they come from our measured windows. Independent student project; not affiliated with or endorsed by NASA, ESA or USGS.</p>
         </div>
-        {SOURCES.map((g) => (
-          <div key={g.group}>
-            <h4>{g.group}</h4>
-            <ul>{g.items.map((s) => <li key={s.label}>{s.url ? <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a> : s.label}</li>)}</ul>
-          </div>
-        ))}
       </div>
     </footer>
   );

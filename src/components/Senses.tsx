@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import type { Sense, Snd } from '../content';
+import type { Sense, Shot, Snd } from '../content';
+import AnnotatedPhoto from './AnnotatedPhoto';
 import { useAllPhotos, useJSON, type PhotoMeta } from '../data';
 
 export type Mode = 'map' | 'see' | 'hear' | 'smell' | 'feel';
@@ -80,7 +81,7 @@ function Thermometer({ c }: { c: number }) {
   );
 }
 
-export default function Senses({ id, mode, sense, snd }: { id: string; mode: Mode; sense?: Sense; snd?: Snd }) {
+export default function Senses({ id, mode, sense, snd, shot }: { id: string; mode: Mode; sense?: Sense; snd?: Snd; shot?: Shot }) {
   const playing = usePlaying();
   const photos = useAllPhotos();
   const objects = useJSON<Record<string, PhotoMeta & { mode: string }>>('data/senses.json');
@@ -93,17 +94,13 @@ export default function Senses({ id, mode, sense, snd }: { id: string; mode: Mod
 
   return (
     <AnimatePresence mode="wait">
-      {mode === 'see' && sense && (
-        <motion.div key="see" className="sense-layer sense-layer--see" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          {sense.see.slice(0, 2).map((k, i) => (
-            <motion.figure key={k} className={`see-card see-card--${i}`}
-              initial={{ scale: 0.2, opacity: 0, rotate: 0, x: i ? -40 : 40, y: i ? -40 : 40 }}
-              animate={{ scale: 1, opacity: 1, rotate: i ? 4 : -4, x: 0, y: 0 }}
-              transition={{ type: 'spring', stiffness: 170, damping: 18, delay: i * 0.12 }}>
-              <img src={`photos/${k}.webp`} alt={all[k]?.title ?? ''} />
-              <figcaption>{credit(all[k])}</figcaption>
-            </motion.figure>
-          ))}
+      {mode === 'see' && (shot || sense) && (
+        <motion.div key="see" className="sense-layer sense-layer--see" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
+          {shot ? (
+            <AnnotatedPhoto src={`photos/${shot.img}.webp`} w={shot.w} h={shot.h} marks={shot.marks} line={shot.line} credit={credit(all[shot.img])} />
+          ) : (
+            <AnnotatedPhoto src={`photos/${sense!.see[0]}.webp`} w={1} h={1} marks={[]} credit={credit(all[sense!.see[0]])} />
+          )}
         </motion.div>
       )}
 
@@ -124,12 +121,23 @@ export default function Senses({ id, mode, sense, snd }: { id: string; mode: Mod
 
       {mode === 'feel' && sense && (
         <motion.div key="feel" className="sense-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          {sense.feel.then != null && sense.feel.now != null ? (
+            <div className="sense-objs sense-objs--feel thermo-pair">
+              {([['Then', sense.feel.then], ['Now', sense.feel.now]] as const).map(([k, v]) => (
+                <div key={k} className="thermo-col">
+                  <Thermometer c={v} />
+                  <div><span className="thermo-k">{k}</span><p className="feel-big feel-big--pair">{v.toLocaleString('en-US').replace('-', '−')} °C</p></div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="sense-objs sense-objs--feel">
             {celsius != null ? <Thermometer c={celsius} /> : sense.feel.img ? (
               <motion.img src={`senses/${sense.feel.img}.webp`} alt="" className="sense-obj" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1, rotate: -4 }} />
             ) : <span className="sense-none">∅</span>}
-            <p className="feel-big">{sense.feel.big}</p>
+            <p className="feel-big" style={sense.feel.big.length > 6 ? { fontSize: 'clamp(24px, 2.6vw, 38px)' } : undefined}>{sense.feel.big}</p>
           </div>
+          )}
           <p className="sense-line sense-line--small">{sense.feel.small}</p>
           {sense.feel.img && celsius == null && <p className="sense-credit">{credit(objects?.[sense.feel.img])}</p>}
         </motion.div>

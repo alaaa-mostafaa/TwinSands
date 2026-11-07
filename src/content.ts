@@ -158,7 +158,7 @@ export const TRAILS: Trail[] = [
     breaks: 'Mars air is about 1% as dense as Earth’s, so even fast wind pushes weakly; yet fine dust can still circle the whole planet in a global storm.',
   },
   {
-    id: 'ice', title: 'Ice', kicker: 'Buried water ice',
+    id: 'ice', title: 'Water', kicker: 'Water and ice',
     question: 'Where is the water astronauts will need?',
     summary: 'Under Mars’s mid-latitudes lies ice, sometimes just centimetres down. Phoenix scraped it up in 2008 and watched it vanish into the thin air. At the lunar poles, hydrogen hints at ice hiding in the cold.',
     earth: { tex: 'tex/earth_snow.webp', title: 'Snow cover, January 2024', source: 'MODIS Terra monthly snow cover via NASA GIBS', legend: { svg: 'legends/earth_snow.png', low: 'none', high: 'full' }, pins: [
@@ -440,7 +440,6 @@ export const SOUNDS: Record<string, Partial<Record<WorldId, Snd>>> = {
   rust: {
     earth: { file: 'earth_stream', what: 'A mountain stream. Río Tinto flows just like this, only blood-red and acid.' },
     mars: { file: 'mars_laser', what: 'Perseverance’s laser zapping a rock to read its minerals, March 2021. A real Mars microphone.' },
-    moon: { file: 'moon_orange_soil', what: 'Apollo 17, 1972: geologist Harrison Schmitt finds orange soil on the Moon.' },
   },
   soil: {
     earth: { file: 'earth_gravel', what: 'Footsteps on gravel.' },
@@ -455,7 +454,6 @@ export const SOUNDS: Record<string, Partial<Record<WorldId, Snd>>> = {
   wind: {
     earth: { file: 'earth_storm_wind', what: 'A 25 m/s storm wind in a Swedish forest.' },
     mars: { file: 'mars_dustdevil', what: 'A real dust devil passing over Perseverance, 2021: the first ever heard on Mars.' },
-    moon: { file: 'moon_hammer_feather', what: 'No air, no wind. Apollo 15, 1971: a hammer and a feather dropped together land together.' },
   },
   ice: {
     earth: { file: 'earth_ice_crack', what: 'Ice cracking on a frozen lake.' },
@@ -474,12 +472,11 @@ export const SOUNDS: Record<string, Partial<Record<WorldId, Snd>>> = {
 // hydrogen sulfide from heated Mars rock; "sunbaked sulfur and chalk" (Scientific American / Space.com, 2016);
 // LCROSS (2009) found ammonia and hydrogen sulfide with the ice in Cabeus; astronauts describe spacewalk suits as
 // smelling of seared steak, hot metal and welding fumes. Feel: lunar pit ~17 °C (Horvath et al. 2022).
-export type Sense = { see: string[]; smell: { items: string[]; text: string }; feel: { big: string; small: string; img?: string } };
+export type Sense = { see: string[]; smell: { items: string[]; text: string }; feel: { big: string; small: string; img?: string; then?: number; now?: number } };
 export const SENSES: Record<string, Partial<Record<WorldId, Sense>>> = {
   rust: {
     earth: { see: ['earth_rio_tinto', 'pc_moqui'], smell: { items: ['coins', 'match'], text: 'Old coins and a whiff of sulfur' }, feel: { big: 'pH 2', small: 'acid water that stings like lemon juice', img: 'lemon' } },
-    mars: { see: ['mars_berries', 'mars_opportunity_shadow'], smell: { items: ['egg'], text: 'Rotten eggs: heated Mars rock gave off hydrogen sulfide' }, feel: { big: '−63 °C', small: 'average day on Mars' } },
-    moon: { see: ['moon_orange_soil', 'moon_apollo17'], smell: { items: ['sparkler'], text: 'Spent gunpowder, said every Apollo crew' }, feel: { big: '+120 °C', small: 'in sunlight, then −130 °C at night' } },
+    mars: { see: ['mars_berries', 'mars_opportunity_shadow'], smell: { items: ['egg'], text: 'Rotten eggs: heated Mars rock gave off hydrogen sulfide' }, feel: { big: 'Magnetic', small: 'the red dust sticks to magnets: rovers carried some to catch it', img: 'magnet' } },
   },
   soil: {
     earth: { see: ['pc_lanzarote_plain', 'earth_salar_atacama'], smell: { items: ['rain'], text: 'Rain on dry dirt' }, feel: { big: 'Soft', small: 'black volcanic sand that shifts underfoot', img: 'sand' } },
@@ -488,13 +485,12 @@ export const SENSES: Record<string, Partial<Record<WorldId, Sense>>> = {
   },
   fire: {
     earth: { see: ['pc_pahoehoe', 'pc_lava_tube'], smell: { items: ['match'], text: 'A just-struck match: sulfur dioxide from the hot lava' }, feel: { big: '1,150 °C', small: 'fresh Hawaiian lava' } },
-    mars: { see: ['mars_olympus', 'mars_skylights'], smell: { items: ['soda'], text: 'Nothing: the air is 95% CO₂, the fizz in soda' }, feel: { big: '−63 °C', small: 'old lava, cold for millions of years' } },
-    moon: { see: ['moon_marius_pit', 'pc_procellarum'], smell: { items: ['weld'], text: 'Hot metal and welding fumes: what astronauts smell on their suits after a spacewalk' }, feel: { big: '17 °C', small: 'steady inside a lunar pit, day and night' } },
+    mars: { see: ['mars_olympus', 'mars_skylights'], smell: { items: ['soda'], text: 'Nothing: the air is 95% CO₂, the fizz in soda' }, feel: { big: '', small: 'Its lava, long ago, vs the cold rock today', then: 1200, now: -63 } },
+    moon: { see: ['moon_marius_pit', 'pc_procellarum'], smell: { items: ['weld'], text: 'Hot metal and welding fumes: what astronauts smell on their suits after a spacewalk' }, feel: { big: '', small: 'Its lava, 3+ billion years ago, vs a lunar night today', then: 1200, now: -130 } },
   },
   wind: {
     earth: { see: ['pc_white_desert', 'pc_sandstorm'], smell: { items: ['sandpile'], text: 'Hot, dry, earthy dust in the air' }, feel: { big: '100 km/h', small: 'a desert storm that stings your face', img: 'windsock' } },
     mars: { see: ['mars_dust_devil_hirise', 'mars_yardangs'], smell: { items: ['chalk'], text: 'A clapped chalkboard eraser' }, feel: { big: 'Gentle', small: 'even 100 km/h feels like a breeze in air this thin', img: 'feather' } },
-    moon: { see: ['moon_flag', 'moon_bootprint'], smell: { items: [], text: 'Nothing. No air to carry a smell.' }, feel: { big: 'Still', small: 'no wind, ever: footprints stay for ages' } },
   },
   ice: {
     earth: { see: ['pc_wright_valley', 'earth_dry_valleys'], smell: { items: ['ice'], text: 'Almost nothing: air this cold and dry barely smells' }, feel: { big: '−20 °C', small: 'yearly average in the Dry Valleys' } },
@@ -504,5 +500,199 @@ export const SENSES: Record<string, Partial<Record<WorldId, Sense>>> = {
   pole: {
     earth: { see: ['pc_transantarctic', 'earth_dry_valleys'], smell: { items: ['snow'], text: 'Cold, clean nothing' }, feel: { big: '−50 °C', small: 'Antarctic winter wind' } },
     moon: { see: ['moon_south_pole', 'pc_spa'], smell: { items: ['sparkler'], text: 'Spent gunpowder: the Moon dust astronauts carry back inside' }, feel: { big: '−133 °C', small: 'sunny ridge, yearly average (Diviner model)' } },
+  },
+};
+
+// ---------------------------------------------------------------- "See": one annotated photo per world
+// Coordinates are in the photo's own pixels (w × h), so marks land on the right spot however the photo is cropped.
+export type Mark =
+  | { t: 'ring'; x: number; y: number; r: number; label: string; sub?: string }
+  | { t: 'ruler'; x1: number; y1: number; x2: number; y2: number; label: string };
+export type Shot = { img: string; w: number; h: number; marks: Mark[]; line: string };
+export const SEE: Record<string, Partial<Record<WorldId, Shot>>> = {
+  rust: {
+    // Moqui marble cracked open: iron-oxide shell around plain sandstone (photo: Steve Jurvetson, CC BY 2.0)
+    earth: { img: 'earth_moqui_inside', w: 1600, h: 1154, line: 'Rust only coats the outside.', marks: [
+      { t: 'ring', x: 470, y: 470, r: 140, label: 'Plain sand inside' },
+      { t: 'ring', x: 520, y: 860, r: 62, label: 'Iron-oxide shell', sub: 'hematite + goethite' },
+    ] },
+    // Curiosity's first drill hole, John Klein, Gale crater, 2013. NASA: the hole is 1.6 cm wide.
+    mars: { img: 'mars_drill', w: 1563, h: 1143, line: 'Red on the surface, grey inside.', marks: [
+      { t: 'ring', x: 430, y: 300, r: 90, label: 'Rusty red skin', sub: 'iron-oxide dust' },
+      { t: 'ring', x: 1110, y: 760, r: 85, label: 'Grey rock inside' },
+      { t: 'ruler', x1: 730, y1: 585, x2: 893, y2: 585, label: '1.6 cm' },
+    ] },
+    // Apollo 11 bootprint, 1969
+    moon: { img: 'moon_bootprint', w: 1400, h: 1400, line: 'No water, no air: Moon iron never rusts.', marks: [
+      { t: 'ring', x: 744, y: 905, r: 270, label: 'Grey all the way', sub: 'no rust anywhere' },
+    ] },
+  },
+};
+
+// ---------------------------------------------------------------- Trail stories ("See" for a trail with a story)
+// Sources: Río Tinto pH ≈ 2.3 and dissolved iron up to ~20 g/L (NASA Astrobiology; Amaral-Zettler et al. 2002, Nature);
+// NASA MARTE drilling at Río Tinto 2003–2005 (Stoker et al.; Cannon et al. 2008, Astrobiology);
+// Gusev soil ~16 wt% iron oxide (Spirit APXS); Earth's continental crust ~7 wt% FeO (Rudnick & Gao 2003);
+// red dust as ferrihydrite (Valantinas et al. 2025, Nature Communications).
+export type MeterSpec = { title: string; value: string; level: number; tick?: number; tickLabel?: string };
+export type StoryPhoto = { img: string; w: number; h: number; place: string; contain?: boolean };
+/** One photo in a story step. `then` shows first, then dissolves into the photo (with a time badge). */
+export type Pane = { world: WorldId; photo: StoryPhoto; marks: Mark[]; meter?: MeterSpec; globe?: 'earth-winds' | 'mars-winds';
+  then?: { photo: StoryPhoto; when: string; note: string }; now?: string };
+export type StoryStep = {
+  title: string; line: string; earth: Mark[]; mars: Mark[]; moon?: boolean;
+  earthPhoto?: StoryPhoto;                                  // swap the Earth photo for this step
+  panes?: Pane[];                                           // full control: any two worlds, then→now dissolves
+  meters?: Partial<Record<'earth' | 'mars', MeterSpec>>;    // vertical meter rising on a photo
+};
+// Río Tinto iron on a log scale 0.0001–100 g/L, so 20 g/L and a normal river (~0.001 g/L) both fit.
+const logPos = (v: number) => (Math.log10(v) + 4) / 6;
+export type Story = {
+  earth: StoryPhoto;
+  mars: StoryPhoto;
+  steps: StoryStep[];
+};
+export const STORIES: Record<string, Story> = {
+  // Sources: Earth's wind belts (Hadley/Ferrel/polar cells, NOAA). Mars winds: Mars Climate Database v6, diurnal mean, Ls 270, 10 km above surface (northern jet ≈68 m/s). MAVEN wind map of Mars' upper atmosphere,
+  // winds rippled by terrain below (Benna et al. 2019, Science; NASA release 19-26). Khamsin: hot dusty spring wind
+  // in Egypt, March–May, Arabic for "fifty", gusts up to ~140 km/h, temperature can jump ~20 °C. Mars air at the
+  // surface is ~1% as dense as Earth's (pressure ~0.6%), so 100 km/h pushes like ~12 km/h here. 2018 global dust
+  // storm blocked the Sun and ended Opportunity's mission.
+  wind: {
+    earth: { img: 'story_khamsin', w: 1600, h: 900, place: 'Khamsin, Egypt' },
+    mars: { img: 'story_mars_storm_art', w: 640, h: 384, place: 'Dust storm, artist’s illustration' },
+    steps: [
+      { title: 'Air on the move', line: 'The Sun heats the equator more than the poles, so Earth’s air flows in belts. Mars has belts too, and in its northern winter a jet stream races around the north at about 245 km/h.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_maven_globe', w: 1800, h: 1013, place: 'Wind belts (drag to spin)' }, globe: 'earth-winds', marks: [] },
+          { world: 'mars', photo: { img: 'story_maven_globe', w: 1800, h: 1013, place: 'Real winds (drag to spin)' }, globe: 'mars-winds', marks: [] },
+        ] },
+      { title: 'Wind that feels mountains', line: 'NASA’s MAVEN measured Mars winds from orbit and found something surprising: winds 150 km up still ripple over the mountains below, like water over rocks.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'story_maven_mountains', w: 1800, h: 1013, place: 'Mars winds over mountains' },
+            marks: [{ t: 'ring', x: 1170, y: 420, r: 130, label: 'Wind bends over peaks' }] },
+        ] },
+      { title: 'Egypt’s Khamsin', line: 'Every spring a hot wind blows out of the Sahara for days. The sky turns orange, palms bend, and it can get 20 °C hotter in a few hours. Its name means “fifty” in Arabic.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_khamsin', w: 1600, h: 900, place: 'Khamsin, Egypt' }, meter: { title: 'Gusts', value: '140 km/h', level: 0.7 },
+            marks: [{ t: 'ring', x: 1250, y: 230, r: 150, label: 'Palms bent flat' }, { t: 'ring', x: 330, y: 160, r: 100, label: 'Sky full of dust' }] },
+        ] },
+      { title: 'Mars does it bigger', line: 'In 2018 a dust storm wrapped all of Mars for months. It blocked the Sun so long that the solar-powered rover Opportunity ran out of power and fell silent.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_khamsin', w: 1600, h: 900, place: 'Khamsin, Egypt' },
+            marks: [{ t: 'ring', x: 800, y: 600, r: 150, label: 'Lasts a few days' }] },
+          { world: 'mars', photo: { img: 'story_mars_storm_art', w: 640, h: 384, place: 'Dust storm, artist’s illustration' },
+            marks: [{ t: 'ring', x: 300, y: 285, r: 60, label: 'A rover (illustration)' }] },
+        ] },
+      { title: 'Where the twin breaks', line: 'Mars air is about 100 times thinner, so a 100 km/h Mars wind pushes like a 12 km/h breeze. Its storms are high, thin haze, not walls like this picture.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_khamsin', w: 1600, h: 900, place: 'Khamsin, Egypt' }, meter: { title: 'Air', value: '100%', level: 1 },
+            marks: [{ t: 'ring', x: 1250, y: 230, r: 150, label: 'Thick air hits hard' }] },
+          { world: 'mars', photo: { img: 'story_mars_storm_art', w: 640, h: 384, place: 'Dust storm, artist’s illustration' }, meter: { title: 'Air', value: '~1%', level: 0.02, tick: 1, tickLabel: 'Earth 100%' },
+            marks: [{ t: 'ring', x: 330, y: 150, r: 90, label: 'Real storms: thin haze', sub: 'not a wall' }] },
+        ] },
+    ],
+  },
+  // Sources: Hawaiian basalt lava erupts at ~1,150 °C (USGS HVO); lunar and Martian basalts erupted at similar
+  // temperatures, ~1,200 °C. Lunar mare lava mostly 3–3.8 billion years old (Chang'e-5 found ~2 billion-year-old lava);
+  // Mars' youngest lava (Cerberus Fossae) is only a few million years old. Sinuous rilles are lava channels and collapsed
+  // tubes (Hadley Rille, Apollo 15). Pavonis Mons skylight ~35 m wide, 20+ m deep (HiRISE, NASA PIA15012).
+  // Low gravity: Mars tubes may be ~100x and Moon tubes ~1,000x wider than Earth's (Sauro et al. 2020, Earth-Science Reviews).
+  // Marius Hills pit ~65 m wide (Haruyama et al. 2009, Kaguya). Lunar pits stay ~17 °C (Horvath et al. 2022, GRL).
+  fire: {
+    earth: { img: 'story_lava_flow', w: 547, h: 365, place: 'Flowing lava' },
+    mars: { img: 'story_pavonis_skylight', w: 1920, h: 1920, place: 'Pavonis Mons' },
+    steps: [
+      { title: 'Earth is still burning', line: 'Lava still pours out on Earth today, hot enough to melt copper. When its top cools into a crust, the river keeps flowing underneath in a lava tube.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_lava_flow', w: 547, h: 365, place: 'Lava, today' }, meter: { title: 'Lava', value: '1,150 °C', level: 1150 / 1300 },
+            marks: [{ t: 'ring', x: 290, y: 175, r: 60, label: 'Liquid rock', sub: '1,150 °C' }] },
+        ] },
+      { title: 'Mars has lava tubes too', line: 'Left: a hole into a lava tube in Hawaiʻi, lava still glowing inside. Right: the same kind of hole on a Mars volcano. Its lava drained away long ago.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_fire_skylight', w: 800, h: 600, place: 'Kīlauea, Hawaiʻi' },
+            marks: [{ t: 'ring', x: 410, y: 355, r: 105, label: 'Lava flowing inside', sub: 'still hot' }] },
+          { world: 'mars', photo: { img: 'story_pavonis_skylight', w: 1920, h: 1920, place: 'Pavonis Mons' },
+            marks: [{ t: 'ring', x: 800, y: 930, r: 150, label: 'Same kind of hole', sub: '≈35 m wide, cold' }] },
+        ] },
+      { title: 'The Moon had lava rivers', line: 'Over 3 billion years ago, lava ran across the Moon the way it runs on Earth today. Its channels froze, and some roofs caved in.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_lava_river', w: 720, h: 1280, place: 'A lava river, today' },
+            marks: [{ t: 'ring', x: 355, y: 700, r: 95, label: 'Lava river', sub: 'crusting over' }] },
+          { world: 'moon', photo: { img: 'story_moon_rille', w: 1100, h: 1100, place: 'A lunar lava channel' },
+            marks: [{ t: 'ring', x: 830, y: 410, r: 95, label: 'What’s left on the Moon', sub: 'roof caved in' }] },
+        ] },
+      { title: 'Giant tunnels', line: 'Weak gravity lets lava tubes grow huge. Mars tubes may be about 100 times wider than Earth’s, and the Moon’s about 1,000 times.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'story_pavonis_skylight', w: 1920, h: 1920, place: 'Pavonis Mons' },
+            meter: { title: 'Tube width', value: '~100×', level: 2 / 3, tick: 0, tickLabel: 'Earth 1×' },
+            marks: [{ t: 'ring', x: 800, y: 930, r: 150, label: 'Gravity 38% of Earth’s' }] },
+          { world: 'moon', photo: { img: 'moon_marius_pit', w: 1000, h: 1000, place: 'Marius Hills pit' },
+            meter: { title: 'Tube width', value: '~1,000×', level: 1, tick: 0, tickLabel: 'Earth 1×' },
+            marks: [{ t: 'ring', x: 502, y: 500, r: 70, label: 'Gravity 17% of Earth’s' }] },
+        ] },
+      { title: 'A ready-made shelter', line: 'Inside a lunar pit it stays about 17 °C, day and night, with rock overhead to block radiation. NASA has designed a robot to rappel in and look, and astronauts already train in Lanzarote’s tubes.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'pc_lava_tube', w: 1400, h: 930, place: 'Lanzarote, Spain' },
+            marks: [{ t: 'ring', x: 700, y: 430, r: 120, label: 'Astronaut cave training', sub: 'ESA PANGAEA' }] },
+          { world: 'moon', photo: { img: 'story_moon_diver', w: 1000, h: 900, place: 'Moon Diver, artist’s concept', contain: true },
+            meter: { title: 'Inside a pit', value: '17 °C', level: 0.55, tick: 0.05, tickLabel: 'outside −170 °C' },
+            marks: [{ t: 'ring', x: 600, y: 770, r: 65, label: 'Robot lowered on a cable', sub: 'NASA concept' }, { t: 'ring', x: 394, y: 140, r: 50, label: 'Earth, seen from the pit' }] },
+        ] },
+    ],
+  },
+  // Sources: healthy topsoil ~45% minerals, 25% water, 25% air, ~5% organic matter (USDA NRCS);
+  // a teaspoon of soil holds more microbes than there are people on Earth (USDA NRCS);
+  // Phoenix found ~0.5% perchlorate in Mars soil (Hecht et al. 2009, Science);
+    // Hawaii's red soils (oxisols) are basalt weathered into iron oxides, low in nutrients but farmed; plants grown in Mars soil simulant (Wamelink et al. 2014, PLOS ONE).
+  soil: {
+    earth: { img: 'story_soil', w: 659, h: 466, place: 'Garden soil' },
+    mars: { img: 'story_mars_soil', w: 600, h: 600, place: 'Gusev crater, Mars' },
+    steps: [
+      { title: 'Earth’s soil is alive', line: 'One spoon of garden soil holds more microbes than there are people on Earth. That’s why things grow in it.',
+        earth: [{ t: 'ring', x: 272, y: 210, r: 78, label: 'Living soil', sub: 'microbes, roots, rotted leaves' }],
+        mars: [{ t: 'ring', x: 300, y: 380, r: 70, label: 'Crushed rock', sub: 'nothing living' }] },
+      { title: 'Mars dirt isn’t soil', line: 'Mars has no worms and no rotting leaves. Phoenix also found perchlorate: a salt that’s toxic to people.',
+        meters: {
+          earth: { title: 'Organic matter', value: '≈5%', level: 0.5 },
+          mars: { title: 'Organic matter', value: '≈0%', level: 0.015 },
+        },
+        earth: [{ t: 'ring', x: 440, y: 110, r: 55, label: 'Roots + microbes' }],
+        mars: [{ t: 'ring', x: 220, y: 330, r: 60, label: 'Perchlorate salt', sub: 'toxic' }] },
+      { title: 'But Earth has a red twin', line: 'In Hawaiʻi, lava rock crumbles and rusts into red dirt. Mars dust is made the same way: broken-down lava, coated in rust.',
+        earthPhoto: { img: 'story_hawaii', w: 1800, h: 1350, place: 'Waimea, Hawaiʻi' },
+        earth: [{ t: 'ring', x: 1000, y: 1000, r: 170, label: 'Crumbled lava', sub: 'rusted red' }],
+        mars: [{ t: 'ring', x: 300, y: 380, r: 70, label: 'Crumbled lava', sub: 'rusted red' }] },
+      { title: 'Can you grow food in it?', line: 'Hawaiʻi’s red dirt is old and low in nutrients, but rain, roots and microbes keep it farmable. Mars dirt has the same rust and none of the life.',
+        earthPhoto: { img: 'story_hawaii', w: 1800, h: 1350, place: 'Waimea, Hawaiʻi' },
+        earth: [{ t: 'ring', x: 1560, y: 210, r: 110, label: 'Grass and trees grow', sub: 'with rain and microbes' }],
+        mars: [{ t: 'ring', x: 450, y: 200, r: 70, label: 'Nothing grows', sub: 'no life, toxic salt' }] },
+      { title: 'Can we farm Mars?', line: 'In lab tests, tomatoes, peas and radishes grew in fake Mars soil. Real Mars dirt needs its toxic salt washed out first.',
+        earth: [{ t: 'ring', x: 470, y: 120, r: 60, label: 'Food grows here' }],
+        mars: [{ t: 'ring', x: 300, y: 380, r: 70, label: 'Wash out the salt first' }] },
+    ],
+  },
+  rust: {
+    earth: { img: 'story_rio_tinto', w: 1800, h: 1350, place: 'Río Tinto, Spain' },
+    mars: { img: 'story_mars_gusev', w: 616, h: 445, place: 'Gusev crater, Mars' },
+    steps: [
+      { title: 'Two red worlds', line: 'A river in Spain and a desert on Mars. They are red for the same reason.', earth: [], mars: [] },
+      { title: 'It’s rust', line: 'Iron + oxygen + water = rust. Both places are packed with iron.',
+        meters: {
+          earth: { title: 'Iron in the water', value: '20 g/L', level: logPos(20), tick: logPos(0.001), tickLabel: 'normal river' },
+          mars: { title: 'Iron oxide in the soil', value: '16%', level: 16 / 20, tick: 7 / 20, tickLabel: 'Earth’s crust 7%' },
+        },
+        earth: [{ t: 'ring', x: 900, y: 560, r: 120, label: 'Iron dissolved in the water' }],
+        mars: [{ t: 'ring', x: 300, y: 370, r: 48, label: 'Iron-oxide dust' }] },
+      { title: 'Is anything alive?', line: 'Río Tinto is full of microbes that live off iron. NASA drilled here in 2003–05 to practise finding life on Mars.',
+        earth: [{ t: 'ring', x: 900, y: 1000, r: 120, label: 'Microbes thrive here', sub: 'eating iron' }],
+        mars: [{ t: 'ring', x: 330, y: 330, r: 70, label: 'No life found', sub: 'yet' }] },
+      { title: 'Only skin-deep', line: 'Mars is red only on top: a thin coat of dust on grey rock. A 2025 study says that dust formed with water.',
+        earth: [{ t: 'ring', x: 150, y: 820, r: 110, label: 'Pale rock under the stain' }],
+        mars: [{ t: 'ring', x: 410, y: 405, r: 26, label: 'Grey basalt rock' }, { t: 'ring', x: 300, y: 40, r: 30, label: 'Dust tints the sky' }] },
+      { title: 'Where the twin breaks', line: 'Río Tinto still flows. Mars dried up billions of years ago and its air has almost no oxygen. And the Moon? No water, no air, no rust.', moon: true,
+        earth: [{ t: 'ring', x: 1250, y: 330, r: 110, label: 'Water flows today' }],
+        mars: [{ t: 'ring', x: 330, y: 300, r: 80, label: 'Dry for 3 billion years' }] },
+    ],
   },
 };

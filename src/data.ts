@@ -6,6 +6,7 @@ export function useJSON<T>(url: string): T | null {
   const [v, setV] = useState<T | null>(null);
   useEffect(() => {
     let live = true;
+    if (!url) return;
     if (!cache.has(url)) cache.set(url, fetch(url).then((r) => { if (!r.ok) throw new Error(url); return r.json(); }));
     (cache.get(url) as Promise<T>).then((d) => live && setV(d)).catch(() => live && setV(null));
     return () => { live = false; };

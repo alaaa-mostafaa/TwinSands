@@ -156,5 +156,114 @@
   "license": "CC BY-SA 4.0",
   "url": "https://commons.wikimedia.org/wiki/File:Pile_of_sand_by_the_soccer_fields_at_Brastad_Arena.jpg",
   "mode": "cut"
+ },
+ "mars_drill": {
+  "title": "Curiosity First Sample Drilling",
+  "author": "NASA/JPL-Caltech/MSSS",
+  "license": "Public domain",
+  "url": "https://images.nasa.gov/details/PIA16726"
+ },
+ "earth_moqui_inside": {
+  "title": "Inside the Moqui Marbles",
+  "author": "Steve Jurvetson",
+  "license": "CC BY 2.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Inside_the_Moqui_Marbles_(53234624816).jpg"
+ },
+ "story_rio_tinto": {
+  "title": "Río Tinto, Spain",
+  "author": "Carol Stoker, NASA Ames (photo supplied by the team; please confirm)",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Rio_tinto_river_CarolStoker_NASA_Ames_Research_Center.jpg"
+ },
+ "story_mars_gusev": {
+  "title": "Gusev crater, Spirit rover, 2004",
+  "author": "NASA/JPL-Caltech (photo supplied by the team; please confirm)",
+  "license": "Public domain",
+  "url": "https://mars.nasa.gov/mer/"
+ },
+ "magnet": {
+  "title": "A-1 horseshoe-magnet-red-silver-iron-filings-AHD",
+  "author": "Oguraclutch",
+  "license": "CC BY-SA 3.0",
+  "url": "https://commons.wikimedia.org/wiki/File:A-1_horseshoe-magnet-red-silver-iron-filings-AHD.jpg",
+  "mode": "cut"
+ },
+ "story_soil": {
+  "title": "Garden soil",
+  "author": "photo supplied by the team (please add source)",
+  "license": "",
+  "url": "#"
+ },
+ "story_mars_soil": {
+  "title": "Bonneville crater rim, Gusev, Mars",
+  "author": "NASA/JPL-Caltech (Spirit; please confirm)",
+  "license": "Public domain",
+  "url": "https://mars.nasa.gov/mer/"
+ },
+ "story_hawaii": {
+  "title": "Red soil of Waimea, Hawaii",
+  "author": "Pexels",
+  "license": "Pexels licence",
+  "url": "https://www.pexels.com/photo/vivid-red-soil-of-waimea-hawaii-landscape-31655134/"
+ },
+ "story_fire_skylight": {
+  "title": "Petunia skylight, Kīlauea, Hawaiʻi",
+  "author": "USGS",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Petunia_skylight.jpg"
+ },
+ "story_moon_rille": {
+  "title": "Lunar sinuous rille",
+  "author": "NASA/GSFC/Arizona State Univ. (LROC; please confirm)",
+  "license": "Public domain",
+  "url": "https://www.lroc.asu.edu/"
+ },
+ "story_lava_flow": {
+  "title": "Flowing lava",
+  "author": "photo supplied by the team (please add source)",
+  "license": "",
+  "url": "#"
+ },
+ "story_pavonis_skylight": {
+  "title": "Lava tube skylight, Pavonis Mons (HiRISE)",
+  "author": "NASA/JPL/University of Arizona",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Pavonis_Mons_lava_tube_skylight_crop.jpg"
+ },
+ "story_lava_river": {
+  "title": "Lava river, from above",
+  "author": "photo supplied by the team (please add source)",
+  "license": "",
+  "url": "#"
+ },
+ "story_moon_diver": {
+  "title": "Moon Diver concept (rendering)",
+  "author": "Keck Institute for Space Studies",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Axel_Descent2.webp"
+ },
+ "story_khamsin": {
+  "title": "Khamsin sandstorm, Egypt",
+  "author": "photo supplied by the team (please add source)",
+  "license": "",
+  "url": "#"
+ },
+ "story_mars_storm_art": {
+  "title": "Rover in a Mars dust storm (illustration)",
+  "author": "illustration via Castanet (please confirm)",
+  "license": "",
+  "url": "https://www.castanet.net/news/Skywatching/231156/Dust-in-the-Martian-wind"
+ },
+ "story_maven_globe": {
+  "title": "MAVEN maps Mars upper-atmosphere winds",
+  "author": "NASA/Goddard/MAVEN/CU Boulder/Univ. of Michigan",
+  "license": "Public domain",
+  "url": "https://www.nasa.gov/news-release/nasas-maven-maps-winds-in-the-martian-upper-atmosphere-that-mirror-the-terrain-below-and-gives-clues-to-martian-climate/"
+ },
+ "story_maven_mountains": {
+  "title": "MAVEN maps Mars upper-atmosphere winds",
+  "author": "NASA/Goddard/MAVEN/CU Boulder/Univ. of Michigan",
+  "license": "Public domain",
+  "url": "https://www.nasa.gov/news-release/nasas-maven-maps-winds-in-the-martian-upper-atmosphere-that-mirror-the-terrain-below-and-gives-clues-to-martian-climate/"
  }
 }

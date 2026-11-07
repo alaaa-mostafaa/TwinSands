@@ -44,6 +44,7 @@ OBJECTS = {
     "rain": ("Water drop 001.jpg", "round"),
     "sandpile": ("Pile of sand by the soccer fields at Brastad Arena.jpg", "cut"),
     # feel
+    "magnet": ("A-1 horseshoe-magnet-red-silver-iron-filings-AHD.jpg", "cut"),
     "lemon": ("Lemon-Whole-Split.jpg", "cut"),
     "sand": ("Handful of Black Sand.jpg", "cut"),
     "glass": ("Glass shards.jpg", "cut"),
@@ -51,7 +52,9 @@ OBJECTS = {
     "velcro": ("2023 Opaski rzepowe.jpg", "cut"),
     "windsock": ("Windsock Hodenhagen Aerodrome 2013.jpg", "cut"),
 }
-NASA_SEE = {"moon_orange_soil": "as17-137-20990", "moon_flag": "as11-40-5875"}
+NASA_SEE = {"moon_orange_soil": "as17-137-20990", "moon_flag": "as11-40-5875", "mars_drill": "PIA16726"}
+# Annotated "see" photos from Commons: key -> file title
+COMMONS_SEE = {"earth_moqui_inside": "Inside the Moqui Marbles (53234624816).jpg"}
 RIO_TINTO_QUERY = "Río Tinto river Huelva red water"
 
 
@@ -126,13 +129,19 @@ if __name__ == "__main__":
         if (PHO / f"{key}.webp").exists():
             continue
         assets = [i["href"] for i in get(f"https://images-api.nasa.gov/asset/{nid}").json()["collection"]["items"]]
-        pick = next(a for suf in ("~large.jpg", "~medium.jpg", "~orig.jpg") for a in assets if a.endswith(suf))
+        pick = next(a for suf in ("~large.jpg", "~orig.jpg", "~medium.jpg") for a in assets if a.endswith(suf))
         im = Image.open(io.BytesIO(get(pick.replace("http://", "https://")).content)).convert("RGB")
         im.thumbnail((1400, 1400))
         im.save(PHO / f"{key}.webp", quality=78, method=6)
         d = get("https://images-api.nasa.gov/search", params={"nasa_id": nid}).json()["collection"]["items"][0]["data"][0]
         meta[key] = {"title": d["title"][:90], "author": "NASA", "license": "Public domain", "url": f"https://images.nasa.gov/details/{nid}"}
         print("nasa", key, flush=True)
+    for key, title in COMMONS_SEE.items():
+        if (PHO / f"{key}.webp").exists():
+            continue
+        img, m = commons(title, 1600)
+        img.save(PHO / f"{key}.webp", quality=82, method=6)
+        meta[key] = m
     if not (PHO / "earth_rio_tinto.webp").exists():
         r = get("https://commons.wikimedia.org/w/api.php", params=dict(action="query", list="search", srsearch=f"filetype:bitmap {RIO_TINTO_QUERY}", srnamespace=6, srlimit=5, format="json")).json()
         titles = [x["title"][5:] for x in r["query"]["search"]]
