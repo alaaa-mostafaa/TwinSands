@@ -18,17 +18,16 @@ Everything the site shows is already in `public/`, so no backend and no API keys
 | # | Chapter | What it shows |
 |---|---|---|
 | — | Hero | Earth / Mars / Moon carousel with real NASA textures and key facts |
-| 01 | Meet Mars | Scroll story: drain Earth's oceans, spread the land over Mars (148.9 vs 144.4 million km²) |
-| — | What Earth can't copy | Gravity, air pressure, radiation, day length on all three worlds |
+| 01 | Meet Mars | Scroll story: Earth's continents squeeze into one ball and become Mars (148.9 vs 144.4 million km²), then true sizes with the Moon, Phobos and Deimos |
 | 02 | Twin Trails | Rust, Soil, Fire, Wind, Ice, South Pole: the same question on three globes, each with a real data layer |
-| 03 | Twin Score | Ranks 469 measured Earth windows against 12 Mars/Moon sites on 7 axes, with radar, hillshades and the USGS answer key |
-| 04 | Neighborhoods | 13 Mars and 10 Moon nicknames on a globe, each paired with an Earth twin globe |
-| 05 | Field Guides | What matches, what doesn't, what to practise; data-backed cards show their radar |
-| 06 | Boots on the Ground | Your Egypt field photos next to rover photos |
+| 03 | Neighborhoods | 23 postcards: a real Mars/Moon photo next to a real photo of its Earth twin, with a short story and what is the same and what is different |
+| 04 | Twin Score | Scores 469 measured patches of Earth against 12 Mars/Moon sites, out of 100, and checks it against famous test sites |
+| 05 | Field Guides | What matches, what doesn't, what to practise there |
+| 06 | Our Trip | Your Egypt field photos next to rover photos |
 
 ## Adding your field photos
 
-Save photos as `public/field/<slot>.jpg`. The slots are `fayoum`, `pavement`, `concretion`, `wind`, `dustdevil` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`).
+Save photos as `public/field/<slot>.jpg`; JPG is fine there. The slots are `fayoum`, `pavement`, `concretion`, `wind`, `dustdevil` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`).
 Until a photo exists, the slot shows a drop zone; dropping a photo there only previews it in your browser.
 
 ## Data pipeline (Python, run once; outputs are committed in `public/`)
@@ -37,8 +36,15 @@ Until a photo exists, the slot shows a drop zone; dropping a photo there only pr
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python pillow numpy requests
 .venv/bin/python pipeline/fetch_textures.py   # globe textures: NASA GIBS (Earth), Mars Trek, Moon Trek
 .venv/bin/python pipeline/fetch_extras.py     # NASA photos, Smithsonian volcanoes, GIBS legends, land mask
-.venv/bin/python pipeline/build_twins.py ../terrestrial-analog-finder-main   # Twin Score
+.venv/bin/python pipeline/build_twins.py ..        # Twin Score (path to the Terrestrial Analog Finder data)
+.venv/bin/python pipeline/optimize_assets.py       # convert everything to WebP (fast loading)
+.venv/bin/python pipeline/fetch_postcards.py       # Neighborhood postcard photos (Wikimedia Commons + NASA)
+.venv/bin/python pipeline/land_distance.py         # distance-to-coast map for the Meet Mars ball animation
+uv pip install --python .venv/bin/python imageio-ffmpeg && .venv/bin/python pipeline/fetch_sounds.py   # Twin Trails sounds
+uv pip install --python .venv/bin/python "rembg[cpu]" && .venv/bin/python pipeline/fetch_senses.py   # smell cut-outs + extra photos
 ```
+
+Postcard photos of Earth twins come from Wikimedia Commons. Each one's author and licence are in `public/data/postcards.json` and shown on its card; CC BY / BY-SA photos require that credit, so keep it.
 
 **Twin Score method** (full text in `pipeline/build_twins.py` and on the site under "How the score works"):
 for each axis, closeness = the share of Earth windows that are farther from the target.
@@ -57,6 +63,7 @@ Findings worth putting in the proposal:
 - **Mars layers:** Viking MDIM 2.1, MGS MOLA, MGS TES thermal inertia (Putzig et al. 2005) and dust cover index (Ruff & Christensen 2002), via NASA Mars Trek.
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.
 - **Volcanoes:** Smithsonian Global Volcanism Program, Volcanoes of the World.
+- **Sounds:** Perseverance microphone recordings (NASA/JPL-Caltech/LANL/CNES) and Apollo surface audio (NASA), public domain; Earth field recordings from Wikimedia Commons, with authors and licences in `public/data/sounds.json` and on screen. Silent Moon panels are silent on purpose: there is no air to carry sound.
 - **Photos:** NASA Image and Video Library (public domain). The title, date and link for each photo are in `public/data/photos.json`.
 
 Earth-twin coordinates written by hand in `src/content.ts` are approximate, and the site says so. Nothing here identifies a safe landing or habitat site.

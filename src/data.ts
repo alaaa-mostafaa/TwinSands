@@ -6,6 +6,7 @@ export function useJSON<T>(url: string): T | null {
   const [v, setV] = useState<T | null>(null);
   useEffect(() => {
     let live = true;
+    if (!url) return;
     if (!cache.has(url)) cache.set(url, fetch(url).then((r) => { if (!r.ok) throw new Error(url); return r.json(); }));
     (cache.get(url) as Promise<T>).then((d) => live && setV(d)).catch(() => live && setV(null));
     return () => { live = false; };
@@ -35,3 +36,15 @@ export type Volcanoes = { source: string; volcanoes: [number, number, string, st
 
 export const useTwins = () => useJSON<Twins>('data/twins.json');
 export const usePhotos = () => useJSON<Photos>('data/photos.json');
+
+export type PhotoMeta = { title: string; author?: string; license?: string; source?: string; url: string };
+
+/** NASA chapter photos + Neighborhood postcard photos, one lookup by key. */
+export function useAllPhotos(): Record<string, PhotoMeta> | null {
+  const a = usePhotos();
+  const b = useJSON<Record<string, PhotoMeta>>('data/postcards.json');
+  if (!a && !b) return null;
+  const out: Record<string, PhotoMeta> = {};
+  for (const [k, v] of Object.entries(a ?? {})) out[k] = { title: v.title, author: 'NASA', license: 'Public domain', source: 'NASA', url: v.url };
+  return { ...out, ...(b ?? {}) };
+}

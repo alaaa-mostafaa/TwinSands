@@ -5,6 +5,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { WORLDS, type WorldId } from '../content';
 import { Atmosphere, Surface } from '../three/Globe';
+import Safe3D, { useContextRecovery } from '../components/Safe3D';
 
 const ORDER: WorldId[] = ['earth', 'mars', 'moon'];
 
@@ -38,7 +39,7 @@ function HeroPlanet({ id, slot }: { id: WorldId; slot: Slot }) {
     <group ref={g}>
       <group rotation={[0.35, 0, 0.12]}>
         <group ref={spin}>
-          <Surface tex={w.tex} shade={0.22} />
+          <Surface tex={w.tex} hiTex={slot === 'center' ? w.tex.replace('.webp', '_4k.webp') : undefined} shade={0.22} segments={128} />
         </group>
       </group>
       <Atmosphere color={w.glow} scale={slot === 'center' ? 1.07 : 1.1} strength={slot === 'center' ? 1.1 : 0.8} power={3} />
@@ -47,6 +48,7 @@ function HeroPlanet({ id, slot }: { id: WorldId; slot: Slot }) {
 }
 
 export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void }) {
+  const recover = useContextRecovery();
   const [i, setI] = useState(1);
   const cur = ORDER[i];
   const prev = ORDER[(i + 2) % 3];
@@ -68,7 +70,8 @@ export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void })
   return (
     <section className="hero" id="top">
       <div className="hero__canvas">
-        <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }} gl={{ antialias: true }}>
+        <Safe3D>
+        <Canvas key={recover.key} onCreated={recover.onCreated} dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }} gl={{ antialias: true }}>
           <color attach="background" args={['#030305']} />
           <ambientLight intensity={0.18} />
           <directionalLight position={[-1.5, 6, 5]} intensity={2.2} />
@@ -77,6 +80,7 @@ export default function Hero({ onExplore }: { onExplore: (w: WorldId) => void })
             {ORDER.map((id) => <HeroPlanet key={id} id={id} slot={slotOf(id)} />)}
           </Suspense>
         </Canvas>
+        </Safe3D>
       </div>
 
       <button className="hero__side hero__side--left" onClick={() => go(-1)} aria-label={`Show ${WORLDS[prev].name}`}>

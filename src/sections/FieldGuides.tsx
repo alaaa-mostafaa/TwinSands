@@ -1,5 +1,5 @@
 import Radar from '../components/Radar';
-import { GUIDES } from '../content';
+import { GUIDES, plain } from '../content';
 import { usePhotos, useTwins } from '../data';
 
 export default function FieldGuides({ onScore }: { onScore: (t: string) => void }) {
@@ -26,15 +26,15 @@ export default function FieldGuides({ onScore }: { onScore: (t: string) => void 
                 <p className="guide__where">{g.country} · {g.at[0].toFixed(2)}°, {g.at[1].toFixed(2)}°</p>
                 <p className="guide__twin">Twin of <b>{g.twinOf}</b></p>
               </header>
-              {g.photo && photos?.[g.photo] && <img className="guide__img" src={`photos/${g.photo}.jpg`} alt={photos[g.photo].title} loading="lazy" />}
+              {g.photo && photos?.[g.photo] && <img className="guide__img" src={`photos/${g.photo}.webp`} alt={photos[g.photo].title} loading="lazy" />}
               {ranked && target && earth && (
                 <div className="guide__data">
                   <div className="guide__hills">
                     {target.hillshade && <img src={target.hillshade} alt="target hillshade" />}
                     {earth.hillshade && <img src={earth.hillshade} alt="earth hillshade" />}
                   </div>
-                  <Radar size={300} axes={d!.axes} series={[{ label: g.place, color: '#7ec8ff', values: d!.axes.map((a) => ranked.axes[a]) }]} />
-                  <button className="link" onClick={() => onScore(g.dataTarget!)}>Twin Score {ranked.score.toFixed(0)} · {ranked.n_axes}/7 axes →</button>
+                  <Radar size={300} labels={plain} axes={d!.axes} series={[{ label: g.place, color: '#7ec8ff', values: d!.axes.map((a) => ranked.axes[a]) }]} />
+                  <button className="link" onClick={() => onScore(g.dataTarget!)}>Twin Score {ranked.score.toFixed(0)} / 100 →</button>
                 </div>
               )}
               <div className="guide__cols">

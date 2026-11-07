@@ -181,7 +181,7 @@ def main():
                                                    or (e.get("values") or {}).get("apparent_thermal_inertia"),
                 "minerals": minerals_of(e) if l["body"] == "earth" else None,
                 "lunar": {k: v for k, v in (e.get("attributes") or {}).items() if k.startswith("lunar_")} or None,
-                "hillshade": f"hillshade/{l['id']}.png" if (HS_OUT / f"{l['id']}.png").exists() else None}
+                "hillshade": f"hillshade/{l['id']}.webp" if (HS_OUT / f"{l['id']}.png").exists() or (HS_OUT / f"{l['id']}.webp").exists() else None}
 
     out = {
         "method": __doc__.split("Run:")[0].strip(),

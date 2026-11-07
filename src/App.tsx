@@ -3,14 +3,13 @@ import type { WorldId } from './content';
 import { Boots, Footer } from './sections/Boots';
 import FieldGuides from './sections/FieldGuides';
 import Hero from './sections/Hero';
-import Limits from './sections/Limits';
 import MeetMars from './sections/MeetMars';
 import Neighborhoods from './sections/Neighborhoods';
 import Trails from './sections/Trails';
 import TwinScore from './sections/TwinScore';
 
 const NAV = [
-  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['score', 'Twin Score'], ['hoods', 'Neighborhoods'], ['guides', 'Field Guides'], ['boots', 'Boots'],
+  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['hoods', 'Neighborhoods'], ['score', 'Twin Score'], ['guides', 'Field Guides'], ['boots', 'Our Trip'],
 ] as const;
 
 const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -60,10 +59,9 @@ export default function App() {
       <main>
         <Hero onExplore={explore} />
         <MeetMars />
-        <Limits />
         <Trails onScore={score} />
-        <TwinScore target={target} setTarget={setTarget} />
         <Neighborhoods world={hoodWorld} setWorld={setHoodWorld} onScore={score} />
+        <TwinScore target={target} setTarget={setTarget} />
         <FieldGuides onScore={score} />
         <Boots />
       </main>
