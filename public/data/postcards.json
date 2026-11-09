@@ -217,12 +217,12 @@
  },
  "pc_mistastin": {
   "source": "Wikimedia Commons",
-  "title": "Mistastin crater L1C T20UMG T20VMH A026091 20200620T152632.jpg",
-  "author": "NASA/USGS",
+  "title": "Mistastin oli 2017254 lrg.jpg",
+  "author": "NASA Earth Observatory",
   "license": "Public domain",
-  "url": "https://commons.wikimedia.org/wiki/File:Mistastin_crater_L1C_T20UMG_T20VMH_A026091_20200620T152632.jpg",
-  "w": 1400,
-  "h": 1167
+  "url": "https://commons.wikimedia.org/wiki/File:Mistastin_oli_2017254_lrg.jpg",
+  "w": 1600,
+  "h": 1568
  },
  "pc_kamil": {
   "source": "Wikimedia Commons",
@@ -250,5 +250,41 @@
   "url": "https://commons.wikimedia.org/wiki/File:Grise_Fiord,_Nunavut_(2008).jpg",
   "w": 931,
   "h": 1400
+ },
+ "pc_wadi_hitan": {
+  "source": "Wikimedia Commons",
+  "title": "The whales fossils at Wadi El-Hitan, Egypt 2017.jpg",
+  "author": "AhmedMosaad",
+  "license": "CC BY-SA 4.0",
+  "url": "https://commons.wikimedia.org/wiki/File:The_whales_fossils_at_Wadi_El-Hitan,_Egypt_2017.jpg",
+  "w": 1400,
+  "h": 933
+ },
+ "pc_olympus_mons": {
+  "source": "Wikimedia Commons",
+  "title": "Olympus Mons alt.jpg",
+  "author": "Image by NASA, modifications by Seddon",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Olympus_Mons_alt.jpg",
+  "w": 1600,
+  "h": 1492
+ },
+ "pc_mauna_loa_2022": {
+  "source": "Wikimedia Commons",
+  "title": "Fissure 3 Mauna Loa - November 30, 2022 (111192).jpeg",
+  "author": "USGS Mauna Loa",
+  "license": "Public domain",
+  "url": "https://commons.wikimedia.org/wiki/File:Fissure_3_Mauna_Loa_-_November_30,_2022_(111192).jpeg",
+  "w": 1600,
+  "h": 1200
+ },
+ "pc_anorthosite": {
+  "source": "Wikimedia Commons",
+  "title": "Anorthosite (\"Blue Eyes Granite\") (Nain Anorthosite, Mesoproterozoic, 1.29-1.35 Ga; Ten Mile Bay Quarry, Labrador, Canada) 5.jpg",
+  "author": "James St. John",
+  "license": "CC BY 2.0",
+  "url": "https://commons.wikimedia.org/wiki/File:Anorthosite_(%22Blue_Eyes_Granite%22)_(Nain_Anorthosite,_Mesoproterozoic,_1.29-1.35_Ga;_Ten_Mile_Bay_Quarry,_Labrador,_Canada)_5.jpg",
+  "w": 900,
+  "h": 900
  }
 }

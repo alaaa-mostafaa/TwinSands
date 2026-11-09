@@ -15,21 +15,20 @@
   "valid_fraction": 1.0,
   "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W_dtm.tif"
  },
- "mars-meridiani": {
+ "mars-olympus": {
   "n": 256,
   "size_m": 12000.0,
-  "min": -1221.65,
-  "max": -984.05,
-  "valid_fraction": 0.9771,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W_dtm.tif"
- },
- "mars-utopia-zhurong": {
-  "n": 256,
-  "size_m": 12000.0,
-  "min": -4218.9,
-  "max": -4059.13,
+  "min": 17802.68,
+  "max": 20965.46,
   "valid_fraction": 1.0,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W_dtm.tif"
+  "source": "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": 16766.55,
+   "max": 21183.28,
+   "source": "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
+  }
  },
  "moon-shackleton-rim": {
   "n": 256,
@@ -47,20 +46,19 @@
   "valid_fraction": 1.0,
   "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site23/Site23.tif"
  },
- "moon-haworth": {
+ "moon-highlands": {
   "n": 256,
   "size_m": 12000.0,
-  "min": 850.68,
-  "max": 2234.64,
+  "min": -207.06,
+  "max": 1155.49,
   "valid_fraction": 1.0,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Haworth/Haworth.tif"
- },
- "moon-de-gerlache-rim": {
-  "n": 256,
-  "size_m": 12000.0,
-  "min": -358.89,
-  "max": 1814.21,
-  "valid_fraction": 1.0,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site11/Site11.tif"
+  "source": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": -1096.91,
+   "max": 5454.23,
+   "source": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
+  }
  }
 }

@@ -1,22 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Boots, Footer } from './sections/Boots';
 import Explore from './sections/Explore';
-import FieldGuides from './sections/FieldGuides';
 import Hero from './sections/Hero';
 import MeetMars from './sections/MeetMars';
-import Neighborhoods from './sections/Neighborhoods';
 import Trails from './sections/Trails';
 import TwinScore from './sections/TwinScore';
 
 const NAV = [
-  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['hoods', 'Neighborhoods'], ['explore', 'Explore'], ['score', 'Twin Score'], ['guides', 'Field Guides'], ['boots', 'Our Trip'],
+  ['meet', 'Meet Mars'], ['trails', 'Twin Trails'], ['explore', 'Explore'], ['score', 'Twin Score'], ['boots', 'Our Trip'],
 ] as const;
 
 const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 export default function App() {
   const [target, setTarget] = useState('mars-gale');
-  const [hoodWorld, setHoodWorld] = useState<'mars' | 'moon'>('mars');
   const [active, setActive] = useState('top');
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -55,10 +52,8 @@ export default function App() {
         <Hero />
         <MeetMars />
         <Trails onScore={score} />
-        <Neighborhoods world={hoodWorld} setWorld={setHoodWorld} onScore={score} />
         <Explore />
         <TwinScore target={target} setTarget={setTarget} />
-        <FieldGuides onScore={score} />
         <Boots />
       </main>
       <Footer />

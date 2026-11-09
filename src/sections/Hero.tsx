@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { WORLDS, type WorldId } from '../content';
 import { Atmosphere, Surface } from '../three/Globe';
 import Safe3D, { useContextRecovery } from '../components/Safe3D';
+import { heroSound } from '../heroAudio';
 
 const ORDER: WorldId[] = ['earth', 'mars', 'moon'];
 
@@ -54,7 +55,30 @@ export default function Hero() {
   const prev = ORDER[(i + 2) % 3];
   const next = ORDER[(i + 1) % 3];
   const slotOf = (id: WorldId): Slot => (id === cur ? 'center' : id === prev ? 'left' : 'right');
-  const go = (d: number) => setI((v) => (v + d + 3) % 3);
+  const go = (d: number) => { heroSound.start(); heroSound.whoosh(d); setI((v) => (v + d + 3) % 3); };
+  const [muted, setMuted] = useState(heroSound.isMuted());
+  const [playing, setPlaying] = useState(false);
+
+  // space sound: we try to start right away; most browsers block sound until the visitor clicks, taps or
+  // presses a key, so we keep trying on every such gesture until the browser says audio is really running.
+  // It fades out as you scroll down past the landing screen.
+  useEffect(() => {
+    const sync = () => setPlaying(heroSound.running());
+    const gestures = ['pointerdown', 'mousedown', 'click', 'keydown', 'touchend'];
+    const tryStart = (e?: Event) => {
+      if (e && (e.target as Element | null)?.closest?.('.hero__sound')) return;
+      if (heroSound.isMuted()) return;
+      heroSound.start(); heroSound.onChange(sync); sync();
+      setTimeout(sync, 300);
+      if (heroSound.running()) gestures.forEach((g) => window.removeEventListener(g, tryStart));
+    };
+    gestures.forEach((g) => window.addEventListener(g, tryStart, { passive: true }));
+    heroSound.setLevel(1 - window.scrollY / (window.innerHeight * 0.85));
+    tryStart();
+    const onScroll = () => heroSound.setLevel(1 - window.scrollY / (window.innerHeight * 0.85));
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { gestures.forEach((g) => window.removeEventListener(g, tryStart)); window.removeEventListener('scroll', onScroll); };
+  }, []);
   const w = WORLDS[cur];
 
   useEffect(() => {
@@ -110,6 +134,16 @@ export default function Hero() {
           </motion.p>
         </AnimatePresence>
       </div>
+
+      <button className={`hero__sound${muted ? '' : ' is-on'}${playing || muted ? '' : ' is-waiting'}`}
+        onClick={(e) => { e.stopPropagation(); if (!muted && !playing) { heroSound.start(); heroSound.onChange(() => setPlaying(heroSound.running())); setTimeout(() => setPlaying(heroSound.running()), 300); return; } const m = !muted; setMuted(m); heroSound.setMuted(m); setTimeout(() => setPlaying(!m && heroSound.running()), 300); }}
+        aria-label={muted ? 'Turn space sound on' : 'Turn space sound off'}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+          {muted ? <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            : <><path className="hero__wave" d="M16 8.5a5 5 0 0 1 0 7" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /><path className="hero__wave hero__wave--2" d="M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /></>}
+        </svg>
+        <span>{muted ? 'Sound off' : playing ? 'Sound on' : 'Click for sound'}</span>
+      </button>
 
       <AnimatePresence mode="wait">
         <motion.dl key={cur} className="hero__facts" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>

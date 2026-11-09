@@ -201,136 +201,6 @@ export const TRAILS: Trail[] = [
   },
 ];
 
-// ---------------------------------------------------------------- Neighborhoods (postcards)
-// there = photo of the Mars/Moon place, here = real photo of its Earth twin (keys in public/photos).
-export type Hood = {
-  nick: string; official: string; at: LatLon;
-  story: string; same: string; diff: string;
-  there: string; here?: string; twin: string; twinPlace?: string; twinAt?: LatLon;
-  dataTarget?: string; noTwin?: boolean;
-};
-
-export const MARS_HOODS: Hood[] = [
-  { nick: 'Mount Everything', official: 'Olympus Mons', at: [18.65, -133.8],
-    story: 'Dear Earth, I’m standing on a volcano so wide its edges sink below the horizon. Olympus Mons is about 22 km tall, nearly three Everests, and about 600 km across. Your Mauna Loa was built the same way: runny lava, layer on layer, gentle slopes.',
-    same: 'Both are shield volcanoes: gentle slopes made of thin, runny lava.',
-    diff: 'Mars has no moving plates, so its volcano sat over one hot spot and kept growing, dozens of times bigger.',
-    there: 'mars_olympus', here: 'pc_mauna_loa', twin: 'Mauna Loa', twinPlace: 'Hawaiʻi, USA', twinAt: [19.48, -155.6] },
-  { nick: 'Volcano Row', official: 'Tharsis Montes', at: [-8.26, -120.09],
-    story: 'Three giant volcanoes stand in a line, and on Arsia Mons orbiters spotted black holes in the ground: skylights that may drop into caves. In Lanzarote you can walk inside one of these tunnels, left behind when a river of lava drained away.',
-    same: 'Lava tubes: tunnels made by flowing lava, natural shelters.',
-    diff: 'With weaker gravity, Mars tubes could be about 100 times wider than Earth’s.',
-    there: 'mars_skylights', here: 'pc_lava_tube', twin: 'Cueva de los Verdes lava tube', twinPlace: 'Lanzarote, Spain', twinAt: [29.16, -13.44] },
-  { nick: 'The Grand Grand Canyon', official: 'Valles Marineris', at: [-13.9, -59.2],
-    story: 'Valles Marineris would stretch from New York to Los Angeles: about 4,000 km long and up to 7 km deep. The Grand Canyon is 446 km long and about 1.8 km deep. Put it inside Valles Marineris and you might not find it.',
-    same: 'Layered canyon walls that show deep time, rock by rock.',
-    diff: 'A river carved the Grand Canyon. Valles Marineris mostly cracked open as the crust pulled apart.',
-    there: 'mars_valles', here: 'pc_grand_canyon', twin: 'Grand Canyon', twinPlace: 'Arizona, USA', twinAt: [36.1, -112.1] },
-  { nick: 'Blueberry Fields', official: 'Meridiani Planum', at: [-1.95, -5.53],
-    story: 'In 2004 the rover Opportunity rolled onto plains scattered with tiny grey balls. Scientists called them blueberries. They are hematite, an iron mineral that grew inside wet rock. In Utah, groundwater made the same kind of iron balls: moqui marbles.',
-    same: 'Iron balls grown by water moving through rock.',
-    diff: 'Mars berries are a few millimetres wide; moqui marbles can reach golf-ball size.',
-    there: 'mars_berries', here: 'pc_moqui', twin: 'Moqui marbles', twinPlace: 'Utah, USA', twinAt: [37.4, -111.6], dataTarget: 'mars-meridiani' },
-  { nick: 'Mars’s Fayoum', official: 'Jezero Crater', at: [18.43, 77.44],
-    story: 'About 3.5 billion years ago Jezero was a lake, and a river dropped mud and sand into it as a fan-shaped delta. Perseverance is collecting rocks there to look for signs of ancient life. Egypt’s Fayoum holds Lake Qarun, the shrunken leftover of a much bigger ancient lake.',
-    same: 'A desert basin that once held a big lake fed by a river.',
-    diff: 'Fayoum still has water and life. Jezero dried up billions of years ago.',
-    there: 'mars_jezero_delta', here: 'pc_lake_qarun', twin: 'Lake Qarun', twinPlace: 'Fayoum, Egypt', twinAt: [29.47, 30.62], dataTarget: 'mars-jezero' },
-  { nick: 'Layer Cake Mountain', official: 'Mount Sharp, Gale Crater', at: [-5.08, 137.85],
-    story: 'Mount Sharp is a 5 km pile of rock layers, each one a page in Mars’s climate diary. Curiosity has been climbing it since 2014. We didn’t pick this twin by hand: our Twin Score scanned 469 places on Earth, and the Danakil desert in Ethiopia came out on top.',
-    same: 'Slopes, ground type and minerals (hematite and sulfates) all match closely.',
-    diff: 'Danakil is hot and volcanically alive; Gale is freezing and quiet.',
-    there: 'mars_murray_buttes', here: 'pc_danakil', twin: 'Danakil desert', twinPlace: 'Afar, Ethiopia', dataTarget: 'mars-gale' },
-  { nick: 'The Ice Cellar', official: 'Arcadia Planitia', at: [46.7, -170],
-    story: 'Under Arcadia Planitia there is water ice, in places only a few centimetres down. NASA scientists say you could dig it with a shovel. In Antarctica’s Dry Valleys almost no snow falls, the wind is bone-dry, and ice hides under the gravel too.',
-    same: 'A cold desert with ice under the ground.',
-    diff: 'On Mars, ice left in the open turns straight into vapour; it never melts.',
-    there: 'mars_ice_scarp', here: 'pc_wright_valley', twin: 'McMurdo Dry Valleys', twinPlace: 'Antarctica', twinAt: [-77.52, 161.85] },
-  { nick: 'The Deep End', official: 'Hellas Planitia', at: [-42.4, 70.5],
-    story: 'Hellas is a crater punched by an asteroid: about 2,300 km wide and more than 7 km deep. The Danakil Depression sits over 100 m below sea level and is one of the hottest places on Earth, with bright yellow salt springs at Dallol.',
-    same: 'Both are deep, low basins far below their surroundings.',
-    diff: 'An asteroid made Hellas; Danakil is Earth slowly tearing apart. This is a story pick our data doesn’t back yet.',
-    there: 'pc_hellas', here: 'pc_dallol', twin: 'Dallol', twinPlace: 'Danakil, Ethiopia', twinAt: [14.24, 40.3] },
-  { nick: 'Wind Sculpture Park', official: 'Medusae Fossae', at: [-5, -147],
-    story: 'Here the wind is the artist. Sand blown for millions of years has carved soft rock into long ridges called yardangs, all lined up with the wind. In Egypt’s White Desert the wind has carved chalk into mushrooms and ice-cream cones.',
-    same: 'Rock carved by wind and blowing sand.',
-    diff: 'Mars air is about 100 times thinner, so the carving took far longer.',
-    there: 'mars_yardangs', here: 'pc_white_desert', twin: 'White Desert', twinPlace: 'Farafra, Egypt', twinAt: [27.36, 28.17] },
-  { nick: 'The Dust Bowl', official: 'Arabia Terra', at: [22.8, 5],
-    story: 'Arabia Terra lies under thick dust. Sometimes a storm lifts dust around the whole planet; in 2018 one blocked the Sun and ended Opportunity’s mission. Every spring, Egypt’s Khamsin wind blows hot dust across the country for days.',
-    same: 'Dust that gets into everything: air, solar panels, joints.',
-    diff: 'Mars dust is finer than flour, and a single storm can wrap the whole planet.',
-    there: 'mars_dust_storm', here: 'pc_sandstorm', twin: 'A Khamsin sandstorm', twinPlace: 'Egypt' },
-  { nick: 'Old Town', official: 'Noachis Terra', at: [-45, -10],
-    story: 'Noachis Terra is some of the oldest ground on Mars, about 4 billion years old and covered in craters. Egypt’s Kamil crater is the opposite: 45 m wide and only a few thousand years old, so fresh it shows exactly what an impact does. The photo is a piece of the iron meteorite that dug it. Nobody has shared an open photo of the crater yet, so that could be your job!',
-    same: 'Ground shaped by space rocks hitting it.',
-    diff: 'Old Town’s craters are huge and worn; Kamil is tiny and brand new.',
-    there: 'pc_noachis', here: 'pc_kamil', twin: 'Kamil crater meteorite', twinPlace: 'Egypt', twinAt: [22.02, 26.09] },
-  { nick: 'Frosty Top', official: 'Planum Boreum', at: [86, 15],
-    story: 'Mars’s north pole wears a cap of water ice about 1,000 km wide and 3 km thick, with spiral valleys cut by the wind and a ring of dark dunes. Greenland’s ice sheet is a similar dome of layered water ice.',
-    same: 'Layer after layer of water ice that records past climate.',
-    diff: 'Every Martian winter the cap gets a coat of frozen carbon dioxide.',
-    there: 'pc_mars_north_cap', here: 'pc_greenland', twin: 'Greenland ice sheet', twinPlace: 'Greenland', twinAt: [72.6, -38.5] },
-  { nick: 'The Dry Ice Rink', official: 'Planum Australe', at: [-86.5, 0],
-    story: 'The south pole is topped with frozen carbon dioxide, which is dry ice. Each summer pits sink into it, making a pattern scientists call Swiss cheese. Earth has no twin: even our coldest place, about −89 °C, is too warm for the tiny trace of CO₂ in our air to freeze.',
-    same: 'Nothing on Earth.',
-    diff: 'Mars’s pole drops to about −125 °C, cold enough to freeze its own air.',
-    there: 'pc_swiss_cheese', twin: 'No twin on Earth', noTwin: true },
-];
-
-export const MOON_HOODS: Hood[] = [
-  { nick: 'Sunny Ridges', official: 'Artemis III candidate rims (Malapert, de Gerlache, Shackleton)', at: [-85.99, -0.24],
-    story: 'At the Moon’s south pole the Sun just skims the horizon. Some ridge tops stay lit most of the year, which is great for solar power, and ice sits in the shadows nearby. That’s why all nine Artemis III landing regions are here. Our Twin Score’s best Earth match is in Antarctica.',
-    same: 'Steep, rugged polar ridges with a low Sun.',
-    diff: 'No air, one-sixth gravity, and shadows far colder than Antarctica.',
-    there: 'moon_south_pole', here: 'pc_transantarctic', twin: 'Transantarctic Mountains', twinPlace: 'Antarctica', dataTarget: 'moon-malapert-massif' },
-  { nick: 'The Ice Cellars', official: 'Permanently shadowed craters (Shackleton, Haworth, Faustini)', at: [-89.67, 129.78],
-    story: 'Some crater floors here have not seen sunlight in billions of years. They are among the coldest places ever measured in the solar system, below −230 °C, cold enough to trap water ice. That ice could become drinking water, air to breathe and rocket fuel.',
-    same: 'Nothing on Earth.',
-    diff: 'Earth’s coldest spot is about −89 °C, nowhere near this cold.',
-    there: 'moon_south_pole', twin: 'No twin on Earth', noTwin: true },
-  { nick: 'The Giant Bowl', official: 'South Pole–Aitken basin', at: [-53, -169],
-    story: 'About 2,500 km across, this is one of the biggest impact craters in the solar system. Sudbury in Canada is one of Earth’s largest. Apollo 16 and 17 astronauts trained there to recognise rock that a giant impact had smashed and melted, like the rock in this photo.',
-    same: 'Rock smashed and melted by a giant impact.',
-    diff: 'Sudbury is worn down and covered by forest and lakes; the lunar basin is untouched.',
-    there: 'pc_spa', here: 'pc_sudbury', twin: 'Sudbury impact rock', twinPlace: 'Ontario, Canada', twinAt: [46.6, -81.18] },
-  { nick: 'The Bright Old Country', official: 'Lunar highlands', at: [-8.97, 15.5],
-    story: 'The bright parts of the Moon are made of anorthosite, a very old, light-coloured rock. Mistastin crater in Labrador is one of the few places on Earth where an asteroid hit anorthosite, and Artemis astronauts have trained there.',
-    same: 'The same light rock, broken up by an impact.',
-    diff: 'Mistastin has a lake, trees and weather.',
-    there: 'moon_apollo17', here: 'pc_mistastin', twin: 'Mistastin crater', twinPlace: 'Labrador, Canada', twinAt: [55.88, -63.31] },
-  { nick: 'First Footprints', official: 'Mare Tranquillitatis', at: [0.67, 23.47],
-    story: 'On 20 July 1969, Apollo 11 landed on this flat lava plain. The Moon’s dark “seas” are old basalt lava. Lanzarote’s lava fields are young basalt, black and bare, and the European Space Agency trains astronauts there.',
-    same: 'Flat, dark plains of basalt lava.',
-    diff: 'Moon lava cooled more than 3 billion years ago; Lanzarote’s about 300 years ago.',
-    there: 'moon_bootprint', here: 'pc_lanzarote_plain', twin: 'Lanzarote lava fields', twinPlace: 'Canary Islands, Spain', twinAt: [29.0, -13.75] },
-  { nick: 'The Lava Ocean', official: 'Oceanus Procellarum', at: [18.4, -57.4],
-    story: 'The Ocean of Storms is the Moon’s biggest dark lava plain, about 2,500 km across. It is not water, it is frozen lava. In Hawaiʻi you can watch the same kind of runny basalt lava flow today.',
-    same: 'Runny basalt lava spreading into wide sheets.',
-    diff: 'Hawaiian lava is still hot; the Moon’s went quiet billions of years ago.',
-    there: 'pc_procellarum', here: 'pc_pahoehoe', twin: 'Pāhoehoe lava', twinPlace: 'Hawaiʻi, USA', twinAt: [19.41, -155.28] },
-  { nick: 'Splash Sea', official: 'Mare Imbrium', at: [32.8, -15.6],
-    story: 'A giant impact blasted out this basin, about 1,100 km wide, and later lava flooded it. We haven’t found its Earth twin yet. Earth’s big impact basins have mostly been worn away by weather or buried. Could you find one?',
-    same: 'Still searching.',
-    diff: 'On Earth, weather and moving plates erase old basins.',
-    there: 'pc_imbrium', twin: 'Still to find' },
-  { nick: 'Cave Hills', official: 'Marius Hills', at: [14.09, -56.78],
-    story: 'In 2009 a Japanese orbiter found a hole about 65 m wide here. It may be a skylight into a lava tube, a ready-made shelter from radiation and wild temperature swings. Earth has tubes like it in Lanzarote and in Saudi Arabia’s Umm Jirsan, where people sheltered thousands of years ago.',
-    same: 'A hole into a tunnel left by flowing lava.',
-    diff: 'Moon tubes may be about 1,000 times wider than Earth’s, thanks to low gravity.',
-    there: 'moon_marius_pit', here: 'pc_lava_tube_mouth', twin: 'Lava tube entrance', twinPlace: 'Lanzarote, Spain', twinAt: [29.16, -13.44] },
-  { nick: 'Starburst', official: 'Tycho Crater', at: [-43.31, -11.36],
-    story: 'Tycho is about 85 km wide and young for the Moon, roughly 108 million years old. Its bright rays of splashed rock stretch across the Moon; you can see them with binoculars at full Moon. Egypt’s Kamil crater is a tiny version, with its bright rays still intact. Here is a chunk of the iron meteorite that made it.',
-    same: 'A fresh crater with bright rays of thrown-out rock.',
-    diff: 'Kamil is 45 m wide, about 2,000 times smaller than Tycho.',
-    there: 'moon_tycho', here: 'pc_kamil', twin: 'Kamil crater meteorite', twinPlace: 'Egypt', twinAt: [22.02, 26.09] },
-  { nick: 'The Hidden Side', official: 'Far side', at: [0, 180],
-    story: 'We always see the same face of the Moon. The far side isn’t dark; it gets just as much sunshine. But radio signals from Earth can’t reach it, so when China’s Chang’e 4 landed there in 2019 it needed a relay satellite to call home.',
-    same: 'Nothing on Earth.',
-    diff: 'No place on Earth is cut off from radio like this.',
-    there: 'moon_far_side', twin: 'No twin on Earth', noTwin: true },
-];
-
 // ---------------------------------------------------------------- Target nicknames for Twin Score
 export const TARGET_NICK: Record<string, string> = {
   'mars-gale': 'Layer Cake Mountain', 'mars-jezero': 'Mars’s Fayoum', 'mars-meridiani': 'Blueberry Fields',
@@ -347,52 +217,6 @@ export const REGION_NAME: Record<string, string> = {
   'atacama-altiplano': 'Atacama / Altiplano', 'australia-interior': 'Australian interior', gobi: 'Gobi, Mongolia',
   iceland: 'Iceland', arabia: 'Arabian Peninsula',
 };
-
-// ---------------------------------------------------------------- Field guides
-export type Guide = {
-  place: string; country: string; at: LatLon; twinOf: string; theme: string; isNew?: boolean; photo?: string;
-  matches: string[]; differs: string[]; practise: string[]; dataTarget?: string; dataEarth?: string;
-};
-
-export const GUIDES: Guide[] = [
-  { place: 'Bahariya Oasis', country: 'Egypt', at: [28.35, 28.86], twinOf: 'Blueberry Fields · Meridiani Planum', theme: 'Rust', isNew: true,
-    matches: ['Iron-rich crusts (ferricretes) formed when groundwater moved through rock', 'Desert pavement and wind-polished surfaces'],
-    differs: ['Earth air is oxygen-rich, so iron rusts in different ways', 'Less studied: the analogy rests mainly on one 2018 conference abstract'],
-    practise: ['Spotting iron concretions from a rover camera', 'Sampling crusts without breaking them'] },
-  { place: 'Río Tinto', country: 'Spain', at: [37.69, -6.59], twinOf: 'Blueberry Fields · Meridiani Planum', theme: 'Rust',
-    matches: ['Acid, iron-rich water that deposits hematite and jarosite, minerals Opportunity found', 'Life surviving in extreme acid'],
-    differs: ['Liquid water flows today; on Mars it dried up billions of years ago', 'Earth’s biosphere makes the chemistry easier to read'],
-    practise: ['Drilling for subsurface life (NASA’s MARTE tests ran here)', 'Telling biological from non-biological iron minerals'] },
-  { place: 'Afar / Danakil cell 12.5°N 40.5°E', country: 'Ethiopia', at: [12.5, 40.5], twinOf: 'Layer Cake Mountain · Gale Crater', theme: 'Data-found', isNew: true,
-    dataTarget: 'mars-gale', dataEarth: 'survey-afar-12p5N-40p5E',
-    matches: ['Terrain slopes and shape close to the Gale window', 'Thermal inertia close to Gale’s, each ranked within its own world', 'EMIT sees hematite and sulfate, two of Gale’s three key mineral groups'],
-    differs: ['Rift volcanism and heat, unlike Gale’s cold sedimentary basin', 'Its overall relief is lower than Gale’s'],
-    practise: ['Reading layered sediments and salts from orbit and on foot', 'Operating in extreme heat and dust'] },
-  { place: 'Lanzarote', country: 'Spain', at: [29.16, -13.44], twinOf: 'Volcano Row · Tharsis, and Cave Hills · Marius Hills', theme: 'Fire', photo: 'earth_lanzarote',
-    matches: ['Young basalt lava fields with little plant cover', 'Walkable lava tubes (Cueva de los Verdes)'],
-    differs: ['Its tubes are metres wide; low gravity may make Mars and Moon tubes hundreds of metres wide', 'Ocean air and occasional rain'],
-    practise: ['Cave mapping and navigation without GPS (ESA PANGAEA and CAVES)', 'Geology fieldwork in spacesuit-like conditions'] },
-  { place: 'Umm Jirsan', country: 'Saudi Arabia', at: [25.59, 39.67], twinOf: 'Cave Hills · Marius Hills', theme: 'Fire', isNew: true,
-    matches: ['Longest known lava tube in Arabia, 1,481 m, in the dry Harrat Khaybar basalt field', 'Hot desert and a dusty cave floor'],
-    differs: ['Tube far smaller than predicted lunar ones', 'People and animals have used it for thousands of years'],
-    practise: ['Robot entry through collapse pits', 'Shelter design inside natural tunnels'] },
-  { place: 'White Desert', country: 'Egypt', at: [27.36, 28.17], twinOf: 'Wind Sculpture Park · Medusae Fossae', theme: 'Wind', isNew: true,
-    matches: ['Soft rock carved by wind into ridges and mushroom shapes', 'Seasonal dust storms (the Khamsin)'],
-    differs: ['Chalk here, not the soft volcanic deposits of Medusae Fossae', 'Air about 100 times thicker, so wind erodes faster'],
-    practise: ['Driving rovers across wind-cut terrain', 'Protecting solar panels and seals from dust'] },
-  { place: 'McMurdo Dry Valleys', country: 'Antarctica', at: [-77.52, 161.85], twinOf: 'The Ice Cellar · Arcadia Planitia', theme: 'Ice', photo: 'earth_dry_valleys',
-    matches: ['Cold, dry, nearly lifeless ground with buried ice', 'Our scorer also picks the nearby Transantarctic cells as terrain twins for lunar south-pole ridges'],
-    differs: ['Air pressure about 100 times Mars’s, so ice can melt into brief streams', 'Mars is colder still'],
-    practise: ['Drilling and sampling ground ice', 'Running long operations in polar cold and isolation'] },
-  { place: 'Mauna Kea', country: 'Hawaiʻi, USA', at: [19.82, -155.47], twinOf: 'Sunny Ridges · lunar south pole', theme: 'Moon', dataTarget: 'moon-malapert-massif', dataEarth: 'earth-mauna-kea',
-    matches: ['Terrain ranks 2nd of 469 Earth windows against the Malapert massif in our Twin Score', 'Volcanic ash and cinders, used for lunar soil tests'],
-    differs: ['Air, weather and a sky that is not black', 'Basalt, while the lunar highlands are anorthosite'],
-    practise: ['Making oxygen and water from soil (NASA ISRU field tests, 2008 and 2010)', 'Rover driving on loose slopes'] },
-  { place: 'Kamil Crater', country: 'Egypt', at: [22.02, 26.09], twinOf: 'Starburst · Tycho', theme: 'Moon', isNew: true,
-    matches: ['A fresh crater with bright ejecta rays still preserved', 'Remote, dry and wind-swept'],
-    differs: ['45 m across, about 2,000 times smaller than Tycho', 'Made by an iron meteorite thousands of years ago, not a large asteroid'],
-    practise: ['Mapping ejecta and finding meteorite fragments', 'Planning sampling traverses across rays'] },
-];
 
 // ---------------------------------------------------------------- Boots on the ground
 export const FIELD_PAIRS: { slot: string; prompt: string; rover: string; caption: string }[] = [
@@ -553,6 +377,72 @@ export type Story = {
   steps: StoryStep[];
 };
 export const STORIES: Record<string, Story> = {
+  // Sources: Phoenix found shallow ground ice in 2008; bright chunks in the Dodo-Goldilocks trench sublimated within ~4 sols
+  // (NASA/JPL/UA). Ice-exposing scarps: Dundas et al. 2018, Science; NASA PIA22077 (ice from 1–2 m down, 100+ m thick).
+  // Mars north polar layered deposits up to ~3 km thick, spiral troughs shaped by katabatic winds; Greenland ice sheet up to
+  // ~3 km thick. Dry Valleys: ice-cemented ground under dry soil; their lakes keep liquid water under year-round ice.
+  // Lunar polar ice in permanently shadowed craters: LRO, LCROSS (2009), Chandrayaan-1 M3 (Li et al. 2018, PNAS).
+  ice: {
+    earth: { img: 'earth_dry_valleys', w: 1260, h: 1400, place: 'Dry Valleys, Antarctica' },
+    mars: { img: 'mars_phoenix_ice', w: 512, h: 1024, place: 'Phoenix trench, Mars 2008' },
+    steps: [
+      { title: 'Ice under the dust', line: 'In 2008 NASA’s Phoenix lander scraped a few centimetres into the Martian soil and hit bright white ice. In Antarctica’s Dry Valleys, frozen ground hides under dry soil the same way.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'mars_phoenix_ice', w: 512, h: 1024, place: 'Phoenix trench, Mars 2008' }, marks: [{ t: 'ring', x: 265, y: 410, r: 95, label: 'Ice!', sub: 'a few cm down' }] },
+          { world: 'earth', photo: { img: 'earth_dry_valleys', w: 1260, h: 1400, place: 'Dry Valleys, Antarctica' }, marks: [{ t: 'ring', x: 650, y: 700, r: 170, label: 'Dry soil, frozen ground below' }] },
+        ] },
+      { title: 'Cliffs of buried ice', line: 'Where Martian ground has slumped away, NASA’s HiRISE camera found cliffs showing layers of nearly pure ice more than 100 m thick, starting just 1–2 m under the surface. Astronauts could dig it out with a shovel.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'mars_ice_scarp', w: 1001, h: 801, place: 'Ice cliff, Mars (HiRISE)' }, marks: [{ t: 'ring', x: 500, y: 350, r: 120, label: 'Blue = ice', sub: 'starts 1–2 m down' }, { t: 'ring', x: 500, y: 120, r: 70, label: 'Dusty ground on top' }] },
+        ] },
+      { title: 'Ice caps 3 km deep', line: 'Mars has a polar ice cap about as thick as Greenland’s ice sheet: up to around 3 km of frozen water. The dark spirals are valleys carved by wind pouring off the cap.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'pc_mars_north_cap', w: 1200, h: 840, place: 'Mars north polar cap' }, meter: { title: 'Thickness', value: '~3 km', level: 0.95 }, marks: [{ t: 'ring', x: 600, y: 533, r: 250, label: 'Water ice, ~1,000 km wide', sub: 'spirals carved by wind' }] },
+          { world: 'earth', photo: { img: 'pc_greenland', w: 1400, h: 855, place: 'Greenland ice sheet' }, meter: { title: 'Thickness', value: '~3 km', level: 1 }, marks: [{ t: 'ring', x: 700, y: 700, r: 150, label: 'Ice sheet', sub: 'up to ~3 km thick' }] },
+        ] },
+      { title: 'Where the twin breaks', line: 'On Earth, ice melts into water. Mars air is so thin that ice skips the liquid and turns straight into vapour, like dry ice. Four days after Phoenix dug them up, some ice chunks had simply vanished.', earth: [], mars: [],
+        panes: [
+          { world: 'mars', photo: { img: 'mars_phoenix_ice', w: 512, h: 1024, place: 'Phoenix trench, Mars 2008' }, marks: [{ t: 'ring', x: 265, y: 410, r: 95, label: 'Gone in 4 days', sub: 'ice → vapour' }] },
+          { world: 'earth', photo: { img: 'earth_dry_valleys', w: 1260, h: 1400, place: 'Dry Valleys, Antarctica' }, marks: [{ t: 'ring', x: 730, y: 855, r: 70, label: 'Liquid water', sub: 'under the lake ice' }] },
+        ] },
+      { title: 'The Moon keeps ice in the dark', line: 'The Moon has ice too, hiding in craters at its poles that haven’t seen sunlight in billions of years. That’s the next trail: the South Pole.', earth: [], mars: [],
+        panes: [
+          { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 740, y: 470, r: 95, label: 'Never sees the Sun', sub: 'ice can hide here' }] },
+        ] },
+    ],
+  },
+  // Sources: lunar axial tilt ~1.5°, so at the pole the Sun stays within ~1.5° of the horizon. Shackleton crater ~21 km wide,
+  // ~4 km deep, near the pole (LRO). Permanently shadowed regions colder than −200 °C (LRO Diviner). Artemis III candidate
+  // regions all within 6° latitude of the south pole (NASA, Aug 2022). NASA ISRU field tests on Mauna Kea 2008 and 2010
+  // (with PISCES). Transantarctic Mountains: our Twin Score's top Earth twin for most Artemis-region sites.
+  pole: {
+    earth: { img: 'pc_transantarctic', w: 1400, h: 903, place: 'Transantarctic Mountains' },
+    mars: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' },
+    steps: [
+      { title: 'A Sun that never climbs', line: 'The Moon barely tilts, so at its south pole the Sun just circles along the horizon, never more than about 1.5° up. Every shadow stretches for kilometres.', earth: [], mars: [],
+        panes: [
+          { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 657, y: 651, r: 40, label: 'South pole', sub: 'Sun stays on the horizon' }] },
+        ] },
+      { title: 'Light on the ridges, ice in the dark', line: 'Some ridges near the pole are lit most of the year, perfect for solar panels. Right beside them, crater floors stay dark and frozen. Antarctica’s Transantarctic Mountains, our scorer’s top twin, mix sunlit rock and ice the same way.', earth: [], mars: [],
+        panes: [
+          { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 657, y: 651, r: 45, label: 'Shackleton crater', sub: '4 km deep, always dark' }, { t: 'ring', x: 740, y: 470, r: 90, label: 'Permanent shadow', sub: 'colder than −200 °C' }] },
+          { world: 'earth', photo: { img: 'pc_transantarctic', w: 1400, h: 903, place: 'Transantarctic Mountains' }, marks: [{ t: 'ring', x: 1213, y: 435, r: 140, label: 'Sunlit rock ridge' }, { t: 'ring', x: 467, y: 700, r: 150, label: 'Ice in the valley' }] },
+        ] },
+      { title: 'Practising on Earth', line: 'In 2008 and 2010 NASA and partners took robots up Mauna Kea in Hawaiʻi to dig volcanic soil and pull oxygen and water out of it: practice for living off Moon dirt instead of shipping everything from Earth.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'pc_mauna_kea', w: 1400, h: 933, place: 'Mauna Kea, Hawaiʻi' }, marks: [{ t: 'ring', x: 825, y: 513, r: 140, label: 'Cinder cones' }, { t: 'ring', x: 467, y: 747, r: 150, label: 'Loose volcanic soil', sub: 'a stand-in for Moon dirt' }] },
+        ] },
+      { title: 'Where Artemis will walk', line: 'NASA has picked nine candidate landing regions for Artemis III, all within 6° of the south pole. You can walk two of them, Shackleton rim and Malapert, in Explore.', earth: [], mars: [],
+        panes: [
+          { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 640, y: 640, r: 455, label: 'All 9 landing regions are inside this ring' }] },
+        ] },
+      { title: 'Where the twin breaks', line: 'Antarctica has air, wind and snow, and it’s mild next to the Moon: in the shadowed craters it’s colder than −200 °C, and there’s no air at all to breathe or to soften the sunlight.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'pc_transantarctic', w: 1400, h: 903, place: 'Transantarctic Mountains' }, marks: [{ t: 'ring', x: 700, y: 220, r: 150, label: 'Air, wind and snow' }] },
+          { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 740, y: 470, r: 90, label: 'No air, −200 °C' }] },
+        ] },
+    ],
+  },
   // Sources: Earth's wind belts (Hadley/Ferrel/polar cells, NOAA). Mars winds: Mars Climate Database v6, diurnal mean, Ls 270, 10 km above surface (northern jet ≈68 m/s). MAVEN wind map of Mars' upper atmosphere,
   // winds rippled by terrain below (Benna et al. 2019, Science; NASA release 19-26). Khamsin: hot dusty spring wind
   // in Egypt, March–May, Arabic for "fifty", gusts up to ~140 km/h, temperature can jump ~20 °C. Mars air at the
@@ -703,23 +593,97 @@ export const STORIES: Record<string, Story> = {
 // we have a photo, otherwise the story twin (marked "looks like").
 export type Region = {
   id: string; world: 'mars' | 'moon'; name: string; line: string;
-  twin: { img: string; name: string; line: string };
+  twin: { img: string; name: string; line: string; inset?: { img: string; caption: string; glow?: boolean } };
+  /** What the rover beside you says while you walk: about this place, and how it compares to its Earth twin. */
+  rover?: string[];
+  /** Optional first screen: a real photo of the place itself, with a "then ↔ now" slider.
+   *  fire: where to draw the imagined eruption, in image pixels (caldera centre, flank radius). */
+  intro?: { img: string; kicker: string; title: string; facts: string[]; fire: { cx: number; cy: number; r: number }; then: string; now: string };
 };
 export const REGIONS: Region[] = [
   { id: 'mars-gale', world: 'mars', name: 'Gale crater', line: 'Curiosity’s landing plain. Mount Sharp’s layers rise to the south.',
-    twin: { img: 'pc_danakil', name: 'Danakil desert, Ethiopia', line: 'Our Twin Score’s best match: the same slopes, and the same rusty and salty minerals.' } },
+    twin: { img: 'pc_danakil', name: 'Danakil desert, Ethiopia', line: 'Our Twin Score’s best match: the same slopes, and the same rusty and salty minerals.' },
+    rover: [
+      'Hi! I’m built just like Curiosity, who has been rolling around this crater since August 2012.',
+      'Oh! We’re surrounded by LAYER CAKE MOUNTAINS. That makes me hungry.',
+      'That mountain ahead is Mount Sharp: 5 km of stacked rock layers. Every layer is a page of Mars history.',
+      'See these flat, layered slabs? Mudstone. A lake filled this crater more than 3 billion years ago.',
+      'Danakil in Ethiopia makes the same kind of rock today: salty water dries out and leaves layer after layer behind.',
+      'Higher up Mount Sharp the layers turn salty: sulfates, the same minerals that crust over Danakil’s pools.',
+      'In 2024 Curiosity cracked a rock open and found pure yellow sulfur inside. Danakil’s Dallol springs are covered in it.',
+      'Big difference: Danakil reaches +45 °C. Tonight it will drop to about −70 °C here.',
+      'Curiosity found organic molecules in these lake rocks. In Danakil, scientists look for the point where life gives up: the most acidic, salty pools are empty.',
+      'Keep walking. Every hill around you is real, measured from orbit.',
+    ] },
   { id: 'mars-jezero', world: 'mars', name: 'Jezero crater', line: 'An old lake bed where Perseverance hunts for signs of ancient life.',
-    twin: { img: 'pc_lake_qarun', name: 'Lake Qarun, Fayoum, Egypt', line: 'Another desert basin that once held a big lake, now mostly dry.' } },
-  { id: 'mars-meridiani', world: 'mars', name: 'Meridiani Planum', line: 'Flat plains scattered with iron “blueberries”. Opportunity drove here for 14 years.',
-    twin: { img: 'pc_moqui', name: 'Moqui marbles, Utah', line: 'Looks like: iron balls grown by groundwater, just like Mars’ blueberries.' } },
-  { id: 'mars-utopia-zhurong', world: 'mars', name: 'Utopia Planitia', line: 'A vast cold plain where China’s Zhurong rover landed in 2021.',
-    twin: { img: 'pc_white_desert', name: 'White Desert, Egypt', line: 'Looks like: a flat, wind-shaped desert floor that goes on forever.' } },
+    twin: { img: 'pc_wadi_hitan', name: 'Wadi El Hitan, Fayoum, Egypt', line: 'The Valley of the Whales: a sea floor turned desert, with whale skeletons 40 million years old lying in the sand.' },
+    rover: [
+      'Welcome to Jezero! This one is my real home. I landed here on 18 February 2021.',
+      'Whoa, a dust storm! In Egypt this is khamaseen season: the hot, dusty spring wind. Its name comes from the Arabic for fifty, as in fifty days.',
+      'Good news: Mars air is so thin that even a strong gust pushes on you like a light breeze on Earth. The dust is the real problem.',
+      'In 2018 a storm like this wrapped the whole planet. My cousin Opportunity ran on solar panels. The dust hid the Sun, and she never woke up.',
+      'People turned her last message into: my battery is low and it’s getting dark.',
+      'But this time I came prepared: goggles, a khamaseen scarf, and a nuclear battery that doesn’t need the Sun. This time, I survive!',
+      'Under the dust, this crater held a lake 45 km wide, about 3.5 billion years ago. A river poured in mud and sand and built a delta.',
+      'Your twin, Wadi El Hitan in Fayoum, was a sea floor too. Now it’s desert, with whale skeletons 40 million years old lying in the sand.',
+      'That’s what I hunt here: traces of old life in old lake mud. In 2024 I found a rock with strange leopard spots, called Cheyava Falls. Maybe a clue!',
+      'Every rock I drill goes into a sealed tube, waiting for a ride to Earth.',
+    ] },
+  { id: 'mars-olympus', world: 'mars', name: 'Olympus Mons', line: 'Stand inside the crater on top of the biggest volcano in the solar system.',
+    intro: {
+      img: 'pc_olympus_mons', kicker: 'Mars · seen from orbit', title: 'Olympus Mons',
+      facts: ['The biggest volcano in the solar system: about 2.5 times as tall as Everest.', 'Its base would cover about a third of Egypt.'],
+      fire: { cx: 862, cy: 775, r: 470 },
+      then: 'Long ago · imagined', now: 'Today · real photo',
+    },
+    twin: { img: 'pc_mauna_loa_2022', name: 'Mauna Loa, Hawaiʻi', line: 'The same kind of volcano, still alive: rivers of lava in its 2022 eruption. Olympus Mons once looked like this.' },
+    rover: [
+      'We made it to Olympus Mons, the biggest volcano in the solar system! We’re standing inside the crater on its summit, 18 km up.',
+      'That wall in front of you climbs about 3 km to the rim. This whole pit collapsed when the lava underneath drained away.',
+      'It’s so wide that its base would cover about a third of Egypt. From up here, its edges are hidden below the horizon.',
+      'Your twin, Mauna Loa in Hawaiʻi, is the same kind of volcano: a shield, built from runny lava flowing out, layer after layer.',
+      'Mauna Loa erupted in 2022, and rivers of lava ran down its sides for two weeks. Olympus Mons once looked just like that.',
+      'So why is this one so much bigger? Mars has no moving plates. The hot spot stayed in one place, so the lava kept piling up on the same spot.',
+      'On Earth, the plate slides over the hot spot, so instead of one giant you get a chain of islands: Hawaiʻi.',
+      'And the weaker gravity here lets a mountain grow taller without sinking under its own weight.',
+      'Some of its lava flows may be only a few million years old. For a planet, that’s yesterday. Is it really asleep? Maybe.',
+      'Notice how soft the ground is? The summit is buried under a thick blanket of fine dust that settled out of the sky. The dark patches are old lava peeking through.',
+      'The air up here is about a tenth as thick as down on the plains, and it sits above most of the dust. That’s why the sky looks darker.',
+    ] },
   { id: 'moon-shackleton-rim', world: 'moon', name: 'Shackleton rim', line: 'Stand on the edge of a crater 4 km deep whose floor never sees the Sun.',
-    twin: { img: 'pc_transantarctic', name: 'Transantarctic Mountains', line: 'Our Twin Score’s best match for the lunar south pole: steep, icy polar ridges.' } },
+    twin: { img: 'pc_transantarctic', name: 'Transantarctic Mountains', line: 'Our Twin Score’s best match for the lunar south pole: steep, icy polar ridges.' },
+    rover: [
+      'See that bootprint? That’s mine. With no wind and no rain up here, a footprint can stay sharp for millions of years.',
+      'Hi, I’m Neil Armstrong. On 20 July 1969 I became the first person to walk on the Moon: “That’s one small step for man, one giant leap for mankind.”',
+      'We landed near the equator, in the Sea of Tranquility. You’ve brought me somewhere I never got to go: the south pole.',
+      'This is the rim of Shackleton crater: about 21 km wide and more than 4 km deep.',
+      'Here the Sun only skims the horizon, so the crater floor has sat in shadow for billions of years. It’s colder than −200 °C down there.',
+      'Scientists think that darkness holds ice. Ice means water to drink, air to breathe, and even rocket fuel. That’s why Artemis wants to land near here.',
+      'On Earth, the closest match for this rim is in Antarctica: bare rock, deep cold, and a Sun that stays low.',
+      'Try hopping! You weigh one sixth of what you weigh on Earth. On Apollo we found hopping easier than walking.',
+      'Look up. That’s Earth, hanging just above the horizon. From the pole it never climbs high in the sky.',
+    ] },
   { id: 'moon-malapert-massif', world: 'moon', name: 'Malapert massif', line: 'A 5 km mountain and a candidate Artemis landing region.',
-    twin: { img: 'pc_mauna_kea', name: 'Mauna Kea, Hawaiʻi', line: 'Ranked #2 of 469 places on Earth for this site. NASA tested Moon mining gear here.' } },
-  { id: 'moon-haworth', world: 'moon', name: 'Haworth', line: 'A dark, ice-trapping crater next to sunlit ridges.',
-    twin: { img: 'pc_wright_valley', name: 'McMurdo Dry Valleys, Antarctica', line: 'Right next to our best-match cell: cold, dry, and almost lifeless.' } },
-  { id: 'moon-de-gerlache-rim', world: 'moon', name: 'de Gerlache rim', line: 'A crater rim that stays lit for much of the lunar year.',
-    twin: { img: 'pc_ellesmere', name: 'Ellesmere Island, Canada', line: 'Near our #2 match: a rocky Arctic desert where the Sun skims the horizon.' } },
+    twin: { img: 'pc_mauna_kea', name: 'Mauna Kea, Hawaiʻi', line: 'Ranked #2 of 469 places on Earth for this site. NASA tested Moon mining gear here.' },
+    rover: [
+      'This is Malapert massif, a mountain about 5 km tall near the south pole.',
+      'From up here you can see Earth most of the time, so it’s a great place for a radio to call home.',
+      'Some ridges around here get sunlight for most of the year. Solar panels would almost never go dark.',
+      'Your twin is Mauna Kea in Hawaiʻi. NASA tested tools there for turning Moon dirt into oxygen and water.',
+      'In my suit I couldn’t bend down very far. To pick up rocks we used long-handled tongs and scoops.',
+      'This backpack kept me alive out here: oxygen to breathe, water to keep me cool, and a radio.',
+    ] },
+  { id: 'moon-highlands', world: 'moon', name: 'Lunar highlands', line: 'The bright old country: the light parts of the Moon, made of some of its oldest rock.',
+    twin: { img: 'pc_mistastin', name: 'Mistastin crater, Labrador, Canada', line: 'One of the few places on Earth where an asteroid hit anorthosite, the same pale rock as the Moon’s highlands. The Artemis II crew trained here in 2023.',
+      inset: { img: 'pc_anorthosite', caption: 'Labrador’s anorthosite flashes blue in the light', glow: true } },
+    rover: [
+      'Welcome to the bright old country: the lunar highlands. Every light-grey patch you see on the Moon from Earth is highland.',
+      'It’s made of anorthosite, a pale rock that floated to the top of a sea of molten rock when the Moon was young, more than 4 billion years ago.',
+      'Apollo 16 landed right here in 1972, the only Apollo landing in the central highlands. John Young and Charlie Duke drove their rover over these hills.',
+      'Your twin is Mistastin crater in Labrador, Canada. An asteroid made it about 36 million years ago.',
+      'It’s one of very few craters on Earth punched into anorthosite, the same kind of rock as these hills. That makes it a perfect classroom.',
+      'In 2023 the Artemis II crew trained there, learning to read rocks like these before flying around the Moon.',
+      'And Labrador’s anorthosite has a trick: turn it in the light and it flashes blue. Geologists call that labradorescence.',
+      'Moon anorthosite doesn’t flash like that. It just glows bright grey in the sunlight. But it’s the same family of stone.',
+    ] },
 ];

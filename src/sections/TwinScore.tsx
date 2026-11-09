@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import Radar from '../components/Radar';
 import { plain, REGION_NAME, TARGET_NICK } from '../content';
-import { useTwins, type Ranked, type Site } from '../data';
+import { useJSON, useTwins, type Ranked, type Site } from '../data';
 
-const ANSWER_NAMES: Record<string, string> = {
-  'earth-atacama-yungay': 'Atacama (Yungay)', 'earth-haughton': 'Haughton crater', 'earth-death-valley': 'Death Valley',
-  'earth-mdrs-hanksville': 'MDRS, Utah', 'earth-dry-valleys': 'McMurdo Dry Valleys', 'earth-meteor-crater': 'Meteor Crater',
-  'earth-craters-of-the-moon': 'Craters of the Moon', 'earth-mauna-kea': 'Mauna Kea',
+type Views = { credits: Record<string, string>; have: string[]; dark?: string[] };
+
+/** Places where NASA (or crews working with NASA) really test gear and train, and what they did there. */
+const TESTS: Record<string, { name: string; for: 'Mars' | 'Moon'; what: string }> = {
+  'earth-atacama-yungay': { name: 'Atacama (Yungay)', for: 'Mars', what: 'NASA’s ARADS project drove a rover with a 1 m drill here (2016–2019), practising the hunt for hidden life in the driest soil on Earth.' },
+  'earth-haughton': { name: 'Haughton crater', for: 'Mars', what: 'Since 1997 the NASA Haughton-Mars Project has tested rovers, spacesuits and Mars field routines in this Arctic impact crater on Devon Island.' },
+  'earth-death-valley': { name: 'Death Valley', for: 'Mars', what: 'Curiosity’s Earth twin “Scarecrow” practised driving on sand dunes next to Death Valley before the real rover landed in 2012.' },
+  'earth-mdrs-hanksville': { name: 'MDRS, Utah', for: 'Mars', what: 'At the Mars Desert Research Station, crews live for weeks in a mock Mars base, wearing suits to go outside. It’s run by the Mars Society, often with NASA scientists.' },
+  'earth-dry-valleys': { name: 'McMurdo Dry Valleys', for: 'Mars', what: 'Scientists from NASA’s Viking missions studied these soils in the 1970s; astrobiologists still test life-detection tools here.' },
+  'earth-meteor-crater': { name: 'Meteor Crater', for: 'Moon', what: 'Apollo astronauts trained here in the 1960s, learning to read the rocks an impact throws out before reading them on the Moon.' },
+  'earth-craters-of-the-moon': { name: 'Craters of the Moon', for: 'Moon', what: 'Apollo 14 astronauts trained on these lava fields in 1969; NASA’s FINESSE team has tested Moon field science here since 2014.' },
+  'earth-mauna-kea': { name: 'Mauna Kea', for: 'Moon', what: 'NASA and partners tested robots here in 2008 and 2010 that dig volcanic soil and pull oxygen and water out of it, practice for living off the Moon.' },
 };
 
 export function earthLabel(s?: Site) {
@@ -26,11 +34,16 @@ function fmtFeature(k: string, v?: number) {
 
 const FEATS: [string, string][] = [['local_relief_m', 'Relief'], ['slope_median_deg', 'Typical slope'], ['slope_p90_deg', 'Steep slopes (90th pct)'], ['roughness_rms_m', 'Roughness'], ['hypsometric_integral', 'Hypsometry']];
 
-function Hill({ site, label, tone }: { site?: Site; label: string; tone: string }) {
+/** One place: its real picture (orbiter or satellite), or the height map. Same 12 km square either way. */
+function Hill({ site, label, tone, view, views }: { site?: Site; label: string; tone: string; view: 'photo' | 'height'; views?: Views | null }) {
+  const has = !!site && !!views?.have.includes(site.id), dark = !!site && !!views?.dark?.includes(site.id);
+  const photo = view === 'photo' && has && !dark;
   return (
     <div className={`hill hill--${tone}`}>
-      {site?.hillshade ? <img src={site.hillshade} alt={`Hillshade of ${site.name}`} /> : <div className="hill__none">No hillshade</div>}
+      {photo ? <img src={`views/${site!.id}.webp`} alt={`Picture of ${site!.name}`} />
+        : site?.hillshade ? <img src={site.hillshade} alt={`Height map of ${site.name}`} /> : <div className="hill__none">No image</div>}
       <span className="hill__tag">{label}</span>
+      {view === 'photo' && dark && <span className="hill__note">Real photos here are almost all black: this ground sits in permanent shadow. Showing its height map instead.</span>}
     </div>
   );
 }
@@ -38,6 +51,8 @@ function Hill({ site, label, tone }: { site?: Site; label: string; tone: string 
 export default function TwinScore({ target, setTarget }: { target: string; setTarget: (t: string) => void }) {
   const d = useTwins();
   const [pick, setPick] = useState<string | null>(null);
+  const [view, setView] = useState<'photo' | 'height'>('photo');
+  const views = useJSON<Views>('data/views.json');
   useEffect(() => setPick(null), [target]);
 
   const earthById = useMemo(() => new Map((d?.earth ?? []).map((e) => [e.id, e])), [d]);
@@ -68,9 +83,15 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
 
       <div className="score__grid">
         <div className="score__pair">
-          <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} />
-          <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" />
-          <p className="score__pairnote">Real 3D height maps of both places, same size, lit the same way. Do they look alike?</p>
+          <div className="score__viewtoggle" role="tablist" aria-label="What to show">
+            <button role="tab" aria-selected={view === 'photo'} className={view === 'photo' ? 'is-on' : ''} onClick={() => setView('photo')}>Real photos</button>
+            <button role="tab" aria-selected={view === 'height'} className={view === 'height' ? 'is-on' : ''} onClick={() => setView('height')}>Height maps</button>
+          </div>
+          <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} view={view} views={views} />
+          <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" view={view} views={views} />
+          <p className="score__pairnote">{view === 'photo'
+            ? <>The same 12 km square of each place, seen from orbit. {views && <span className="score__credit">{t.body === 'mars' ? views.credits.mars : views.credits.moon}; {views.credits.earth}.</span>}</>
+            : 'Real 3D height maps of both places, same size, lit the same way. This is what the score compares.'}</p>
           <details className="feat__wrap"><summary>See the numbers</summary>
           <table className="feat">
             <thead><tr><th /><th style={{ color: col }}>{t.body}</th><th style={{ color: 'var(--earth)' }}>earth</th></tr></thead>
@@ -83,6 +104,21 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
           </table>
           <p className="score__pairnote">Height maps: {t.body === 'mars' ? 'MRO CTX' : 'LRO LOLA'} and Copernicus DEM, 30 m grid.</p>
           </details>
+        <div className="flatmap"><span className="flatmap__title">Where the top 12 are on Earth</span>
+          <img src="tex/earth_base.webp" alt="Earth map" />
+          {d.earth_all.map(([id, la, lo]) => (
+            <i key={id} className="flatmap__dot" style={{ left: `${((lo + 180) / 360) * 100}%`, top: `${((90 - la) / 180) * 100}%` }} />
+          ))}
+          {list.map((x, i) => {
+            const s = earthById.get(x.id);
+            if (!s) return null;
+            return (
+              <button key={x.id} className={`flatmap__pin${x.id === chosen.id ? ' is-on' : ''}`} style={{ left: `${((s.lon + 180) / 360) * 100}%`, top: `${((90 - s.lat) / 180) * 100}%` }} onClick={() => setPick(x.id)} title={earthLabel(s)}>
+                {i + 1}
+              </button>
+            );
+          })}
+        </div>
         </div>
 
         <div className="score__radar">
@@ -115,34 +151,21 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
       </div>
 
       <div className="score__map">
-        <div className="flatmap">
-          <img src="tex/earth_base.webp" alt="Earth map" />
-          {d.earth_all.map(([id, la, lo]) => (
-            <i key={id} className="flatmap__dot" style={{ left: `${((lo + 180) / 360) * 100}%`, top: `${((90 - la) / 180) * 100}%` }} />
-          ))}
-          {list.map((x, i) => {
-            const s = earthById.get(x.id);
-            if (!s) return null;
-            return (
-              <button key={x.id} className={`flatmap__pin${x.id === chosen.id ? ' is-on' : ''}`} style={{ left: `${((s.lon + 180) / 360) * 100}%`, top: `${((90 - s.lat) / 180) * 100}%` }} onClick={() => setPick(x.id)} title={earthLabel(s)}>
-                {i + 1}
-              </button>
-            );
-          })}
-        </div>
         <div className="answer">
           <h4>Does it find the famous test sites?</h4>
-          <p>NASA already tests gear at these places. We never told the scorer, so where do they land out of {r.pool}? Further left = higher on the list.</p>
+          <p>NASA already trains and tests gear at these places. We never told the scorer, so where do they land out of {r.pool}? Further left = higher on the list. <b>Tap one</b> to see what NASA did there and compare it with your place.</p>
           <ul>
-            {Object.keys(ANSWER_NAMES).map((id) => {
-              const rk = rankOf(id);
+            {Object.entries(TESTS).map(([id, x]) => {
+              const rk = rankOf(id), on = chosen.id === id;
               return (
-                <li key={id}>
-                  <button onClick={() => rk && setPick(id)} disabled={!rk}>
-                    <span>{ANSWER_NAMES[id]}</span>
+                <li key={id} className={on ? 'is-on' : ''}>
+                  <button onClick={() => rk && setPick(id)} disabled={!rk} aria-expanded={on}>
+                    <span className="answer__name">{x.name}<small>{x.for} practice</small></span>
                     <span className="answer__bar"><i style={{ left: `${rk ? ((rk - 1) / (r.pool - 1)) * 100 : 0}%` }} /></span>
                     <b>{rk ? `#${rk}` : '—'}</b>
+                    <span className="answer__chev" aria-hidden>›</span>
                   </button>
+                  {on && <p className="answer__what">{x.what} <em>Our scorer ranks it #{rk} of {r.pool} for this place, and it’s now shown above.</em></p>}
                 </li>
               );
             })}

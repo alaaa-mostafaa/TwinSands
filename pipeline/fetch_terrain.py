@@ -22,8 +22,16 @@ from pipeline import sources  # noqa: E402  (Terrestrial Analog Finder)
 
 OUT = ROOT / "public" / "terrain"
 OUT.mkdir(parents=True, exist_ok=True)
-REGIONS = ["mars-gale", "mars-jezero", "mars-meridiani", "mars-utopia-zhurong",
-           "moon-shackleton-rim", "moon-malapert-massif", "moon-haworth", "moon-de-gerlache-rim"]
+REGIONS = ["mars-gale", "mars-jezero", "mars-olympus",
+           "moon-shackleton-rim", "moon-malapert-massif", "moon-highlands"]
+# Sites that are not in the analog finder's locations.json: (body, lat, lon, DEM url, source resolution m).
+# Olympus Mons: the south wall of the summit caldera, where the rim drops ~3.2 km to the caldera floor.
+# CTX DTMs only cover ~40% of this wall, so we use the gap-free NASA MOLA + ESA HRSC blended global DEM (200 m).
+MOLA_HRSC = "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
+# Lunar highlands: the Apollo 16 landing site in the Descartes highlands, from the NASA LRO LOLA global DEM (118 m).
+LOLA = "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
+EXTRA = {"mars-olympus": ("mars", 17.8095, -133.55, MOLA_HRSC, 200.0),
+         "moon-highlands": ("moon", -8.97, 15.50, LOLA, 118.0)}
 N = 256
 
 
@@ -50,16 +58,44 @@ def resample(a, n):
 locs = {l["id"]: l for l in json.loads((SRC / "data" / "processed" / "locations.json").read_text())["locations"]}
 index = {}
 for rid in REGIONS:
-    l = locs[rid]
-    item = requests.get(l["source_item"]["stac_url"], timeout=60).json()
-    url = item["assets"]["dtm"]["href"]
-    w = sources.read_astrogeo_window(l["body"], url, l["lat"], l["lon"], l["source_item"]["gsd_m"])
+    if rid in EXTRA:
+        body, lat, lon, url, res = EXTRA[rid]
+        w = sources.read_astrogeo_window(body, url, lat, lon, res)
+    else:
+        l = locs[rid]
+        item = requests.get(l["source_item"]["stac_url"], timeout=60).json()
+        url = item["assets"]["dtm"]["href"]
+        w = sources.read_astrogeo_window(l["body"], url, l["lat"], l["lon"], l["source_item"]["gsd_m"])
     valid = float(np.isfinite(w.elevation).mean())
     z = resample(fill_nans(w.elevation), N)
+    if rid in EXTRA and EXTRA[rid][4] > 50:       # coarse source: soften the 200 m pixel steps (no new relief)
+        k = np.exp(-0.5 * (np.arange(-6, 7) / 2.5) ** 2); k /= k.sum()
+        for ax in (0, 1):
+            z = np.apply_along_axis(lambda v: np.convolve(np.pad(v, 6, mode="edge"), k, mode="valid"), ax, z)
     lo, hi = float(z.min()), float(z.max())
     q = np.round((z - lo) / max(hi - lo, 1e-6) * 65535).astype("<u2")
     q.tofile(OUT / f"{rid}.bin")
     index[rid] = {"n": N, "size_m": sources.WINDOW_SIZE_M, "min": round(lo, 2), "max": round(hi, 2),
                   "valid_fraction": round(valid, 4), "source": url}
     print(rid, f"relief {hi - lo:.0f} m, valid {valid:.1%}", flush=True)
+    hs_path = ROOT / "public" / "hillshade" / f"{rid}.webp"
+    if not hs_path.exists():                      # card thumbnail for regions the analog finder has no hillshade for
+        from PIL import Image
+        gy, gx = np.gradient(z, 12000 / N)
+        shade = np.clip(0.55 + (-gx + gy) * 0.35, 0, 1)
+        Image.fromarray((shade * 255).astype("uint8")).resize((512, 512)).save(hs_path, quality=80)
+    if rid in EXTRA:
+        # wide backdrop: 120 km of the same global DEM around the walk, so distant walls and hills are there to see
+        body, lat, lon, url, res = EXTRA[rid]
+        keep = (sources.WINDOW_SIZE_M, sources.GRID_RES_M, sources.N_PX)
+        sources.WINDOW_SIZE_M, sources.GRID_RES_M, sources.N_PX = 120_000.0, 400.0, 300
+        try:
+            far = sources.read_astrogeo_window(body, url, lat, lon, res).elevation
+        finally:
+            sources.WINDOW_SIZE_M, sources.GRID_RES_M, sources.N_PX = keep
+        fz = resample(fill_nans(far), 200)
+        flo, fhi = float(fz.min()), float(fz.max())
+        np.round((fz - flo) / max(fhi - flo, 1e-6) * 65535).astype("<u2").tofile(OUT / f"{rid}.far.bin")
+        index[rid]["far"] = {"n": 200, "size_m": 120_000.0, "min": round(flo, 2), "max": round(fhi, 2), "source": url}
+        print(rid, f"backdrop relief {fhi - flo:.0f} m", flush=True)
 (OUT / "index.json").write_text(json.dumps(index, indent=1))
