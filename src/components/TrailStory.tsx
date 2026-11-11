@@ -34,7 +34,7 @@ function PaneView({ pane, credit }: { pane: Pane; credit: (k: string) => React.R
   }, [pane]);
   const ph = pane.photo;
   return (
-    <figure className={`story__photo story__photo--${pane.world}`}>
+    <figure className={`story__photo story__photo--${pane.world}${ph.img === 'story_lava_flow' ? ' story__photo--fire-opening' : ''}`}>
       {pane.globe ? <WindGlobe world={pane.globe === 'mars-winds' ? 'mars' : 'earth'} /> : <AnnotatedPhoto key={now ? 'now' : 'then'} src={`photos/${ph.img}.webp`} w={ph.w} h={ph.h} marks={now ? pane.marks : []} pad={18} credit={credit(ph.img)} contain={ph.contain} />}
       {pane.then && (
         <motion.div className="story__then" initial={{ opacity: 1 }} animate={{ opacity: now ? 0 : 1 }} transition={{ duration: 1.2 }}>
@@ -59,31 +59,71 @@ function PaneView({ pane, credit }: { pane: Pane; credit: (k: string) => React.R
 export default function TrailStory({ story }: { story: Story }) {
   const [i, setI] = useState(0);
   const [auto, setAuto] = useState(false);
+  const [audioError, setAudioError] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const credits = useJSON<Record<string, PhotoMeta>>('data/senses.json');
   const n = story.steps.length;
+  const narration = story.narration;
   const step = story.steps[i];
   const panes: Pane[] = step.panes ?? (['earth', 'mars'] as const).map((w) => ({
     world: w, photo: w === 'earth' && step.earthPhoto ? step.earthPhoto : story[w], marks: step[w], meter: step.meters?.[w],
   }));
-  const go = (d: number) => setI((v) => Math.min(n - 1, Math.max(0, v + d)));
+  const playNarration = (index: number) => {
+    const audio = audioRef.current;
+    const src = narration?.[index];
+    if (!audio || !src) return;
+    audio.src = src;
+    audio.load();
+    setAudioError(false);
+    audio.play().catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setAudioError(true);
+      setAuto(false);
+    });
+  };
+  const pauseNarration = () => audioRef.current?.pause();
+  const goTo = (index: number, play = false, continueStory = false) => {
+    const next = Math.min(n - 1, Math.max(0, index));
+    setAuto(continueStory);
+    setI(next);
+    pauseNarration();
+    if (play) playNarration(next);
+  };
+  const go = (d: number) => goTo(i + d, !!narration, !!narration);
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!auto) return;
+    if (!auto || narration) return;
     if (i >= n - 1) { setAuto(false); return; }
     const t = setTimeout(() => setI((v) => v + 1), STEP_MS);
     return () => clearTimeout(t);
-  }, [auto, i, n]);
+  }, [auto, i, n, narration]);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const r = box.current?.getBoundingClientRect();
       if (!r || r.bottom < 0 || r.top > innerHeight) return;
-      if (e.key === 'ArrowRight') { setAuto(false); go(1); }
-      if (e.key === 'ArrowLeft') { setAuto(false); go(-1); }
+      if (e.key === 'ArrowRight') go(1);
+      if (e.key === 'ArrowLeft') go(-1);
     };
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
-  }, []);
+  }, [go]);
+  useEffect(() => () => audioRef.current?.pause(), []);
+
+  const onNarrationEnded = () => {
+    if (!auto) return;
+    if (i >= n - 1) {
+      setAuto(false);
+      return;
+    }
+    const next = i + 1;
+    setI(next);
+    playNarration(next);
+  };
+  const onNarrationError = () => {
+    setAudioError(true);
+    setAuto(false);
+  };
 
   const credit = (k: string) => {
     const c = credits?.[k];
@@ -95,7 +135,7 @@ export default function TrailStory({ story }: { story: Story }) {
       <div className="story__top">
         <div className="story__dots">
           {story.steps.map((s, k) => (
-            <button key={s.title} className={`story__dot${k === i ? ' is-on' : ''}${k < i ? ' is-done' : ''}`} onClick={() => { setAuto(false); setI(k); }} aria-label={s.title}>
+            <button key={s.title} className={`story__dot${k === i ? ' is-on' : ''}${k < i ? ' is-done' : ''}`} onClick={() => goTo(k, !!narration)} aria-label={s.title}>
               {k === i && auto && <motion.i key={i} initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: STEP_MS / 1000, ease: 'linear' }} />}
             </button>
           ))}
@@ -131,12 +171,24 @@ export default function TrailStory({ story }: { story: Story }) {
       </AnimatePresence>
 
       <div className="story__nav">
-        <button className="story__arrow" onClick={() => { setAuto(false); go(-1); }} disabled={i === 0} aria-label="Previous">←</button>
-        <button className={`story__play${auto ? ' is-on' : ''}`} onClick={() => { if (i >= n - 1) setI(0); setAuto((a) => !a); }}>
-          {auto ? 'Pause' : i >= n - 1 ? 'Replay' : 'Play story'}
+        <button className="story__arrow" onClick={() => go(-1)} disabled={i === 0} aria-label="Previous">←</button>
+        <button className={`story__play${auto ? ' is-on' : ''}`} onClick={() => {
+          if (auto) {
+            setAuto(false);
+            pauseNarration();
+          } else {
+            const start = i >= n - 1 ? 0 : i;
+            if (start !== i) setI(start);
+            setAuto(true);
+            playNarration(start);
+          }
+        }}>
+          {auto ? 'Pause' : i >= n - 1 ? 'Replay' : i === 0 ? 'Start story' : 'Play story'}
         </button>
-        <button className="story__arrow story__arrow--next" onClick={() => { setAuto(false); go(1); }} disabled={i === n - 1} aria-label="Next">→</button>
+        <button className="story__arrow story__arrow--next" onClick={() => go(1)} disabled={i === n - 1} aria-label="Next">→</button>
       </div>
+      {narration && <audio ref={audioRef} hidden onEnded={onNarrationEnded} onError={onNarrationError} />}
+      {audioError && <p className="story__audio-error" role="alert">Narration could not be played. Try starting the story again.</p>}
     </div>
   );
 }

@@ -107,7 +107,6 @@ export const TRAILS: Trail[] = [
       { label: 'Putzig et al. 2005, global thermal inertia of Mars', url: 'https://doi.org/10.1016/j.icarus.2004.08.017' },
     ],
     breaks: 'Mars soil holds perchlorate salts that are toxic to people; Earth soil does not. Earth soil is full of life and organics, which Mars soil lacks.',
-    scoreTarget: 'mars-gale',
   },
   {
     id: 'fire', title: 'Fire', kicker: 'Volcanoes and lava tubes',
@@ -375,6 +374,7 @@ export type Story = {
   earth: StoryPhoto;
   mars: StoryPhoto;
   steps: StoryStep[];
+  narration?: string[];
 };
 export const STORIES: Record<string, Story> = {
   // Sources: Phoenix found shallow ground ice in 2008; bright chunks in the Dodo-Goldilocks trench sublimated within ~4 sols
@@ -385,6 +385,13 @@ export const STORIES: Record<string, Story> = {
   ice: {
     earth: { img: 'earth_dry_valleys', w: 1260, h: 1400, place: 'Dry Valleys, Antarctica' },
     mars: { img: 'mars_phoenix_ice', w: 512, h: 1024, place: 'Phoenix trench, Mars 2008' },
+    narration: [
+      'sounds/water/s1.opus',
+      'sounds/water/s2.opus',
+      'sounds/water/s3.opus',
+      'sounds/water/s4.opus',
+      'sounds/water/s5.opus',
+    ],
     steps: [
       { title: 'Ice under the dust', line: 'In 2008 NASA’s Phoenix lander scraped a few centimetres into the Martian soil and hit bright white ice. In Antarctica’s Dry Valleys, frozen ground hides under dry soil the same way.', earth: [], mars: [],
         panes: [
@@ -418,6 +425,13 @@ export const STORIES: Record<string, Story> = {
   pole: {
     earth: { img: 'pc_transantarctic', w: 1400, h: 903, place: 'Transantarctic Mountains' },
     mars: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' },
+    narration: [
+      'sounds/pole/s1.opus',
+      'sounds/pole/s2.opus',
+      'sounds/pole/s3.opus',
+      'sounds/pole/s4.opus',
+      'sounds/pole/s5.opus',
+    ],
     steps: [
       { title: 'A Sun that never climbs', line: 'The Moon barely tilts, so at its south pole the Sun just circles along the horizon, never more than about 1.5° up. Every shadow stretches for kilometres.', earth: [], mars: [],
         panes: [
@@ -428,7 +442,7 @@ export const STORIES: Record<string, Story> = {
           { world: 'moon', photo: { img: 'moon_south_pole', w: 1280, h: 1280, place: 'Moon south pole (LRO)' }, marks: [{ t: 'ring', x: 657, y: 651, r: 45, label: 'Shackleton crater', sub: '4 km deep, always dark' }, { t: 'ring', x: 740, y: 470, r: 90, label: 'Permanent shadow', sub: 'colder than −200 °C' }] },
           { world: 'earth', photo: { img: 'pc_transantarctic', w: 1400, h: 903, place: 'Transantarctic Mountains' }, marks: [{ t: 'ring', x: 1213, y: 435, r: 140, label: 'Sunlit rock ridge' }, { t: 'ring', x: 467, y: 700, r: 150, label: 'Ice in the valley' }] },
         ] },
-      { title: 'Practising on Earth', line: 'In 2008 and 2010 NASA and partners took robots up Mauna Kea in Hawaiʻi to dig volcanic soil and pull oxygen and water out of it: practice for living off Moon dirt instead of shipping everything from Earth.', earth: [], mars: [],
+      { title: 'Practicing on Earth', line: 'In 2008 and 2010 NASA and partners took robots up Mauna Kea in Hawaiʻi to dig volcanic soil and pull oxygen and water out of it: practice for living off Moon dirt instead of shipping everything from Earth.', earth: [], mars: [],
         panes: [
           { world: 'earth', photo: { img: 'pc_mauna_kea', w: 1400, h: 933, place: 'Mauna Kea, Hawaiʻi' }, marks: [{ t: 'ring', x: 825, y: 513, r: 140, label: 'Cinder cones' }, { t: 'ring', x: 467, y: 747, r: 150, label: 'Loose volcanic soil', sub: 'a stand-in for Moon dirt' }] },
         ] },
@@ -451,6 +465,13 @@ export const STORIES: Record<string, Story> = {
   wind: {
     earth: { img: 'story_khamsin', w: 1600, h: 900, place: 'Khamsin, Egypt' },
     mars: { img: 'story_mars_storm_art', w: 640, h: 384, place: 'Dust storm, artist’s illustration' },
+    narration: [
+      'sounds/wind/s1.opus',
+      'sounds/wind/s2.opus',
+      'sounds/wind/s3.opus',
+      'sounds/wind/s4.opus',
+      'sounds/wind/s5.opus',
+    ],
     steps: [
       { title: 'Air on the move', line: 'The Sun heats the equator more than the poles, so Earth’s air flows in belts. Mars has belts too, and in its northern winter a jet stream races around the north at about 245 km/h.', earth: [], mars: [],
         panes: [
@@ -492,6 +513,13 @@ export const STORIES: Record<string, Story> = {
   fire: {
     earth: { img: 'story_lava_flow', w: 547, h: 365, place: 'Flowing lava' },
     mars: { img: 'story_pavonis_skylight', w: 1920, h: 1920, place: 'Pavonis Mons' },
+    narration: [
+      'sounds/fire/s1.opus',
+      'sounds/fire/s2.opus',
+      'sounds/fire/s3.opus',
+      'sounds/fire/s4.opus',
+      'sounds/fire/s5.opus',
+    ],
     steps: [
       { title: 'Earth is still burning', line: 'Lava still pours out on Earth today, hot enough to melt copper. When its top cools into a crust, the river keeps flowing underneath in a lava tube.', earth: [], mars: [],
         panes: [
@@ -538,6 +566,13 @@ export const STORIES: Record<string, Story> = {
   soil: {
     earth: { img: 'story_soil', w: 659, h: 466, place: 'Garden soil' },
     mars: { img: 'story_mars_soil', w: 600, h: 600, place: 'Gusev crater, Mars' },
+    narration: [
+      'sounds/soil/s1.opus',
+      'sounds/soil/s2.opus',
+      'sounds/soil/s3.opus',
+      'sounds/soil/s4.opus',
+      'sounds/soil/s5.opus',
+    ],
     steps: [
       { title: 'Earth’s soil is alive', line: 'One spoon of garden soil holds more microbes than there are people on Earth. That’s why things grow in it.',
         earth: [{ t: 'ring', x: 272, y: 210, r: 78, label: 'Living soil', sub: 'microbes, roots, rotted leaves' }],
@@ -565,6 +600,13 @@ export const STORIES: Record<string, Story> = {
   rust: {
     earth: { img: 'story_rio_tinto', w: 1800, h: 1350, place: 'Río Tinto, Spain' },
     mars: { img: 'story_mars_gusev', w: 616, h: 445, place: 'Gusev crater, Mars' },
+    narration: [
+      'sounds/rust/s1.opus',
+      'sounds/rust/s2.opus',
+      'sounds/rust/s3.opus',
+      'sounds/rust/s4.opus',
+      'sounds/rust/s5.opus',
+    ],
     steps: [
       { title: 'Two red worlds', line: 'A river in Spain and a desert on Mars. They are red for the same reason.', earth: [], mars: [] },
       { title: 'It’s rust', line: 'Iron + oxygen + water = rust. Both places are packed with iron.',
@@ -574,7 +616,7 @@ export const STORIES: Record<string, Story> = {
         },
         earth: [{ t: 'ring', x: 900, y: 560, r: 120, label: 'Iron dissolved in the water' }],
         mars: [{ t: 'ring', x: 300, y: 370, r: 48, label: 'Iron-oxide dust' }] },
-      { title: 'Is anything alive?', line: 'Río Tinto is full of microbes that live off iron. NASA drilled here in 2003–05 to practise finding life on Mars.',
+      { title: 'Is anything alive?', line: 'Río Tinto is full of microbes that live off iron. NASA drilled here in 2003–05 to practice finding life on Mars.',
         earth: [{ t: 'ring', x: 900, y: 1000, r: 120, label: 'Microbes thrive here', sub: 'eating iron' }],
         mars: [{ t: 'ring', x: 330, y: 330, r: 70, label: 'No life found', sub: 'yet' }] },
       { title: 'Only skin-deep', line: 'Mars is red only on top: a thin coat of dust on grey rock. A 2025 study says that dust formed with water.',

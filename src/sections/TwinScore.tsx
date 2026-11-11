@@ -7,9 +7,9 @@ type Views = { credits: Record<string, string>; have: string[]; dark?: string[] 
 
 /** Places where NASA (or crews working with NASA) really test gear and train, and what they did there. */
 const TESTS: Record<string, { name: string; for: 'Mars' | 'Moon'; what: string }> = {
-  'earth-atacama-yungay': { name: 'Atacama (Yungay)', for: 'Mars', what: 'NASA’s ARADS project drove a rover with a 1 m drill here (2016–2019), practising the hunt for hidden life in the driest soil on Earth.' },
+  'earth-atacama-yungay': { name: 'Atacama (Yungay)', for: 'Mars', what: 'NASA’s ARADS project drove a rover with a 1 m drill here (2016–2019), practicing the hunt for hidden life in the driest soil on Earth.' },
   'earth-haughton': { name: 'Haughton crater', for: 'Mars', what: 'Since 1997 the NASA Haughton-Mars Project has tested rovers, spacesuits and Mars field routines in this Arctic impact crater on Devon Island.' },
-  'earth-death-valley': { name: 'Death Valley', for: 'Mars', what: 'Curiosity’s Earth twin “Scarecrow” practised driving on sand dunes next to Death Valley before the real rover landed in 2012.' },
+  'earth-death-valley': { name: 'Death Valley', for: 'Mars', what: 'Curiosity’s Earth twin “Scarecrow” practiced driving on sand dunes next to Death Valley before the real rover landed in 2012.' },
   'earth-mdrs-hanksville': { name: 'MDRS, Utah', for: 'Mars', what: 'At the Mars Desert Research Station, crews live for weeks in a mock Mars base, wearing suits to go outside. It’s run by the Mars Society, often with NASA scientists.' },
   'earth-dry-valleys': { name: 'McMurdo Dry Valleys', for: 'Mars', what: 'Scientists from NASA’s Viking missions studied these soils in the 1970s; astrobiologists still test life-detection tools here.' },
   'earth-meteor-crater': { name: 'Meteor Crater', for: 'Moon', what: 'Apollo astronauts trained here in the 1960s, learning to read the rocks an impact throws out before reading them on the Moon.' },

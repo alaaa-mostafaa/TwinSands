@@ -19,16 +19,15 @@ Everything the site shows is already in `public/`, so no backend and no API keys
 |---|---|---|
 | — | Hero | Earth / Mars / Moon carousel with real NASA textures and key facts |
 | 01 | Meet Mars | Scroll story: Earth's continents squeeze into one ball and become Mars (148.9 vs 144.4 million km²), then true sizes with the Moon, Phobos and Deimos |
-| 02 | Twin Trails | Rust, Soil, Fire, Wind, Ice, South Pole: the same question on three globes, each with a real data layer |
+| 02 | Twin Trails | Rust, Soil, Fire, Wind, Water, South Pole: compare worlds with real data layers; each story has step-by-step narration |
 | 03 | Neighborhoods | 23 postcards: a real Mars/Moon photo next to a real photo of its Earth twin, with a short story and what is the same and what is different |
 | 04 | Twin Score | Scores 469 measured patches of Earth against 12 Mars/Moon sites, out of 100, and checks it against famous test sites |
-| 05 | Field Guides | What matches, what doesn't, what to practise there |
-| 06 | Our Trip | Your Egypt field photos next to rover photos |
+| 05 | Field Guides | What matches, what doesn't, what to practice there |
+| 06 | We Had to See It for Ourselves | Our field photos from Egypt and Saudi Arabia, alongside places and features from other worlds |
 
 ## Adding your field photos
 
-Save photos as `public/field/<slot>.jpg`; JPG is fine there. The slots are `fayoum`, `pavement`, `concretion`, `wind`, `dustdevil` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`).
-Until a photo exists, the slot shows a drop zone; dropping a photo there only previews it in your browser.
+The Fayoum album in `public/photos/fayoum/` is paired with the Curiosity panorama; the Dahab album in `public/photos/dahab/` appears in the next card, paired with Curiosity at Rocknest. The Al Madinah Al Munawwarah, Saudi Arabia album in `public/photos/madina/` is paired with the Mars dust-devil image. The White Desert album in `public/photos/white-desert/` is paired with the wind-carved terrain comparison. Use the arrows to browse the albums; videos have playback controls. Other field slots can use `public/field/<slot>.jpg`; JPG is fine there. The slots are `concretion` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`). Until a photo exists, the slot shows a drop zone; dropping a photo there only previews it in your browser.
 
 ## Data pipeline (Python, run once; outputs are committed in `public/`)
 
@@ -64,7 +63,7 @@ Findings worth putting in the proposal:
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.
 - **Volcanoes:** Smithsonian Global Volcanism Program, Volcanoes of the World.
 - **Sounds:** Perseverance microphone recordings (NASA/JPL-Caltech/LANL/CNES) and Apollo surface audio (NASA), public domain; Earth field recordings from Wikimedia Commons, with authors and licences in `public/data/sounds.json` and on screen. Silent Moon panels are silent on purpose: there is no air to carry sound.
-- **Photos:** NASA Image and Video Library (public domain). The title, date and link for each photo are in `public/data/photos.json`.
+- **Photos:** NASA Image and Video Library (public domain). The title, date and link for each photo are in `public/data/photos.json`. The Fayoum comparison also shows Curiosity's hill Bolívar and sand-ridges panorama, credited to NASA/JPL-Caltech/MSSS and sourced from [Phys.org](https://phys.org/news/2022-10-nasa-curiosity-mars-rover-long-awaited.html).
 
 Earth-twin coordinates written by hand in `src/content.ts` are approximate, and the site says so. Nothing here identifies a safe landing or habitat site.
 This is an independent student project, not affiliated with or endorsed by NASA, ESA or USGS.

@@ -331,7 +331,17 @@ section { position: relative; }
 .boots__grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 22px; }
 .field { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .field__img { position: relative; aspect-ratio: 4 / 5; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
-.field__img img { width: 100%; height: 100%; object-fit: cover; }
+.field__img img, .field__img video { width: 100%; height: 100%; object-fit: cover; }
+.field__mars-card { align-self: center; min-width: 0; }
+.field__img--panorama { aspect-ratio: 1197 / 660; }
+.field__img--panorama img { object-fit: cover; transform: scale(1.07); }
+.field__description { margin-top: 10px; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+.field__description a { color: var(--mars); white-space: nowrap; }
+.field__album video { background: #080706; }
+.field__arrow { position: absolute; z-index: 1; top: 50%; width: 36px; height: 36px; display: grid; place-items: center; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: rgba(0,0,0,.62); color: #fff; font: 400 28px/1 var(--body); transition: background .2s, border-color .2s; }
+.field__arrow:hover, .field__arrow:focus-visible { background: rgba(0,0,0,.88); border-color: #fff; }
+.field__arrow--prev { left: 10px; }
+.field__arrow--next { right: 10px; }
 .field__tag { position: absolute; left: 8px; bottom: 8px; right: 8px; font: 600 10px/1.25 var(--cond); letter-spacing: .16em; text-transform: uppercase; padding: 6px 8px; background: rgba(0,0,0,.65); border-radius: 6px; color: var(--go); }
 .field__tag--mars { color: var(--mars); }
 .field__drop { aspect-ratio: 4 / 5; border-radius: 14px; border: 1.5px dashed rgba(255,210,122,.45); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; padding: 18px; text-align: center; cursor: pointer; font-size: 15px; background: repeating-linear-gradient(45deg, rgba(255,210,122,.03) 0 10px, transparent 10px 20px); transition: border-color .2s, background .2s; }
@@ -567,6 +577,7 @@ details[open] > summary::before { content: '− '; }
 .story__title span { display: block; font: 500 12px/1 var(--cond); letter-spacing: .4em; color: var(--go); margin-bottom: 8px; }
 .story__photos { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .story__photo { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); }
+.story__photo--fire-opening { width: min(100%, 500px); justify-self: center; }
 .story__photo .aphoto { border-radius: 0; }
 .story__photo figcaption { position: absolute; left: 14px; top: 14px; z-index: 3; display: flex; gap: 8px; align-items: baseline; padding: 7px 12px; border-radius: 999px; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); font: 500 13px/1 var(--body); }
 .story__photo figcaption b { font: 700 11px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
@@ -823,3 +834,8 @@ details[open] > summary::before { content: '− '; }
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
   url(photos/boots_bg.webp) center bottom / cover no-repeat, #0a0806; }
 .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; pointer-events: none; z-index: 1; background: linear-gradient(180deg, transparent, var(--seam-c)); }
+
+/* logo: Mars and Earth wrapped in one ring of sand */
+.brand__logo { height: 54px; margin: -6px 0; width: auto; flex: none; filter: drop-shadow(0 2px 10px rgba(0,0,0,.45)); transition: transform .4s; }
+.brand:hover .brand__logo { transform: rotate(-8deg) scale(1.06); }
+.brand--big .brand__logo { height: 64px; }
