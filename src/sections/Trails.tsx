@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import Senses, { SenseBar, stopSound, type Mode } from '../components/Senses';
 import TrailStory from '../components/TrailStory';
-import { SEE, SENSES, SOUNDS, STORIES, TRAILS, WORLDS, type Layer, type Pin, type Sense, type Shot, type Snd, type Trail, type WorldId } from '../content';
+import { MAP_COMPARE, MAP_READ, SEE, SENSES, SOUNDS, STORIES, TRAILS, WORLDS, type Layer, type Pin, type Sense, type Shot, type Snd, type Trail, type WorldId } from '../content';
 import { useJSON, useTwins, type Volcanoes } from '../data';
 import { GlobeCanvas, Planet, type PointCloud } from '../three/Globe';
 
@@ -21,7 +21,8 @@ function Legend({ layer }: { layer: Layer }) {
   );
 }
 
-function WorldPanel({ world, layer, pins, cloud, empty, swap, home, sound, soundId, sense, mode, shot }: {
+function WorldPanel({ world, layer, pins, cloud, empty, swap, home, sound, soundId, sense, mode, shot, read }: {
+  read?: string;
   world: WorldId; layer: (Layer & { pins: Pin[] }) | null; pins: Pin[]; cloud?: PointCloud; empty?: string; home?: [number, number];
   sound?: Snd; soundId: string; sense?: Sense; mode: Mode; shot?: Shot;
   swap?: { label: string; on: boolean; toggle: () => void };
@@ -48,9 +49,10 @@ function WorldPanel({ world, layer, pins, cloud, empty, swap, home, sound, sound
         )}
         <Senses id={soundId} mode={mode} snd={sound} sense={sense} shot={shot} />
       </div>
-      {layer && !sensing && (layer.legend || swap) && (
+      {layer && !sensing && (layer.legend || swap || read) && (
         <div className="panel__foot">
-          <Legend layer={layer} />
+          {layer.legend && <Legend layer={layer} />}
+          {read && <p className="panel__read">{read}</p>}
           {swap && <button className="chip" onClick={swap.toggle}>{swap.label}</button>}
         </div>
       )}
@@ -68,9 +70,8 @@ const TRAIL_LOOK: Record<string, { color: string; icon: JSX.Element }> = {
   pole: { color: '#ffd27a', icon: <svg viewBox="0 0 24 24"><path d="M2 18h20M5 21h14" /><path d="M7 18a5 5 0 0 1 10 0" /><path d="M12 6v3M4.9 9.9l2.1 2.1M19.1 9.9 17 12" /></svg> },
 };
 
-export default function Trails({ onScore }: { onScore: (target: string) => void }) {
+export default function Trails() {
   const [id, setId] = useState(TRAILS[0].id);
-  const [night, setNight] = useState(false);
   const [mode, setMode] = useState<Mode>('map');
   useEffect(() => { setMode('map'); stopSound(); }, [id]);
   const t = TRAILS.find((x) => x.id === id) as Trail;
@@ -93,9 +94,7 @@ export default function Trails({ onScore }: { onScore: (target: string) => void 
     return twins.targets.filter((x) => x.body === 'moon').map<Pin>((x) => ({ name: x.name, at: [x.lat, x.lon], tone: 'target' }));
   }, [t, twins]);
 
-  const earthLayer = t.id === 'soil' && night
-    ? { ...t.earth, tex: 'tex/earth_lst_night.webp', title: 'Land surface temperature, July 2024, night' }
-    : t.earth;
+  const earthLayer = t.earth;
 
   return (
     <section className="trails" id="trails" style={{ ['--trails-img' as string]: 'url(photos/trails_bg.webp)' }}>
@@ -126,26 +125,24 @@ export default function Trails({ onScore }: { onScore: (target: string) => void 
             <SenseBar mode={mode} setMode={setMode} />
           </div>
 
+          {/* fixed-height stage: switching trail or sense never makes the page jump */}
+          <div className="trail__body">
           {mode === 'see' && STORIES[t.id] ? <TrailStory key={t.id} story={STORIES[t.id]} /> : (
           <div className="panels" style={{ gridTemplateColumns: `repeat(${shown.length}, minmax(0, 1fr))` }}>
             {shown.includes('earth') && (
-            <WorldPanel world="earth" layer={earthLayer} pins={t.earth.pins} cloud={earthCloud} sound={SOUNDS[t.id]?.earth} soundId={t.id + '-earth'} sense={SENSES[t.id]?.earth} mode={mode} shot={SEE[t.id]?.earth}
-              swap={t.id === 'soil' ? { label: night ? 'Show day' : 'Show night', on: night, toggle: () => setNight((v) => !v) } : undefined} />
+            <WorldPanel world="earth" read={MAP_READ[t.id]?.earth} layer={earthLayer} pins={t.earth.pins} cloud={earthCloud} sound={SOUNDS[t.id]?.earth} soundId={t.id + '-earth'} sense={SENSES[t.id]?.earth} mode={mode} shot={SEE[t.id]?.earth}
+              home={t.id === 'ice' ? [58, 95] : undefined} />
             )}
             {shown.includes('mars') && (
-            <WorldPanel world="mars" layer={t.mars} pins={t.mars?.pins ?? []} empty={t.emptyMars} sound={SOUNDS[t.id]?.mars} soundId={t.id + '-mars'} sense={SENSES[t.id]?.mars} mode={mode} shot={SEE[t.id]?.mars} />
+            <WorldPanel world="mars" read={MAP_READ[t.id]?.mars} layer={t.mars} pins={t.mars?.pins ?? []} empty={t.emptyMars} sound={SOUNDS[t.id]?.mars} soundId={t.id + '-mars'} sense={SENSES[t.id]?.mars} mode={mode} shot={SEE[t.id]?.mars} />
             )}
             {shown.includes('moon') && (
-            <WorldPanel world="moon" layer={t.moon} pins={moonPins} empty={t.emptyMoon} home={t.id === 'pole' ? [-84, 0] : undefined} sound={SOUNDS[t.id]?.moon} soundId={t.id + '-moon'} sense={SENSES[t.id]?.moon} mode={mode} shot={SEE[t.id]?.moon} />
+            <WorldPanel world="moon" read={MAP_READ[t.id]?.moon} layer={t.moon} pins={moonPins} empty={t.emptyMoon} home={t.id === 'pole' ? [-84, 0] : undefined} sound={SOUNDS[t.id]?.moon} soundId={t.id + '-moon'} sense={SENSES[t.id]?.moon} mode={mode} shot={SEE[t.id]?.moon} />
             )}
           </div>
           )}
 
-          {t.id === 'pole' && mode === 'map' && <p className="trail__note">Mars isn’t part of this trail: the lunar south pole has no Martian twin here.</p>}
-          <div className="trail__bottom">
-            <div className="evidence">
-              {t.scoreTarget && <button className="pill pill--small" onClick={() => onScore(t.scoreTarget!)}>Score these twins →</button>}
-            </div>
+          {mode === 'map' && MAP_COMPARE[t.id] && <p className="trail__note trail__compare"><b>Why the maps look different:</b> {MAP_COMPARE[t.id]}</p>}
           </div>
       </div>
     </section>

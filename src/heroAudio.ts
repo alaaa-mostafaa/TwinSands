@@ -20,22 +20,27 @@ function noiseBuffer(c: AudioContext, seconds: number) {
 
 const TRACK = 'sounds/hero_space.mp3';   // the team's chosen space sound ("Conexión extraterrestre", flechex)
 const XFADE = 1.5;                         // seconds of overlap when the clip loops, so there's no seam
+const LOOP_END = 15.8;                     // the file has ~8 s of silence after 16 s: loop only the part with sound
+const LEVEL = 2.0;                         // the track peaks at only ~0.42, so lift it to a normal loudness
 
 function build() {
   const c = new AudioContext();
   ac = c;
-  master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
-  drone = c.createGain(); drone.gain.value = 0.9; drone.connect(master);
+  master = c.createGain(); master.gain.value = 0;
+  const lim = c.createDynamicsCompressor(); lim.threshold.value = -6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
+  master.connect(lim).connect(c.destination);
+  drone = c.createGain(); drone.gain.value = LEVEL; drone.connect(master);
   // play the clip on a loop: each copy fades in while the last one fades out
   fetch(TRACK).then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b)).then((buf) => {
     const play = (at: number) => {
       if (ac !== c) return;
       const src = c.createBufferSource(), g = c.createGain();
+      const len = Math.min(buf.duration, LOOP_END);
       src.buffer = buf; src.connect(g).connect(drone!);
       g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(1, at + XFADE);
-      g.gain.setValueAtTime(1, at + buf.duration - XFADE); g.gain.linearRampToValueAtTime(0, at + buf.duration);
-      src.start(at); src.stop(at + buf.duration + 0.05);
-      const next = at + buf.duration - XFADE;
+      g.gain.setValueAtTime(1, at + len - XFADE); g.gain.linearRampToValueAtTime(0, at + len);
+      src.start(at, 0, len); src.stop(at + len + 0.05);
+      const next = at + len - XFADE;
       shimmerTimer = window.setTimeout(() => play(next), Math.max(0, (next - c.currentTime - 1) * 1000));
     };
     play(c.currentTime + 0.05);
@@ -73,7 +78,7 @@ export const heroSound = {
     if (!ac || !master || muted) return;
     const c = ac, t = c.currentTime, L = 1.6;
     // duck the drone so the swoosh stands out, then bring it back
-    if (drone) { drone.gain.cancelScheduledValues(t); drone.gain.setTargetAtTime(0.35, t, 0.05); drone.gain.setTargetAtTime(0.9, t + 0.9, 0.4); }
+    if (drone) { drone.gain.cancelScheduledValues(t); drone.gain.setTargetAtTime(LEVEL * 0.4, t, 0.05); drone.gain.setTargetAtTime(LEVEL, t + 0.9, 0.4); }
     const pan = c.createStereoPanner(), out = c.createGain(); out.gain.value = 1;
     pan.pan.setValueAtTime(dir > 0 ? 0.9 : -0.9, t); pan.pan.linearRampToValueAtTime(dir > 0 ? -0.9 : 0.9, t + L * 0.85);
     pan.connect(out).connect(c.destination);

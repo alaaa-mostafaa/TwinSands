@@ -53,6 +53,7 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
   const [pick, setPick] = useState<string | null>(null);
   const [view, setView] = useState<'photo' | 'height'>('photo');
   const views = useJSON<Views>('data/views.json');
+  // Moon: photos don't compare (the pole is in deep shadow, its Earth twins are snow-covered), so show height maps
   useEffect(() => setPick(null), [target]);
 
   const earthById = useMemo(() => new Map((d?.earth ?? []).map((e) => [e.id, e])), [d]);
@@ -67,6 +68,7 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
   const rankOf = (id: string) => d.answer_key[t.id]?.[id];
   const mars = d.targets.filter((x) => x.body === 'mars'), moon = d.targets.filter((x) => x.body === 'moon');
   const col = t.body === 'mars' ? 'var(--mars)' : 'var(--moon)';
+  const shown: 'photo' | 'height' = t.body === 'moon' ? 'height' : view;
   const minerals = d.target_minerals[t.id];
 
   return (
@@ -83,15 +85,17 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
 
       <div className="score__grid">
         <div className="score__pair">
-          <div className="score__viewtoggle" role="tablist" aria-label="What to show">
+          {t.body === 'mars' && <div className="score__viewtoggle" role="tablist" aria-label="What to show">
             <button role="tab" aria-selected={view === 'photo'} className={view === 'photo' ? 'is-on' : ''} onClick={() => setView('photo')}>Real photos</button>
             <button role="tab" aria-selected={view === 'height'} className={view === 'height' ? 'is-on' : ''} onClick={() => setView('height')}>Height maps</button>
-          </div>
-          <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} view={view} views={views} />
-          <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" view={view} views={views} />
-          <p className="score__pairnote">{view === 'photo'
+          </div>}
+          <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} view={shown} views={views} />
+          <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" view={shown} views={views} />
+          <p className="score__pairnote">{shown === 'photo'
             ? <>The same 12 km square of each place, seen from orbit. {views && <span className="score__credit">{t.body === 'mars' ? views.credits.mars : views.credits.moon}; {views.credits.earth}.</span>}</>
-            : 'Real 3D height maps of both places, same size, lit the same way. This is what the score compares.'}</p>
+            : t.body === 'moon'
+              ? 'Real 3D height maps of both places, lit the same way. (Photos don’t compare here: the pole sits in deep shadow and its Earth twins are under snow.)'
+              : 'Real 3D height maps of both places, same size, lit the same way. This is what the score compares.'}</p>
           <details className="feat__wrap"><summary>See the numbers</summary>
           <table className="feat">
             <thead><tr><th /><th style={{ color: col }}>{t.body}</th><th style={{ color: 'var(--earth)' }}>earth</th></tr></thead>
@@ -122,6 +126,17 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
         </div>
 
         <div className="score__radar">
+          {t.lunar && (
+            <div className="diviner">
+              <span className="kicker">NASA LRO Diviner · measured temperatures</span>
+              <div className="diviner__row">
+                <div><b>{Math.round(t.lunar.lunar_temp_annual_avg_k - 273.15)} °C</b><span>average all year</span></div>
+                <div><b>{Math.round(t.lunar.lunar_temp_annual_max_k - 273.15)} °C</b><span>warmest it gets</span></div>
+                <div><b>{Math.round((t.lunar.lunar_ice_stable_area_fraction ?? 0) * 100)}%</b><span>of this square could keep ice frozen</span></div>
+              </div>
+              <p>No place on Earth stays this cold all year. The closest are Antarctica’s high plateau and Dry Valleys, which is why they top this list.</p>
+            </div>
+          )}
           <div className="score__big">
             <span className="score__num">{chosen.score.toFixed(0)}</span>
             <span className="score__of">out of 100<br /><em>{earthLabel(e)}</em></span>

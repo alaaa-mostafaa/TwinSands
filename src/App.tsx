@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Boots, Footer } from './sections/Boots';
+import { Boots } from './sections/Boots';
 import Explore from './sections/Explore';
 import Hero from './sections/Hero';
 import MeetMars from './sections/MeetMars';
@@ -33,13 +33,12 @@ export default function App() {
     return () => window.removeEventListener('scroll', on);
   }, []);
 
-  const score = (t: string) => { setTarget(t); go('score'); };
 
   return (
     <>
       <nav className={`nav${scrolled ? ' is-solid' : ''}${menu ? ' is-open' : ''}`}>
         <button className="brand" onClick={() => { go('top'); setMenu(false); }} aria-label="Twin Sands, back to top">
-          <span className="brand__dot" /><span>Twin<br />Sands</span>
+          <img className="brand__logo" src="logo.webp" alt="" /><span>Twin<br />Sands</span>
         </button>
         <ul className="nav__links">
           {NAV.map(([id, label]) => (
@@ -51,12 +50,11 @@ export default function App() {
       <main>
         <Hero />
         <MeetMars />
-        <Trails onScore={score} />
+        <Trails />
         <Explore />
         <TwinScore target={target} setTarget={setTarget} />
         <Boots />
       </main>
-      <Footer />
     </>
   );
 }

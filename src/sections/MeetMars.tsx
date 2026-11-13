@@ -3,6 +3,7 @@ import { Html, useTexture } from '@react-three/drei';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Atmosphere } from '../three/Globe';
+import { meetSound } from '../meetAudio';
 import Safe3D, { useContextRecovery } from '../components/Safe3D';
 
 // Earth's land: 148.9 million km² (NASA Earth fact sheet). Mars' whole surface: 144.4 million km²
@@ -210,7 +211,9 @@ export default function MeetMars() {
       const el = wrap.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      setP(clamp(-r.top / (r.height - window.innerHeight)));
+      const pp = clamp(-r.top / (r.height - window.innerHeight));
+      setP(pp);
+      meetSound.update(pp, ease(seg(pp, 0.76, 0.86)), r.top < window.innerHeight && r.bottom > 0);
     };
     on();
     window.addEventListener('scroll', on, { passive: true });

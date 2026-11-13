@@ -23,6 +23,14 @@ const MADINA_MEDIA = [
   { src: 'photos/madina/im4.mp4', name: 'im4', type: 'video' },
 ] as const;
 
+const DESERTS_MEDIA = [
+  { src: 'photos/deserts/im3.png', name: 'Photo 1', type: 'image' },
+  { src: 'photos/deserts/im2.jpg', name: 'Photo 2', type: 'image' },
+  { src: 'photos/deserts/im1.jpg', name: 'Photo 3', type: 'image' },
+  { src: 'photos/deserts/im4.jpg', name: 'Photo 4', type: 'image' },
+  { src: 'photos/deserts/im5.jpg', name: 'Photo 5', type: 'image' },
+] as const;
+
 const WHITE_DESERT_MEDIA = [
   { src: 'photos/white-desert/im1.png', name: 'Photo 1', type: 'image' },
   { src: 'photos/white-desert/im2.jpeg', name: 'Photo 2', type: 'image' },
@@ -61,6 +69,7 @@ function FieldSlot({ slot, prompt }: { slot: string; prompt: string }) {
   if (slot === 'fayoum') return <FieldAlbum location="Fayoum, Egypt" items={FAYOUM_MEDIA} />;
   if (slot === 'pavement') return <FieldAlbum location="Dahab, Egypt" items={DAHAB_MEDIA} />;
   if (slot === 'dustdevil') return <FieldAlbum location="Al Madinah Al Munawwarah" country="Saudi Arabia" items={MADINA_MEDIA} />;
+  if (slot === 'deserts') return <FieldAlbum location="Egyptian deserts" items={DESERTS_MEDIA} />;
   if (slot === 'wind') return <FieldAlbum location="White Desert, Egypt" items={WHITE_DESERT_MEDIA} />;
   if (!missing || local) {
     return (

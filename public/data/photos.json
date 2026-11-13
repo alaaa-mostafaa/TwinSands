@@ -284,5 +284,15 @@
   "url": "https://images.nasa.gov/details/PIA23420",
   "w": 1040,
   "h": 1280
+ },
+ "mars_namib_dune": {
+  "nasa_id": "PIA20316",
+  "title": "Curiosity Self-Portrait at Martian Sand Dune",
+  "center": "JPL",
+  "date": "2016-01-29",
+  "credit": "NASA/JPL-Caltech/MSSS",
+  "url": "https://images.nasa.gov/details/PIA20316",
+  "w": 1199,
+  "h": 1280
  }
 }

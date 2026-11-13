@@ -91,7 +91,7 @@ export const TRAILS: Trail[] = [
     id: 'soil', title: 'Soil', kicker: 'What the ground is made of',
     question: 'Is the ground dust, sand or bare rock? Heat tells us.',
     summary: 'Fine dust heats fast by day and cools fast at night. Rock holds its heat. Measuring that day–night swing (thermal inertia) tells rovers where the ground is soft and where it is solid, on any world.',
-    earth: { tex: 'tex/earth_lst_day.webp', title: 'Land surface temperature, July 2024, day', source: 'MODIS Terra monthly LST via NASA GIBS', legend: { svg: 'legends/earth_lst.png', low: 'cold', high: 'hot' }, pins: [
+    earth: { tex: 'tex/earth_tswing.webp', title: 'Day-to-night temperature swing, July 2025', source: 'JAXA GCOM-C SGLI land surface temperature (G-Portal product, via JAXA Earth API)', legend: { low: 'small swing', high: '30+ °C swing', colors: 'linear-gradient(90deg,#1f4d8c,#598c8c,#e6b366,#d96126,#a61f14)' }, pins: [
       { name: 'Mojave basalt (MMS simulant)', at: [35.0, -117.8], tone: 'twin' },
       { name: 'Mauna Kea saddle (JSC Mars-1)', at: [19.75, -155.45], tone: 'twin' },
     ] },
@@ -160,11 +160,11 @@ export const TRAILS: Trail[] = [
     id: 'ice', title: 'Water', kicker: 'Water and ice',
     question: 'Where is the water astronauts will need?',
     summary: 'Under Mars’s mid-latitudes lies ice, sometimes just centimetres down. Phoenix scraped it up in 2008 and watched it vanish into the thin air. At the lunar poles, hydrogen hints at ice hiding in the cold.',
-    earth: { tex: 'tex/earth_snow.webp', title: 'Snow cover, January 2024', source: 'MODIS Terra monthly snow cover via NASA GIBS', legend: { svg: 'legends/earth_snow.png', low: 'none', high: 'full' }, pins: [
+    earth: { tex: 'tex/earth_permafrost.webp', title: 'Permanently frozen ground (permafrost), 2019', source: 'ESA CCI Permafrost, found via the ESA Open Science Catalog', legend: { low: 'none', high: '100% frozen', colors: 'linear-gradient(90deg,#8cc7f2,#4a8ce6,#1a40bf)' }, pins: [
       { name: 'McMurdo Dry Valleys', at: [-77.52, 161.85], tone: 'twin', note: 'cold, dry, ground ice' },
       { name: 'Qaidam Basin, China', at: [37.5, 94.0], tone: 'twin' },
     ] },
-    mars: { tex: 'tex/mars_base.webp', title: 'Polar caps and ice targets', source: 'Viking MDIM 2.1 colour mosaic, via Mars Trek', pins: [
+    mars: { tex: 'tex/mars_water.webp', title: 'Water in the top metre of soil', source: 'NASA Mars Odyssey Gamma Ray Spectrometer, H₂O weight %, NASA Planetary Data System (grey: not measured, under seasonal frost)', legend: { low: '2% water', high: '8%', colors: 'linear-gradient(90deg,#8c331a,#cc7a40,#59a6c7,#1f66e0,#0d26b3)' }, pins: [
       { name: 'Arcadia Planitia', at: [46.7, -170], tone: 'target', note: 'shallow buried ice' },
       { name: 'Phoenix landing site', at: [68.22, -125.75], tone: 'target' },
     ] },
@@ -221,7 +221,7 @@ export const REGION_NAME: Record<string, string> = {
 export const FIELD_PAIRS: { slot: string; prompt: string; rover: string; caption: string }[] = [
   { slot: 'fayoum', prompt: 'Fayoum: old lake shoreline or layered lake sediment', rover: 'mars_jezero_delta', caption: 'Perseverance: Jezero delta' },
   { slot: 'pavement', prompt: 'Desert pavement or a scoop of sand', rover: 'mars_rocknest', caption: 'Curiosity at Rocknest' },
-  { slot: 'concretion', prompt: 'Iron concretions or a red crust', rover: 'mars_berries', caption: 'Opportunity: hematite spherules' },
+  { slot: 'deserts', prompt: 'Egyptian deserts', rover: 'mars_namib_dune', caption: 'Curiosity at Namib Dune, a Mars desert' },
   { slot: 'wind', prompt: 'Wind-carved rock or ripples', rover: 'mars_yardangs', caption: 'HiRISE: yardangs' },
   { slot: 'dustdevil', prompt: 'A dust devil or dust plume', rover: 'mars_dust_devil', caption: 'Spirit: dust devil, sol 446' },
   { slot: 'shadow', prompt: 'Your team’s shadow on the ground', rover: 'mars_opportunity_shadow', caption: 'Opportunity’s shadow, sol 180' },
@@ -376,6 +376,48 @@ export type Story = {
   steps: StoryStep[];
   narration?: string[];
 };
+
+// ---------------------------------------------------------------- Plain-language map guide (Twin Trails, Map mode)
+// One line under each globe: what the colours or dots mean. Plus one line per trail: why the three maps differ.
+export const MAP_READ: Record<string, Partial<Record<WorldId, string>>> = {
+  rust: {
+    earth: 'Orange dots: places where NASA’s EMIT instrument on the space station found iron-rust minerals in the ground.',
+    mars: 'Real colours from the Viking orbiters. The whole planet is orange-red because its dust is rusted iron.',
+    moon: 'Red = more iron in the soil. The dark “seas” you see from Earth are the iron-rich parts. None of it rusts: no water, no air.',
+  },
+  soil: {
+    earth: 'Red = ground that heats up a lot by day and cools a lot by night (dry, bare deserts). Blue = it barely changes (wet or green land).',
+    mars: 'Purple and blue = soft fine dust, red = hard rock and crust. Rovers want to avoid the deep dust.',
+    moon: 'Blue = smooth fine powder, brighter = more rocks lying on the surface.',
+  },
+  fire: {
+    earth: 'Red dots: the 1,214 volcanoes that erupted in the last ~12,000 years. Colours show land height: green low, brown and white high.',
+    mars: 'Colours show height: blue = low, red and white = high. The white peaks on the left are giant volcanoes, Olympus Mons the tallest.',
+    moon: 'A real photo mosaic. The dark patches are old lava that flooded giant craters 3–4 billion years ago.',
+  },
+  wind: {
+    earth: 'Brighter yellow-red = more dust in the air near the ground. The big blob over Africa is dust blowing off the Sahara.',
+    mars: 'Red = ground covered in fine dust, blue = dust-free rock. On Mars, dust storms can hide the whole planet.',
+  },
+  ice: {
+    earth: 'Blue = ground that stays frozen all year (permafrost). Darker blue = more of the land is frozen.',
+    mars: 'Blue = more water hidden in the top metre of soil (as ice or wet minerals), orange = drier. Grey = not measured, near the poles.',
+    moon: 'Bright = more hydrogen in the soil. Hydrogen is the clue: where it collects at the poles, there may be ice.',
+  },
+  pole: {
+    earth: 'The pins are the Earth places our Twin Score found most like the lunar south pole: icy, rocky mountains near the poles.',
+    moon: 'Colours show height around the south pole: blue low, red and white high. The pins are possible Artemis landing areas.',
+  },
+};
+export const MAP_COMPARE: Record<string, string> = {
+  rust: 'Each world was measured with a different tool, so the colours aren’t one shared scale. Compare where iron shows up, not the exact shade.',
+  soil: 'Different instruments on each world, so no shared scale. The idea is the same though: soft dust vs hard rock.',
+  fire: 'Earth shows its young volcanoes, Mars its height, the Moon a photo of its old lava. Each one shows where fire shaped the ground.',
+  wind: 'The Moon has no air, so no wind and no map. Earth shows dust in the air, Mars dust lying on the ground.',
+  ice: 'Water is measured differently on each world: frozen ground on Earth, water in the soil on Mars, hydrogen on the Moon. Look for where it gathers.',
+  pole: 'This trail is all about the Moon’s south pole and its closest Earth twins. Mars isn’t part of it.',
+};
+
 export const STORIES: Record<string, Story> = {
   // Sources: Phoenix found shallow ground ice in 2008; bright chunks in the Dodo-Goldilocks trench sublimated within ~4 sols
   // (NASA/JPL/UA). Ice-exposing scarps: Dundas et al. 2018, Science; NASA PIA22077 (ice from 1–2 m down, 100+ m thick).
@@ -388,6 +430,7 @@ export const STORIES: Record<string, Story> = {
     narration: [
       'sounds/water/s1.opus',
       'sounds/water/s2.opus',
+      'sounds/water/s_radar.opus',   // step 3, Seeing in the dark (RADARSAT-1 at Haughton)
       'sounds/water/s3.opus',
       'sounds/water/s4.opus',
       'sounds/water/s5.opus',
@@ -401,6 +444,11 @@ export const STORIES: Record<string, Story> = {
       { title: 'Cliffs of buried ice', line: 'Where Martian ground has slumped away, NASA’s HiRISE camera found cliffs showing layers of nearly pure ice more than 100 m thick, starting just 1–2 m under the surface. Astronauts could dig it out with a shovel.', earth: [], mars: [],
         panes: [
           { world: 'mars', photo: { img: 'mars_ice_scarp', w: 1001, h: 801, place: 'Ice cliff, Mars (HiRISE)' }, marks: [{ t: 'ring', x: 500, y: 350, r: 120, label: 'Blue = ice', sub: 'starts 1–2 m down' }, { t: 'ring', x: 500, y: 120, r: 70, label: 'Dusty ground on top' }] },
+        ] },
+      { title: 'Seeing in the dark', line: 'Canada’s RADARSAT-1 photographed NASA’s Arctic Mars test site, Haughton crater, on 3 January 2001, in the middle of polar night. Radar brings its own light, the same trick Mars and Moon orbiters use to find buried ice.', earth: [], mars: [],
+        panes: [
+          { world: 'earth', photo: { img: 'story_haughton_radar', w: 900, h: 900, place: 'Haughton crater, RADARSAT-1 radar (CSA), 2001' },
+            marks: [{ t: 'ring', x: 480, y: 465, r: 200, label: 'Haughton crater, 23 km wide', sub: 'imaged in total darkness' }, { t: 'ring', x: 470, y: 60, r: 60, label: 'Frozen sea', sub: 'smooth = dark to radar' }] },
         ] },
       { title: 'Ice caps 3 km deep', line: 'Mars has a polar ice cap about as thick as Greenland’s ice sheet: up to around 3 km of frozen water. The dark spirals are valleys carved by wind pouring off the cap.', earth: [], mars: [],
         panes: [

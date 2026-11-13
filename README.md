@@ -55,6 +55,22 @@ Findings worth putting in the proposal:
 - **Mars:** the classic analogs (Atacama, Haughton, Death Valley) land mid-pack on terrain. Their value is chemistry and climate, which is the case for scoring more than landform.
   The best fully measured (7/7) twins are lesser-known places: an Afar/Danakil cell about 200 km from Dallol for Gale, and the Namib for Meridiani.
 
+## Space Apps challenge resources used
+
+| Resource (from the challenge page) | Where it is used in Twin Sands |
+|---|---|
+| NASA Earthdata Search (CMR) | Analog finder backend: finds EMIT mineral, ECOSTRESS temperature and MODIS albedo granules for every Earth window (`backend/pipeline/earthdata.py`) → Twin Score "minerals" spoke, Rust trail map |
+| NASA Worldview (GIBS) | Twin Trails Earth maps: dust (Wind), snow, land temperature, relief (`pipeline/fetch_textures.py`) |
+| NASA Planetary Data System | TES thermal inertia (Mars) and Diviner (Moon) in the score; CTX / LOLA DEMs via USGS Astrogeology (PDS-derived) for height maps, Explore terrain and Twin Score photos |
+| NASA LRO (LROC, LOLA) | LOLA heights for Moon twins and the Explore walks; LROC WAC photos in Twin Score (`pipeline/fetch_views.py`); LRO south-pole mosaic in the South Pole story |
+| NASA LRO Diviner | Polar Resource Product → ice-stable area and temperatures for every Moon site; shown in Twin Score's "NASA LRO Diviner" panel |
+| CSA RADARSAT-1 | Radar image of Haughton crater taken in polar night (3 Jan 2001), Water story (`pipeline/fetch_radar.py`) |
+| CSA SAR Python tutorial | Followed for reading and displaying the RADARSAT scene (GCP reprojection, dB stretch) |
+| CSA RADARSAT Constellation Mission | Not used: RCM open data is limited to a few sample scenes, none over our sites |
+| ESA Copernicus | Copernicus DEM GLO-30 = all Earth heights in the score; Sentinel-2 cloudless (EOX) = Earth photos in Twin Score |
+| ESA Open Science Catalog | Found ESA CCI Permafrost there → Water trail Earth map (`pipeline/fetch_permafrost.py`) |
+| JAXA G-Portal | GCOM-C SGLI land surface temperature (day and night) → Soil trail "day-to-night swing" map (`pipeline/fetch_jaxa_lst.py`); AMSR2 soil moisture tested, not shown (see script) |
+
 ## Credits and sources
 
 - **Measured terrain, thermal and mineral windows:** the Terrestrial Analog Finder project (Space Apps 2026). We reuse its published processed measurements (Copernicus DEM GLO-30, LOLA and CTX DTMs, ECOSTRESS, VIIRS, EMIT, TES, Diviner); the scoring code is ours. *Add their repository URL in `src/content.ts` (`SOURCES`) and in the proposal's literature review.*
