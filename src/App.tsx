@@ -39,7 +39,7 @@ export default function App() {
     <>
       <nav className={`nav${scrolled ? ' is-solid' : ''}${menu ? ' is-open' : ''}`}>
         <button className="brand" onClick={() => { go('top'); setMenu(false); }} aria-label="Twin Sands, back to top">
-          <img className="brand__logo" src="logo.webp" alt="" /><span>Twin<br />Sands</span>
+          <img className="brand__logo" src="logo.svg" alt="" /><span>Twin<br />Sands</span>
         </button>
         <ul className="nav__links">
           {NAV.map(([id, label]) => (

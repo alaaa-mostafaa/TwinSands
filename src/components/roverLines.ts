@@ -11,19 +11,19 @@ export const AREA: Record<AreaKey, string[]> = {
     'Spin the worlds with the arrows. The red one is my favourite.',
   ],
   meet0: [
-    'Watch Earth’s land squeeze into one ball!',
-    'All of Earth’s continents, rolled up like dough!',
-    'Keep scrolling: something magic happens to the land.',
+    'Scroll down ↓ and watch Earth’s land squeeze into one ball!',
+    'Scroll down ↓ All of Earth’s continents roll up like dough!',
+    'Keep scrolling down ↓ Something magic happens to the land.',
   ],
   meet1: [
-    'Ta-da! That ball is the size of Mars!',
-    'All of Earth’s land is about as big as all of Mars!',
-    'See? Mars is my home, and it’s Earth-land-sized.',
+    'Wow! All the land on Earth is almost exactly the size of ALL of Mars! Keep scrolling ↓',
+    'Every continent on Earth together ≈ the whole surface of Mars: about 149 vs 144 million km². Scroll on ↓',
+    'Take away Earth’s oceans, and its land would wrap Mars almost perfectly. Keep scrolling ↓',
   ],
   meet2: [
-    'Mars next to Earth, at true size. Small but mighty!',
-    'Mars is about half as wide as Earth.',
-    'Earth is the big sister. Mars is the cool little one.',
+    'Mars next to Earth, at true size. Small but mighty! Scroll for the moons ↓',
+    'Mars is about half as wide as Earth. Keep scrolling ↓',
+    'Earth is the big sister. Mars is the cool little one. Scroll on ↓',
   ],
   meet3: [
     'And the moons! Phobos and Deimos are tiny potatoes.',
@@ -36,9 +36,9 @@ export const AREA: Record<AreaKey, string[]> = {
     'I brought microphones to Mars. You can hear my recordings here!',
   ],
   explore: [
-    'Pick a place and walk on real Mars ground with me!',
-    'I drive around in here too. In 3D, with my big wheels!',
-    'Real terrain from orbit cameras. Wheels ready!',
+    'Pick one of the places below and tap it. Let’s explore it together!',
+    'Choose a region, tap it, and walk on real Mars ground with me!',
+    'Tap any place below: first you’ll see its twin on Earth, then we drive in!',
   ],
   score: [
     'Which spot on Earth is my twin? Pick a place!',

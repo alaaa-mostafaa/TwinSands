@@ -26,9 +26,8 @@ const MADINA_MEDIA = [
 const DESERTS_MEDIA = [
   { src: 'photos/deserts/im3.png', name: 'Photo 1', type: 'image' },
   { src: 'photos/deserts/im2.jpg', name: 'Photo 2', type: 'image' },
-  { src: 'photos/deserts/im1.jpg', name: 'Photo 3', type: 'image' },
-  { src: 'photos/deserts/im4.jpg', name: 'Photo 4', type: 'image' },
-  { src: 'photos/deserts/im5.jpg', name: 'Photo 5', type: 'image' },
+  { src: 'photos/deserts/im4.jpg', name: 'Photo 3', type: 'image' },
+  { src: 'photos/deserts/im5.jpg', name: 'Photo 4', type: 'image' },
 ] as const;
 
 const WHITE_DESERT_MEDIA = [
@@ -137,7 +136,7 @@ export function Footer() {
     <footer className="foot" id="sources">
       <div className="foot__top">
         <div>
-          <div className="brand brand--big"><img className="brand__logo" src="logo.webp" alt="" /><span>Twin<br />Sands</span></div>
+          <div className="brand brand--big"><img className="brand__logo" src="logo.svg" alt="" /><span>Twin<br />Sands</span></div>
           <p className="foot__team">Team Phobos &amp; Deimos · NASA Space Apps Cairo 2026</p>
           <p className="foot__note">A similarity score is a ranking aid, not a probability, and nothing here identifies a safe landing or habitat site. Earth twin coordinates are approximate unless they come from our measured windows. Independent student project; not affiliated with or endorsed by NASA, ESA or USGS.</p>
         </div>

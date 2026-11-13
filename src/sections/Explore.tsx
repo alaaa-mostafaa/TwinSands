@@ -250,7 +250,7 @@ function ThenNow({ region, meta, onNext, onClose }: { region: Region; meta?: Pho
 }
 
 export default function Explore() {
-  const [world, setWorld] = useState<'mars' | 'moon' | null>(null);
+  const [world, setWorld] = useState<'mars' | 'moon' | null>('mars');
   const [region, setRegion] = useState<Region | null>(null);
   const [stage, setStage] = useState<'intro' | 'twin' | 'walk'>('twin');
   const credits = useJSON<Record<string, PhotoMeta>>('data/postcards.json');
@@ -285,11 +285,12 @@ export default function Explore() {
       <AnimatePresence mode="wait">
         {world && (
           <motion.div key={world} className="explore__regions" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            {regions.map((r) => (
-              <button key={r.id} className="xregion" onClick={() => open(r)}>
-                <img src={`hillshade/${r.id}.webp`} alt="" />
+            {regions.map((r, k) => (
+              <button key={r.id} className="xregion" onClick={() => open(r)} style={{ ['--k' as string]: k }} aria-label={`Walk on ${r.name}`}>
+                <span className="xregion__img"><img src={`hillshade/${r.id}.webp`} alt="" /></span>
                 <b>{r.name}</b>
                 <span>{r.line}</span>
+                <em className="xregion__go">Walk here <i aria-hidden>→</i></em>
               </button>
             ))}
           </motion.div>

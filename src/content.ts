@@ -202,12 +202,12 @@ export const TRAILS: Trail[] = [
 
 // ---------------------------------------------------------------- Target nicknames for Twin Score
 export const TARGET_NICK: Record<string, string> = {
-  'mars-gale': 'Layer Cake Mountain', 'mars-jezero': 'Mars’s Fayoum', 'mars-meridiani': 'Blueberry Fields',
-  'mars-utopia-zhurong': 'Zhurong’s Plain', 'moon-connecting-ridge': 'Sunny Ridges · Connecting ridge',
-  'moon-de-gerlache-rim': 'Sunny Ridges · de Gerlache', 'moon-haworth': 'Ice Cellar rim · Haworth',
-  'moon-leibnitz-beta-plateau': 'Sunny Ridges · Leibnitz β', 'moon-malapert-massif': 'Sunny Ridges · Malapert',
-  'moon-nobile-rim-1': 'Sunny Ridges · Nobile', 'moon-peak-near-shackleton': 'Sunny Ridges · Shackleton peak',
-  'moon-shackleton-rim': 'Ice Cellar rim · Shackleton',
+  'mars-gale': 'Gale crater', 'mars-jezero': 'Jezero crater', 'mars-meridiani': 'Meridiani Planum',
+  'mars-utopia-zhurong': 'Utopia Planitia', 'moon-connecting-ridge': 'Connecting ridge',
+  'moon-de-gerlache-rim': 'de Gerlache rim', 'moon-haworth': 'Haworth',
+  'moon-leibnitz-beta-plateau': 'Leibnitz β plateau', 'moon-malapert-massif': 'Malapert massif',
+  'moon-nobile-rim-1': 'Nobile rim', 'moon-peak-near-shackleton': 'Peak near Shackleton',
+  'moon-shackleton-rim': 'Shackleton rim',
 };
 
 export const REGION_NAME: Record<string, string> = {
