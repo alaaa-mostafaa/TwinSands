@@ -44,6 +44,7 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python pillow n
 uv pip install --python .venv/bin/python imageio-ffmpeg && .venv/bin/python pipeline/fetch_sounds.py   # Twin Trails sounds
 uv pip install --python .venv/bin/python "rembg[cpu]" && .venv/bin/python pipeline/fetch_senses.py   # smell cut-outs + extra photos
 uv pip install --python .venv/bin/python playwright && .venv/bin/playwright install chromium && .venv/bin/python pipeline/render_rover_sprite.py   # frames for the rover that rides down the page
+uv pip install --python .venv/bin/python rasterio==1.4.3 && .venv/bin/python pipeline/fetch_far_terrain.py --cache pipeline/.cache/far   # 120 km horizon around each Explore walk
 ```
 
 Postcard photos of Earth twins come from Wikimedia Commons. Each one's author and licence are in `public/data/postcards.json` and shown on its card; CC BY / BY-SA photos require that credit, so keep it.
@@ -82,6 +83,7 @@ Findings worth putting in the proposal:
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.
 - **Volcanoes:** Smithsonian Global Volcanism Program, Volcanoes of the World.
 - **Sounds:** Perseverance microphone recordings (NASA/JPL-Caltech/LANL/CNES) and Apollo surface audio (NASA), public domain; Earth field recordings from Wikimedia Commons, with authors and licences in `public/data/sounds.json` and on screen. Silent Moon panels are silent on purpose: there is no air to carry sound.
+- **Explore walks:** each 12 km walk is real elevation data (CTX DTMs for Gale and Jezero, LOLA for the Moon); the 120 km horizon around it comes from the NASA MOLA + ESA HRSC blended Mars DEM (200 m) and NASA LRO LOLA (`LDEM_75S` near the south pole, global LDEM elsewhere), fetched by `pipeline/fetch_far_terrain.py`. The look of the ground, sky and light follows published measurements: Curiosity and Perseverance sky colours and dust optical depth (Lemmon et al.), the Golombek and Rapp rock size model, lunar photometry (McEwen's lunar-Lambert law, opposition surge), Sun angles from the Apollo 16 surface journal and the south-pole illumination studies, and, for Jezero's storm, the January 2022 dust storm Perseverance watched (Lemmon et al. 2022), made about twice as thick. Pebbles, ripples, cracks and small craters are drawn by a shader; the shape of the land is the data.
 - **Rover companion:** the little Perseverance hanging on a cable at the right edge is drawn from NASA's Perseverance 3D model (NASA-3D-Resources, public domain), with the model's own mast and arm animations, rendered by `pipeline/render_rover_sprite.py`.
 - **Photos:** NASA Image and Video Library (public domain). The title, date and link for each photo are in `public/data/photos.json`. The Fayoum comparison also shows Curiosity's hill Bolívar and sand-ridges panorama, credited to NASA/JPL-Caltech/MSSS and sourced from [Phys.org](https://phys.org/news/2022-10-nasa-curiosity-mars-rover-long-awaited.html).
 

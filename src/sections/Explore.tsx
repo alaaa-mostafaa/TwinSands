@@ -170,7 +170,7 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
       )}
       <div className="walk__help">
         <span><kbd>↑</kbd><kbd>↓</kbd> walk · <kbd>←</kbd><kbd>→</kbd> turn · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> also work · <kbd>Shift</kbd> run · drag to look</span>
-        <em>{region.world === 'moon' ? 'No air on the Moon: no wind, and you’d only feel your steps through your suit.' : storm ? 'Dust storm (made up for the story). Wind: real Perseverance recording, louder. Steps: recorded on Earth.' : 'Wind: real Perseverance recording. Steps: recorded on Earth.'}</em>
+        <em>{region.world === 'moon' ? 'No air on the Moon: no wind, and you’d only feel your steps through your suit.' : storm ? 'A heavy dust storm, thicker than the one Perseverance watched here in January 2022. Wind: real Perseverance recording, louder. Steps: recorded on Earth.' : 'Wind: real Perseverance recording. Steps: recorded on Earth.'}</em>
       </div>
       <div className="walk__pad" aria-hidden>
         <button {...hold('f')} className="pad-up">▲</button>

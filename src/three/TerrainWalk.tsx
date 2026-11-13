@@ -1,54 +1,77 @@
-import { Html, Stars, useGLTF } from '@react-three/drei';
+import { Html, useGLTF, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import Safe3D from '../components/Safe3D';
-import { Surface } from './Globe';
+import { cavity, litFraction, PLANET_R, sunHorizon } from './walk/horizon';
+import { makeOutcrop, makeRock, mulberry32, vnoise } from './walk/rocks';
+import { makeDustSheetMaterial, makeSkyMaterial, patchMaterial, U } from './walk/shading';
 
 export type Terrain = { n: number; size: number; min: number; max: number; h: Float32Array; far?: Terrain };
 export type Keys = { f: boolean; b: boolean; l: boolean; r: boolean; tl: boolean; tr: boolean; run: boolean };
+type RGB = [number, number, number];
 
-/** How the ground looks up close. The shape is real data; the surface dressing is per region. */
+/** How the ground looks up close. The shape is real elevation data; the surface dressing is per region and
+ *  follows what rovers and astronauts photographed there. Colours are linear albedos (how much light the surface
+ *  reflects): Mars dust about 0.25, dark basalt sand about 0.1, Moon highland soil about 0.15. */
 export type GroundStyle = {
-  sand: [number, number, number]; rock: [number, number, number]; stone: string; slab?: string;
+  sand: RGB; dark: RGB; rock: RGB; slab: RGB; peb: RGB;
+  pebbles: number;          // 0..1 pebble cover
   ripples: number;          // 0 = none, 1 = strong wind ripples
-  gravel: number;           // pebble dots per texture tile
-  rocks: number;            // rocks per 30 m cell around you
-  big: number;              // 0..1, how many of those are boulders
-  slabs: number;            // flat bedrock plates per cell
-  outcrops?: number;        // chance per cell of a big layered rock ledge
-  storm?: boolean;          // dust storm: thick haze, blowing dust, the rover puts its gear on
+  plates: number;           // 0..1 flat bedrock plates, cracked, flush with the ground
+  plateSize: number;        // metres across one plate
+  darkAmt: number;          // dark sand patches
+  streaks?: number;         // long dark wind streaks (Olympus)
+  rockK: number;            // fraction of ground covered by rocks (Golombek & Rapp 1997 size model)
+  rockCol: RGB;             // dust-free rock
+  dust: number;             // 0..1 dust settled on the tops of rocks
+  outcrops?: number;        // chance per 30 m cell of a low layered outcrop
+  bands?: [RGB, RGB];       // its alternating layer colours
+  clusters?: number;        // chance per cell of a cluster of blocks thrown out by a small impact
+  storm?: boolean;          // dust storm: haze, a dim Sun, blowing dust, the rover puts its gear on
   high?: boolean;           // very high up: thin, clear air, darker sky
   sunHigh?: boolean;        // near the Moon's equator: Sun higher, Earth high overhead
-  patches?: [number, number, number]; // colour of bare rock showing through the dust in big patches
-  slabSize?: number;        // scale of the flat plates (1 = default)
-  bands?: [string, string]; // its alternating layer colours
+  sunElev?: number;         // Moon poles: the Sun's height in degrees (it skims the horizon there)
+  exposure?: number;
 };
-const MARS_SAND: GroundStyle = { sand: [0.72, 0.4, 0.24], rock: [0.42, 0.26, 0.18], stone: '#6e3a22', ripples: 1, gravel: 260, rocks: 1, big: 0.2, slabs: 0 };
-const MOON_DUST: GroundStyle = { sand: [0.55, 0.55, 0.56], rock: [0.33, 0.33, 0.35], stone: '#59595c', ripples: 0, gravel: 260, rocks: 1, big: 0.2, slabs: 0 };
+const MARS_SAND: GroundStyle = {
+  sand: [0.3, 0.165, 0.085], dark: [0.13, 0.09, 0.06], rock: [0.16, 0.11, 0.08], slab: [0.24, 0.17, 0.11], peb: [0.1, 0.08, 0.065],
+  pebbles: 0.4, ripples: 0.5, plates: 0, plateSize: 1, darkAmt: 0.3, rockK: 0.012, rockCol: [0.08, 0.068, 0.058], dust: 0.6,
+};
+const MOON_DUST: GroundStyle = {
+  sand: [0.16, 0.15, 0.135], dark: [0.13, 0.12, 0.11], rock: [0.15, 0.14, 0.13], slab: [0.17, 0.16, 0.15], peb: [0.21, 0.2, 0.19],
+  pebbles: 0.12, ripples: 0, plates: 0, plateSize: 1, darkAmt: 0.2, rockK: 0.003, rockCol: [0.17, 0.16, 0.15], dust: 0.35, clusters: 0.035,
+};
 export const STYLES: Record<string, GroundStyle> = {
-  // Gale floor (Aeolis Palus): Curiosity drives over dusty brown ground strewn with dark angular rocks,
-  // gravel and cracked slabs of lake-bed bedrock.
-  'mars-gale': { sand: [0.88, 0.32, 0.12], rock: [0.58, 0.22, 0.1], stone: '#80543f', slab: '#b4826a', ripples: 0, gravel: 900, rocks: 45, big: 0.4, slabs: 3,
-    outcrops: 0.85, bands: ['#a87258', '#c08f72'] },
-};
-STYLES['mars-jezero'] = {
-  // Jezero: dusty crater floor with sand, scattered rocks and low layered delta outcrops, in a dust storm
-  sand: [0.78, 0.46, 0.27], rock: [0.55, 0.32, 0.2], stone: '#7c5642', slab: '#b08a6c', ripples: 0.6, gravel: 520,
-  rocks: 26, big: 0.3, slabs: 2, outcrops: 0, storm: true,
-};
-STYLES['mars-olympus'] = {
-  // Olympus Mons summit: orbiters measure very low thermal inertia here, meaning a thick blanket of fine dust.
-  // So: smooth dusty ground, dark lava (basalt) showing through in patches and flat plates, few rocks.
-  sand: [0.84, 0.6, 0.44], rock: [0.66, 0.46, 0.34], stone: '#5a4038', slab: '#4a3530', ripples: 0.25, gravel: 140,
-  rocks: 5, big: 0.12, slabs: 3, slabSize: 2.6, outcrops: 0, high: true, patches: [0.3, 0.2, 0.17],
-};
-STYLES['moon-highlands'] = {
-  // Lunar highlands (Apollo 16, Descartes): bright anorthosite soil and pale boulders under a higher Sun
-  sand: [0.74, 0.73, 0.71], rock: [0.52, 0.52, 0.52], stone: '#9c9893', slab: '#8a8681', ripples: 0, gravel: 380,
-  rocks: 14, big: 0.3, slabs: 0, outcrops: 0, sunHigh: true,
+  // Gale floor (Aeolis Palus, near Bradbury Landing): dusty brown fines carpeted with rounded pebbles, sparse cobbles,
+  // flat cracked mudstone and conglomerate pavement, and low tilted outcrops of layered rock.
+  'mars-gale': { ...MARS_SAND, pebbles: 0.45, ripples: 0, plates: 0.7, plateSize: 0.8, darkAmt: 0.35, rockK: 0.012, rockCol: [0.085, 0.07, 0.06], dust: 0.7,
+    outcrops: 0.22, bands: [[0.2, 0.14, 0.1], [0.28, 0.2, 0.14]] },
+  // Jezero floor (Máaz): dusty soil and dark sand, flat light 'paver' rocks, clusters of blocky dark rocks on low rises.
+  // The haze is a heavy dust storm (optical depth ~4), thicker than the one Perseverance watched in January 2022 (~2).
+  'mars-jezero': { ...MARS_SAND, sand: [0.3, 0.17, 0.09], dark: [0.11, 0.08, 0.055], rock: [0.13, 0.09, 0.065], slab: [0.28, 0.21, 0.15], peb: [0.08, 0.07, 0.06],
+    pebbles: 0.35, ripples: 0.6, plates: 0.55, plateSize: 1.6, darkAmt: 0.45, rockK: 0.022, rockCol: [0.06, 0.055, 0.045], dust: 0.55, clusters: 0.06, storm: true },
+  // Olympus Mons summit: a thick blanket of bright fine dust (very low thermal inertia), dark wind streaks, few rocks.
+  'mars-olympus': { ...MARS_SAND, sand: [0.34, 0.2, 0.11], dark: [0.17, 0.1, 0.06], rock: [0.12, 0.08, 0.06], peb: [0.12, 0.08, 0.06],
+    pebbles: 0.08, ripples: 0.25, darkAmt: 0.2, streaks: 0.6, rockK: 0.004, rockCol: [0.07, 0.055, 0.045], dust: 0.8, high: true },
+  // Lunar highlands (Apollo 16, Descartes): bright anorthosite soil, rocks mostly near small fresh craters, Sun ~30° up.
+  'moon-highlands': { ...MOON_DUST, sand: [0.19, 0.175, 0.16], dark: [0.16, 0.15, 0.14], peb: [0.26, 0.25, 0.24], rockK: 0.005, rockCol: [0.22, 0.21, 0.2],
+    pebbles: 0.15, sunHigh: true, exposure: 1.25 },
+  // Lunar south pole: the Sun skims the horizon, so sunlit rims and slopes blaze and everything lower is in shadow.
+  'moon-shackleton-rim': { ...MOON_DUST, sunElev: 3, exposure: 1.7 },
+  'moon-malapert-massif': { ...MOON_DUST, sunElev: 5, exposure: 1.6 },
 };
 export const styleFor = (id: string, world: 'mars' | 'moon') => STYLES[id] ?? (world === 'mars' ? MARS_SAND : MOON_DUST);
+
+/** The air: sky colours (linear radiance), dust optical depth, haze, sunlight. Mars values follow Curiosity and
+ *  Perseverance sky measurements: butterscotch sky, dust optical depth ~0.6 on a normal day, much less on Olympus. */
+type Atmos = { zen: RGB; hor: RGB; tau: number; aur: number; fogB: number; fogH: number; sunI: number; sunCol: string; env: number; exposure: number; shadow: number };
+const ATMOS: Record<'mars' | 'high' | 'storm' | 'moon', Atmos> = {
+  mars: { zen: [0.36, 0.215, 0.13], hor: [0.62, 0.37, 0.21], tau: 0.6, aur: 1, fogB: 4.5e-5, fogH: 11000, sunI: 4.4, sunCol: '#fff4e6', env: 1, exposure: 1.05, shadow: 1 },
+  high: { zen: [0.075, 0.05, 0.045], hor: [0.4, 0.24, 0.14], tau: 0.12, aur: 0.3, fogB: 1.2e-5, fogH: 11000, sunI: 5.2, sunCol: '#fffaf2', env: 0.8, exposure: 1.0, shadow: 1 },
+  storm: { zen: [0.34, 0.12, 0.035], hor: [0.52, 0.2, 0.055], tau: 4.0, aur: 0.9, fogB: 1.5e-3, fogH: 900, sunI: 0.75, sunCol: '#ffd2a0', env: 1.8, exposure: 1.3, shadow: 0.25 },
+  moon: { zen: [0, 0, 0], hor: [0, 0, 0], tau: 0, aur: 0, fogB: 0, fogH: 1, sunI: 5, sunCol: '#ffffff', env: 1, exposure: 1.5, shadow: 1 },
+};
 
 const EYE = 2;            // metres above the ground
 const WALK = 18, RUN = 70; // metres per second: sped up so a 12 km map is explorable
@@ -90,267 +113,193 @@ export function meshHeightAt(t: Terrain, x: number, z: number) {
   return fc + fr <= 1 ? A + (D - A) * fc + (B - A) * fr : C + (B - C) * (1 - fc) + (D - C) * (1 - fr);
 }
 
-/** A tiling grain texture (pebbles, ripples) so the ground has detail up close. Purely visual. */
-function useGrain(world: 'mars' | 'moon', st: GroundStyle) {
-  return useMemo(() => {
-    const S = 256, c = document.createElement('canvas');
-    c.width = c.height = S;
-    const g = c.getContext('2d')!;
-    const img = g.createImageData(S, S);
-    let seed = world === 'mars' ? 11 : 23;
-    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < S * S; i++) {
-      const x = i % S, y = Math.floor(i / S);
-      const ripple = st.ripples * 0.06 * Math.sin((x + y * 0.35) * 0.25);
-      const v = 0.82 + rnd() * 0.22 + ripple;
-      const k = Math.round(Math.min(1, v) * 255);
-      img.data.set([k, k, k, 255], i * 4);
-    }
-    g.putImageData(img, 0, 0);
-    // scattered pebbles
-    for (let i = 0; i < st.gravel; i++) {
-      const r = 0.6 + rnd() * 2.4;
-      g.fillStyle = rnd() < 0.2 ? `rgba(255,235,210,${0.1 + rnd() * 0.15})` : `rgba(0,0,0,${0.12 + rnd() * 0.3})`;
-      g.beginPath(); g.arc(rnd() * S, rnd() * S, r, 0, Math.PI * 2); g.fill();
-    }
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(1600, 1600);   // ~7.5 m per tile on a 12 km map
-    tex.anisotropy = 8;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, [world, st]);
-}
-
 function Ground({ t, world, st }: { t: Terrain; world: 'mars' | 'moon'; st: GroundStyle }) {
-  const grain = useGrain(world, st);
   const geo = useMemo(() => {
     const g = new THREE.PlaneGeometry(t.size, t.size, t.n - 1, t.n - 1);
     g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) pos.setY(i, t.h[i]);
     g.computeVertexNormals();
-    // colour: base tone, varied by slope and a little noise (the shape is real data, the colour is not)
-    const nrm = g.attributes.normal as THREE.BufferAttribute;
-    const col = new Float32Array(pos.count * 3);
-    const base = st.sand, rock = st.rock;
-    for (let i = 0; i < pos.count; i++) {
-      const steep = 1 - nrm.getY(i);
-      const k = Math.min(1, steep * 3.2);
-      const nz = 0.9 + 0.2 * Math.sin(pos.getX(i) * 0.013 + Math.cos(pos.getZ(i) * 0.011) * 3) * Math.cos(pos.getZ(i) * 0.017);
-      let pk = 0;                                   // bare lava patches: smooth noise, sharp-ish edges
-      if (st.patches) { const n = fbm(pos.getX(i) * 0.0055 + 3.1, 0.5, pos.getZ(i) * 0.0055 - 1.7); pk = Math.min(0.85, Math.max(0, (n - 0.08) * 4)); }
-      for (let c = 0; c < 3; c++) col[i * 3 + c] = ((base[c] * (1 - k) + rock[c] * k) * (1 - pk) + (st.patches?.[c] ?? 0) * pk) * nz;
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('cav', new THREE.BufferAttribute(cavity(t), 1));
     return g;
-  }, [t, st]);
-  return (
-    <mesh geometry={geo}>
-      <meshStandardMaterial vertexColors map={grain} roughness={1} metalness={0} />
-    </mesh>
-  );
+  }, [t]);
+  const mat = useMemo(() => {
+    const moon = world === 'moon';
+    return patchMaterial(new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 }),
+      { ground: true, moon, lunar: moon, aerial: !moon, curve: true, plates: st.plates > 0, streaks: !!st.streaks });
+  }, [world, st]);
+  useEffect(() => () => { geo.dispose(); mat.dispose(); }, [geo, mat]);
+  return <mesh geometry={geo} material={mat} receiveShadow />;
 }
 
-/** The wide backdrop (120 km, coarse) under the detailed map, so distant walls and floors are there to see.
- *  Inside the walkable square it is tucked 40 m under the detailed ground so the two never fight. */
-function Backdrop({ t, st }: { t: Terrain; st: GroundStyle }) {
+/** The wide backdrop (120 km, coarse) around the detailed map, so distant crater walls and mountains are there to see.
+ *  Under the walkable square it is tucked a little below the detailed ground; past the edge it blends into the
+ *  wide data over 1.8 km, so there is no step. Planet curvature is applied in the shader. */
+function Backdrop({ t, world, st }: { t: Terrain; world: 'mars' | 'moon'; st: GroundStyle }) {
   const geo = useMemo(() => {
     const f = t.far!, g = new THREE.PlaneGeometry(f.size, f.size, f.n - 1, f.n - 1);
     g.rotateX(-Math.PI / 2);
-    const pos = g.attributes.position as THREE.BufferAttribute, half = t.size / 2;
+    const pos = g.attributes.position as THREE.BufferAttribute, half = t.size / 2, band = 1800;
     for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), z = pos.getZ(i);
-      pos.setY(i, Math.abs(x) < half && Math.abs(z) < half ? heightAt(t, x, z) - 40 : f.h[i]);
+      const x = pos.getX(i), z = pos.getZ(i), e = Math.max(Math.abs(x), Math.abs(z));
+      const w = THREE.MathUtils.smoothstep(e, half, half + band);
+      const tuck = e < half ? THREE.MathUtils.lerp(40, 12, e / half) : 12 * (1 - w);
+      pos.setY(i, (heightAt(t, x, z) - tuck) * (1 - w) + f.h[i] * w);
     }
     g.computeVertexNormals();
-    const nrm = g.attributes.normal as THREE.BufferAttribute, col = new Float32Array(pos.count * 3);
-    for (let i = 0; i < pos.count; i++) {
-      const k = Math.min(1, (1 - nrm.getY(i)) * 4);
-      for (let c = 0; c < 3; c++) col[i * 3 + c] = st.sand[c] * (1 - k) + st.rock[c] * k;
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('cav', new THREE.BufferAttribute(new Float32Array(pos.count), 1));
     return g;
-  }, [t, st]);
-  return <mesh geometry={geo}><meshStandardMaterial vertexColors roughness={1} /></mesh>;
+  }, [t]);
+  const mat = useMemo(() => {
+    const moon = world === 'moon';
+    const m = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 });
+    return patchMaterial(m, { ground: true, moon, lunar: moon, aerial: !moon, curve: true, far: true, streaks: !!st.streaks });
+  }, [world, st]);
+  useEffect(() => () => { geo.dispose(); mat.dispose(); }, [geo, mat]);
+  return <mesh geometry={geo} material={mat} />;
 }
 
 /** Rocks you can bump into (filled by the rock field around you). */
 export const ROCKS: { x: number; z: number; r: number }[] = [];
 
 const CELL = 30, RING = 8;   // rocks are generated in 30 m cells, 8 cells around you (about 250 m)
-function hash(a: number, b: number) {
-  let h = (a * 374761393 + b * 668265263) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return () => { h = Math.imul(h ^ (h >>> 15), 2246822519) + 0x9e3779b9 | 0; return ((h >>> 0) % 100000) / 100000; };
-}
+const BINS = [0.13, 0.2, 0.32, 0.5, 0.8, 1.25, 2, 3.2];   // rock diameter classes, metres
+const CULL = 0.0032;          // don't draw a rock smaller than this fraction of its distance (under ~2 pixels)
+const LODS = [{ upTo: 0.5, detail: 2, cap: 2000 }, { upTo: 1.25, detail: 3, cap: 500 }, { upTo: 99, detail: 3, cap: 160 }];
+const VARIANTS = 4;
 
-/** Smooth 3D value noise (deterministic), used to roughen rock shapes. */
-function vnoise(x: number, y: number, z: number) {
-  const h = (i: number, j: number, k: number) => { const n = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453; return n - Math.floor(n); };
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
-  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
-  const L = (a: number, b: number, t: number) => a + (b - a) * t;
-  return L(L(L(h(xi, yi, zi), h(xi + 1, yi, zi), u), L(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v),
-           L(L(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), L(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v), w) * 2 - 1;
+/** Expected rocks per square metre in each size class, from the rock cover k (Golombek & Rapp 1997):
+ *  the area covered by rocks wider than D is k * exp(-q D), with q = 1.79 + 0.152 / k. */
+function rockDensity(k: number) {
+  const q = 1.79 + 0.152 / k;
+  return BINS.slice(0, -1).map((a, i) => {
+    const b = BINS[i + 1], N = 8; let s = 0;
+    for (let j = 0; j < N; j++) { const D = a + ((b - a) * (j + 0.5)) / N; s += (4 * k * q * Math.exp(-q * D)) / (Math.PI * D * D); }
+    return (s * (b - a)) / N;
+  });
 }
-const fbm = (x: number, y: number, z: number) => vnoise(x, y, z) * 0.6 + vnoise(x * 2.3, y * 2.3, z * 2.3) * 0.3 + vnoise(x * 5.1, y * 5.1, z * 5.1) * 0.1;
+const cellSeed = (cx: number, cz: number, salt: number) => (Math.imul(cx | 0, 73856093) ^ Math.imul(cz | 0, 19349663) ^ Math.imul(salt + 1, 83492791)) >>> 0;
 
-/** Push every vertex in or out by noise (same position -> same push, so seams stay closed),
- *  then shade: dusty light tops, plain sides, dark undersides. */
-function roughen(g: THREE.BufferGeometry, amt: number, freq: number, radialOnly = false) {
-  const p = g.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-    const n = fbm(x * freq + 7.3, y * freq * (radialOnly ? 3 : 1), z * freq - 2.1) * amt;
-    if (radialOnly) {
-      const r = Math.hypot(x, z) || 1;
-      p.setXYZ(i, x + (x / r) * n, y + (Math.abs(y) > 0.49 ? n * 0.25 : 0), z + (z / r) * n);
-    } else {
-      const r = Math.hypot(x, y, z) || 1;
-      p.setXYZ(i, x * (1 + n / r), y * (1 + n / r), z * (1 + n / r));
-    }
-  }
-  g.computeVertexNormals();
-  const nr = g.attributes.normal as THREE.BufferAttribute, col = new Float32Array(p.count * 3);
-  for (let i = 0; i < p.count; i++) {
-    const up = nr.getY(i);
-    const k = up > 0.55 ? 1.18 : up < -0.3 ? 0.6 : 0.95 + up * 0.15;
-    col.set([k * (up > 0.55 ? 1.04 : 1), k, k * (up > 0.55 ? 0.94 : 1)], i * 3);
-  }
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  return g;
-}
-
-/** Rock surface: grain, fine horizontal bedding lines and a few cracks. Greyscale, tinted per rock. */
-function useRockTexture() {
-  return useMemo(() => {
-    const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
-    const g = c.getContext('2d')!, img = g.createImageData(S, S);
-    for (let y = 0; y < S; y++) {
-      const bed = 0.08 * Math.sin(y * 0.21 + Math.sin(y * 0.037) * 4) + 0.05 * vnoise(0, y * 0.09, 3);
-      for (let x = 0; x < S; x++) {
-        const n = fbm(x * 0.018, y * 0.05, 1.7) * 0.18 + (Math.random() - 0.5) * 0.12;
-        const k = Math.round(Math.max(0, Math.min(1, 0.9 + n + bed)) * 255);
-        img.data.set([k, k, k, 255], (y * S + x) * 4);
-      }
-    }
-    g.putImageData(img, 0, 0);
-    g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 1.2;
-    for (let i = 0; i < 14; i++) {                      // cracks: short wandering vertical lines
-      let x = Math.random() * S, y = Math.random() * S;
-      g.beginPath(); g.moveTo(x, y);
-      for (let k = 0; k < 10; k++) { x += (Math.random() - 0.5) * 14; y += 6 + Math.random() * 10; g.lineTo(x, y); }
-      g.stroke();
-    }
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.anisotropy = 8; tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-}
-
-/** Rocks and bedrock slabs, generated cell by cell around you, so the ground stays rocky wherever you walk.
- *  The same cell always gets the same rocks. */
-function Rocks({ t, st, pos }: { t: Terrain; st: GroundStyle; pos: React.MutableRefObject<THREE.Vector3> }) {
-  const rocks = useRef<THREE.InstancedMesh>(null), slabs = useRef<THREE.InstancedMesh>(null), layers = useRef<THREE.InstancedMesh>(null);
-  const side = RING * 2 + 1;
-  const RC = side * side * st.rocks, SC = Math.max(1, side * side * st.slabs), LC = st.outcrops ? side * side * 15 : 1;
-  const bandA = useMemo(() => new THREE.Color(st.bands?.[0] ?? st.stone), [st]), bandB = useMemo(() => new THREE.Color(st.bands?.[1] ?? st.stone), [st]);
+/** Rocks and outcrops, generated cell by cell around you so the ground stays rocky wherever you walk.
+ *  The same cell always gets the same rocks. Sizes follow the measured Mars/Moon rock size laws: many small
+ *  stones, few big ones, in clusters. Stones smaller than 13 cm are drawn by the ground shader instead. */
+function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mars' | 'moon'; pos: React.MutableRefObject<THREE.Vector3> }) {
+  const moon = world === 'moon';
+  const geos = useMemo(() => LODS.map((l, li) => Array.from({ length: VARIANTS }, (_, v) =>
+    makeRock(li * 31 + v * 7 + (moon ? 100 : 0), l.detail, moon && v % 2 ? 'rounded' : 'angular'))), [moon]);
+  const outGeos = useMemo(() => (st.outcrops ? Array.from({ length: 3 }, (_, v) => makeOutcrop(v + 1)) : []), [st]);
+  const rockMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 }), { rock: true, aerial: !moon }), [moon]);
+  const outMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0 }), { rock: true, layers: true, aerial: !moon }), [moon]);
+  const meshes = useMemo(() => LODS.map((l, li) => geos[li].map((g) => {
+    const m = new THREE.InstancedMesh(g, rockMat, l.cap);
+    m.castShadow = m.receiveShadow = true; m.frustumCulled = false; m.count = 0;
+    m.setColorAt(0, new THREE.Color());
+    return m;
+  })), [geos, rockMat]);
+  const outMeshes = useMemo(() => outGeos.map((g) => {
+    const m = new THREE.InstancedMesh(g, outMat, 140);
+    m.castShadow = m.receiveShadow = true; m.frustumCulled = false; m.count = 0;
+    return m;
+  }), [outGeos, outMat]);
+  useEffect(() => () => { geos.flat().forEach((g) => g.dispose()); outGeos.forEach((g) => g.dispose()); rockMat.dispose(); outMat.dispose(); meshes.flat().forEach((m) => m.dispose()); outMeshes.forEach((m) => m.dispose()); },
+    [geos, outGeos, rockMat, outMat, meshes, outMeshes]);
+  const dens = useMemo(() => rockDensity(st.rockK), [st]);
+  const dClus = useMemo(() => rockDensity(0.15), []);
+  const base = useMemo(() => new THREE.Color(...st.rockCol), [st]);
   const cur = useRef('');
-  const tex = useRockTexture();
-  // a broken-edged plate: notched outline, slightly undercut (top wider than bottom), rough faces
-  const jagged = useMemo(() => {
-    const SEG = 18, g = new THREE.CylinderGeometry(0.52, 0.46, 1, SEG, 3);
-    const jit = Array.from({ length: SEG + 1 }, (_, k) => 0.7 + ((Math.sin(k * 12.9898) * 43758.5453) % 1 + 1) % 1 * 0.5);
-    jit[SEG] = jit[0];
-    const p = g.attributes.position as THREE.BufferAttribute;
-    for (let v = 0; v < p.count; v++) {
-      const x = p.getX(v), z = p.getZ(v), r = Math.hypot(x, z);
-      if (r < 1e-4) continue;
-      const a = Math.atan2(x, z), f = ((a + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * SEG, k = Math.floor(f), m = f - k;
-      const j = jit[k] * (1 - m) + jit[(k + 1) % (SEG + 1)] * m;
-      p.setX(v, x * j); p.setZ(v, z * j);
-    }
-    return roughen(g, 0.07, 4, true);
-  }, []);
-  const boulder = useMemo(() => roughen(new THREE.IcosahedronGeometry(1, 1), 0.32, 1.6), []);
-  const slabGeo = useMemo(() => roughen(new THREE.CylinderGeometry(0.5, 0.55, 1, 10, 1), 0.08, 3, true), []);
-  const stone = useMemo(() => new THREE.Color(st.stone), [st]);
-  const o = useMemo(() => new THREE.Object3D(), []);
+  const o = useMemo(() => new THREE.Object3D(), []), c = useMemo(() => new THREE.Color(), []);
+  useEffect(() => { cur.current = ''; }, [t, st]);
   useFrame(() => {
     const cx = Math.floor(pos.current.x / CELL), cz = Math.floor(pos.current.z / CELL), key = cx + ',' + cz;
-    if (key === cur.current || !rocks.current || !slabs.current || !layers.current) return;
+    if (key === cur.current) return;
     cur.current = key;
     ROCKS.length = 0;
-    let ri = 0, si = 0, li = 0;
+    const counts = meshes.map((l) => l.map(() => 0)), oc = outMeshes.map(() => 0);
+    const px = pos.current.x, pz = pos.current.z;
+    const put = (x: number, z: number, D: number, rnd: () => number) => {
+      const dist = Math.hypot(x - px, z - pz);
+      if (D < dist * CULL) return;
+      if (D > 0.45 && Math.hypot(x, z) < 10) return;                // keep the landing spot clear
+      const li = D < LODS[0].upTo ? 0 : D < LODS[1].upTo ? 1 : 2, v = Math.floor(rnd() * VARIANTS), m = meshes[li][v];
+      if (counts[li][v] >= LODS[li].cap) return;
+      o.position.set(x, meshHeightAt(t, x, z) - D * (0.04 + rnd() * 0.08), z);
+      o.rotation.set((rnd() - 0.5) * 0.3, rnd() * Math.PI * 2, (rnd() - 0.5) * 0.3);
+      o.scale.setScalar(D);
+      o.updateMatrix(); m.setMatrixAt(counts[li][v], o.matrix);
+      const r = rnd();
+      // the Moon: white anorthosite, grey breccia and dark glass-coated rocks; Mars: shades of dark basalt
+      const k = moon ? (r < 0.25 ? 1.6 : r < 0.85 ? 0.9 + rnd() * 0.3 : 0.45) : 0.7 + r * 0.6;
+      m.setColorAt(counts[li][v]++, c.copy(base).multiplyScalar(k));
+      if (D > 0.8) ROCKS.push({ x, z, r: D * 0.5 + 0.35 });
+    };
     for (let i = -RING; i <= RING; i++) for (let j = -RING; j <= RING; j++) {
-      const rnd = hash(cx + i, cz + j);
-      for (let k = 0; k < st.rocks; k++) {
-        const x = (cx + i + rnd()) * CELL, z = (cz + j + rnd()) * CELL;
-        const boulder = rnd() < st.big && Math.hypot(x, z) > 12;
-        const s = boulder ? 0.25 + Math.pow(rnd(), 2.5) * 1.3 : 0.05 + rnd() * 0.16;
-        o.position.set(x, heightAt(t, x, z) + s * 0.15, z);
-        o.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
-        o.scale.set(s * (0.7 + rnd() * 0.8), s * (0.4 + rnd() * 0.5), s * (0.7 + rnd() * 0.6));
-        o.updateMatrix(); rocks.current.setMatrixAt(ri, o.matrix);
-        rocks.current.setColorAt(ri++, stone.clone().multiplyScalar(0.75 + rnd() * 0.5));
-        if (s > 0.45) ROCKS.push({ x, z, r: s + 0.4 });
-      }
-      for (let k = 0; k < st.slabs; k++) {
-        const x = (cx + i + rnd()) * CELL, z = (cz + j + rnd()) * CELL;
-        const w = (1.5 + rnd() * 4) * (st.slabSize ?? 1);
-        const grade = Math.hypot(heightAt(t, x + 3, z) - heightAt(t, x - 3, z), heightAt(t, x, z + 3) - heightAt(t, x, z - 3)) / 6;
-        if (grade > 0.07) { rnd(); rnd(); rnd(); rnd(); continue; }   // a flat plate would stick out of a slope
-        o.position.set(x, heightAt(t, x, z) + (st.slabSize ? 0.04 : -0.03), z);
-        o.rotation.set((rnd() - 0.5) * 0.04, rnd() * 3, (rnd() - 0.5) * 0.04);
-        o.scale.set(w, (0.12 + rnd() * 0.18) * (st.slabSize ? 0.5 : 1), w * (0.5 + rnd() * 0.6));
-        o.updateMatrix(); slabs.current.setMatrixAt(si++, o.matrix);
-      }
-      // Layered rock ledge: broad broken plates stacked like pages. Each layer steps back the same way,
-      // so one side is a cliff of exposed layers and the other a gentle slope (like tilted sediment).
-      if (st.outcrops && rnd() < st.outcrops) {
-        const x = (cx + i + 0.2 + rnd() * 0.6) * CELL, z = (cz + j + 0.2 + rnd() * 0.6) * CELL;
-        // three size classes: knee-high ledges, house-size blocks, and big mesas tens of metres across
-        const cls = rnd(), w = cls < 0.4 ? 3 + rnd() * 6 : cls < 0.75 ? 9 + rnd() * 18 : 28 + Math.pow(rnd(), 0.8) * 45;
-        const thick = w > 28 ? 1.4 + rnd() * 0.8 : w > 9 ? 1.1 + rnd() * 0.4 : 1;
-        const n = Math.min(4 + Math.floor(rnd() * 11), 2 + Math.floor(w / 1.6)), rot = rnd() * Math.PI * 2;
-        const sx = Math.cos(rot), sz = -Math.sin(rot), tilt = (rnd() - 0.5) * 0.14;
-        if (Math.hypot(x, z) < w * 0.6 + 8) continue;   // keep the landing spot clear
-        let y = heightAt(t, x, z) - 0.4, ww = w, d = w * (0.35 + rnd() * 0.45), off = 0;
+      const gx = cx + i, gz = cz + j;
+      // nearest point of this cell to you: skip size classes too small to see from there
+      const nx = Math.max(gx * CELL, Math.min(px, (gx + 1) * CELL)), nz = Math.max(gz * CELL, Math.min(pz, (gz + 1) * CELL));
+      const near = Math.hypot(nx - px, nz - pz);
+      const clump = 0.2 + 1.6 * THREE.MathUtils.smoothstep(vnoise(gx * 0.13, 1.3, gz * 0.13), -0.3, 0.55);   // rocky and bare patches
+      for (let b = 0; b < dens.length; b++) {
+        if (BINS[b + 1] < near * CULL) continue;
+        const rnd = mulberry32(cellSeed(gx, gz, b));
+        const lam = dens[b] * CELL * CELL * clump, n = Math.floor(lam + rnd());
         for (let k = 0; k < n; k++) {
-          const th = (0.3 + rnd() * 0.7) * thick;
-          o.position.set(x + sx * off, y + th / 2, z + sz * off);
-          o.rotation.set(tilt, rot + (rnd() - 0.5) * 0.25, (rnd() - 0.5) * 0.06);
-          o.scale.set(ww, th, d);
-          o.updateMatrix(); layers.current.setMatrixAt(li, o.matrix);
-          layers.current.setColorAt(li++, (k % 2 ? bandA : bandB).clone().multiplyScalar(0.8 + rnd() * 0.35));
-          y += th * 0.92; off += ww * (0.06 + rnd() * 0.1); ww *= 0.78 + rnd() * 0.2; d *= 0.85 + rnd() * 0.15;
+          const x = (gx + rnd()) * CELL, z = (gz + rnd()) * CELL, D = BINS[b] + (BINS[b + 1] - BINS[b]) * rnd();
+          put(x, z, D, rnd);
         }
-        ROCKS.push({ x, z, r: w * 0.4 + 0.6 });
+      }
+      // a clump of blocks thrown out by a small impact, densest at its centre
+      const rc = mulberry32(cellSeed(gx, gz, 50));
+      if (st.clusters && rc() < st.clusters) {
+        const ccx = (gx + 0.2 + rc() * 0.6) * CELL, ccz = (gz + 0.2 + rc() * 0.6) * CELL, R = 4 + rc() * 8;
+        for (let b = 0; b < dClus.length; b++) {
+          const n = Math.floor(dClus[b] * Math.PI * R * R * 2 + rc());
+          for (let k = 0; k < n; k++) {
+            const a = rc() * Math.PI * 2, rr = -Math.log(1 - rc() * 0.95) * R * 0.5;
+            put(ccx + Math.cos(a) * rr, ccz + Math.sin(a) * rr, BINS[b] + (BINS[b + 1] - BINS[b]) * rc(), rc);
+          }
+        }
+      }
+      // a low, tilted outcrop of layered rock
+      const ro = mulberry32(cellSeed(gx, gz, 77));
+      if (st.outcrops && outMeshes.length && ro() < st.outcrops) {
+        const x = (gx + 0.15 + ro() * 0.7) * CELL, z = (gz + 0.15 + ro() * 0.7) * CELL;
+        const W = ro() < 0.12 ? 10 + ro() * 9 : 2.5 + Math.pow(ro(), 1.5) * 7, H = Math.min(1.9, Math.max(0.35, W * (0.07 + ro() * 0.09)));
+        const v = Math.floor(ro() * outMeshes.length);
+        if (Math.hypot(x, z) < W * 0.6 + 8 || Math.hypot(x - px, z - pz) > 230 || oc[v] >= 140) continue;
+        const grade = Math.hypot(heightAt(t, x + 4, z) - heightAt(t, x - 4, z), heightAt(t, x, z + 4) - heightAt(t, x, z - 4)) / 8;
+        o.position.set(x, meshHeightAt(t, x, z) - H * (0.1 + grade * 2), z);
+        o.rotation.set((ro() - 0.5) * 0.08, ro() * Math.PI * 2, (ro() - 0.5) * 0.08);
+        o.scale.set(W, H, W * (0.45 + ro() * 0.4));
+        o.updateMatrix(); outMeshes[v].setMatrixAt(oc[v]++, o.matrix);
+        ROCKS.push({ x, z, r: W * 0.36 + 0.5 });
       }
     }
-    rocks.current.count = ri; slabs.current.count = si; layers.current.count = li;
-    rocks.current.instanceMatrix.needsUpdate = true; slabs.current.instanceMatrix.needsUpdate = true; layers.current.instanceMatrix.needsUpdate = true;
-    if (layers.current.instanceColor) layers.current.instanceColor.needsUpdate = true;
-    if (rocks.current.instanceColor) rocks.current.instanceColor.needsUpdate = true;
+    meshes.forEach((l, li) => l.forEach((m, v) => {
+      m.count = counts[li][v]; m.instanceMatrix.needsUpdate = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    }));
+    outMeshes.forEach((m, v) => { m.count = oc[v]; m.instanceMatrix.needsUpdate = true; });
   });
-  useEffect(() => { cur.current = ''; }, [t, st]);
   return (
     <>
-      <instancedMesh ref={rocks} args={[undefined, undefined, RC]} frustumCulled={false}>
-        <primitive object={boulder} attach="geometry" />
-        <meshStandardMaterial map={tex} vertexColors roughness={1} flatShading />
-      </instancedMesh>
-      <instancedMesh ref={slabs} args={[undefined, undefined, SC]} frustumCulled={false}>
-        <primitive object={st.slabSize ? jagged : slabGeo} attach="geometry" />
-        <meshStandardMaterial map={tex} vertexColors color={st.slab ?? st.stone} roughness={1} flatShading />
-      </instancedMesh>
-      <instancedMesh ref={layers} args={[undefined, undefined, LC]} frustumCulled={false}>
-        <primitive object={jagged} attach="geometry" />
-        <meshStandardMaterial map={tex} vertexColors roughness={1} flatShading />
-      </instancedMesh>
+      {meshes.flat().map((m, i) => <primitive key={'r' + i} object={m} />)}
+      {outMeshes.map((m, i) => <primitive key={'o' + i} object={m} />)}
     </>
   );
+}
+
+/** Give a loaded model shadows and the walk's lighting (terrain shadow, haze). Done once per material. */
+function prepModel(root: THREE.Object3D, aerial: boolean) {
+  root.traverse((o) => {
+    const m = o as THREE.Mesh; if (!m.isMesh) return;
+    m.castShadow = m.receiveShadow = true;
+    for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+      const s = mat as THREE.MeshStandardMaterial;
+      if (!s.isMeshStandardMaterial || s.userData.walk) continue;
+      s.userData.walk = true;
+      patchMaterial(s, { aerial });
+    }
+  });
 }
 
 /** Storm gear for the rover (a joke, not real hardware): goggles over its mast camera and a red-and-white
@@ -390,7 +339,7 @@ function StormGear({ model }: { model: THREE.Object3D }) {
       {/* goggles: two round lenses with orange rims over the camera eyes, and a strap round the head */}
       {[-1, 1].map((sx) => (
         <group key={sx} position={[sx * lens * 1.1, head.c.y + head.sz.y * 0.2, head.front - head.c.z + 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-          <mesh><cylinderGeometry args={[lens, lens, 0.09, 28]} /><meshStandardMaterial color="#ff7a1a" emissive="#5a2200" metalness={0.3} roughness={0.35} /></mesh>
+          <mesh castShadow><cylinderGeometry args={[lens, lens, 0.09, 28]} /><meshStandardMaterial color="#ff7a1a" emissive="#5a2200" metalness={0.3} roughness={0.35} /></mesh>
           <mesh position={[0, 0.047, 0]}><cylinderGeometry args={[lens * 0.74, lens * 0.74, 0.01, 28]} /><meshStandardMaterial color="#14324a" metalness={0.9} roughness={0.05} /></mesh>
         </group>
       ))}
@@ -398,13 +347,13 @@ function StormGear({ model }: { model: THREE.Object3D }) {
         <torusGeometry args={[1, 0.05, 8, 40]} /><meshStandardMaterial color="#3a2a22" roughness={0.9} />
       </mesh>
       {/* scarf: wrapped round the head just under the goggles, two tails blowing out behind */}
-      <mesh position={[0, head.bottom + 0.04, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[head.sz.x * 0.7 + 0.06, head.sz.z * 0.7 + 0.06, 1.5]}>
+      <mesh castShadow position={[0, head.bottom + 0.04, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[head.sz.x * 0.7 + 0.06, head.sz.z * 0.7 + 0.06, 1.5]}>
         <torusGeometry args={[1, 0.09, 12, 40]} /><meshStandardMaterial map={checks} roughness={1} />
       </mesh>
       <group ref={tails} position={[0, head.bottom + 0.04, -(head.front - head.c.z) - 0.02]}>
         {[-0.09, 0.09].map((x, i) => (
           <group key={i} position={[x, 0, 0]}>
-            <mesh position={[0, -0.5, 0]}>
+            <mesh position={[0, -0.5, 0]} castShadow>
               <planeGeometry args={[0.24, 1.0]} />
               <meshStandardMaterial map={checks} side={THREE.DoubleSide} roughness={1} />
             </mesh>
@@ -419,6 +368,7 @@ function StormGear({ model }: { model: THREE.Object3D }) {
 const ROVER_URL = 'models/perseverance.glb';
 function Rover({ t, pos, look, say, onTap, gear }: { gear?: boolean; t: Terrain; pos: React.MutableRefObject<THREE.Vector3>; look: React.MutableRefObject<{ yaw: number; pitch: number }>; say: string | null; onTap: () => void }) {
   const { scene } = useGLTF(ROVER_URL, 'draco/');
+  useMemo(() => prepModel(scene, true), [scene]);
   const g = useRef<THREE.Group>(null);
   const yaw = useRef(look.current.yaw);
   const placed = useRef(false);
@@ -427,7 +377,7 @@ function Rover({ t, pos, look, say, onTap, gear }: { gear?: boolean; t: Terrain;
     const dt = Math.min(dtRaw, 0.05), P = pos.current, L = look.current;
     const fx = -Math.sin(L.yaw), fz = -Math.cos(L.yaw), rx = Math.cos(L.yaw), rz = -Math.sin(L.yaw);
     const tx = P.x + rx * 4 + fx * 10, tz = P.z + rz * 4 + fz * 10;   // ahead and to your right, in view
-    if (!placed.current) { r.position.set(tx, heightAt(t, tx, tz), tz); placed.current = true; }
+    if (!placed.current) { r.position.set(tx, meshHeightAt(t, tx, tz), tz); placed.current = true; }
     const dx = tx - r.position.x, dz = tz - r.position.z, d = Math.hypot(dx, dz);
     if (d > 60) r.position.set(tx, 0, tz);                       // left far behind: catch up
     else if (d > 0.4) {
@@ -449,10 +399,10 @@ function Rover({ t, pos, look, say, onTap, gear }: { gear?: boolean; t: Terrain;
       if (e < rr && e > 0.001) { r.position.x = k.x + (ex / e) * rr; r.position.z = k.z + (ez / e) * rr; }
     }
     const x = r.position.x, z = r.position.z;
-    r.position.y = heightAt(t, x, z);
+    r.position.y = meshHeightAt(t, x, z);
     // tilt with the ground under its wheels
     const ax = Math.sin(yaw.current), az = Math.cos(yaw.current);
-    const pitch = Math.atan2(heightAt(t, x - ax * 1.5, z - az * 1.5) - heightAt(t, x + ax * 1.5, z + az * 1.5), 3);
+    const pitch = Math.atan2(meshHeightAt(t, x - ax * 1.5, z - az * 1.5) - meshHeightAt(t, x + ax * 1.5, z + az * 1.5), 3);
     r.rotation.set(0, 0, 0);
     r.rotateY(yaw.current); r.rotateX(pitch);
   });
@@ -492,6 +442,7 @@ function Footprints({ t, first }: { t: Terrain; first: { x: number; z: number; y
   const ref = useRef<THREE.InstancedMesh>(null);
   const N = 400, next = useRef(0);
   const o = useMemo(() => new THREE.Object3D(), []);
+  const mat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: 1 }), {}), [tex]);
   useEffect(() => {
     const m = ref.current; if (!m) return;
     const put = (x: number, z: number, yaw: number, scale = 1) => {
@@ -506,9 +457,8 @@ function Footprints({ t, first }: { t: Terrain; first: { x: number; z: number; y
     return () => { PRINTS.add = () => {}; };
   }, [t, first, o]);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, N]} frustumCulled={false}>
+    <instancedMesh ref={ref} args={[undefined, mat, N]} frustumCulled={false} receiveShadow>
       <planeGeometry args={[0.15, 0.36]} />
-      <meshStandardMaterial map={tex} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-2} roughness={1} />
     </instancedMesh>
   );
 }
@@ -542,6 +492,7 @@ function Astronaut({ t, pos, look, say, onTap }: { t: Terrain; pos: React.Mutabl
       }
       m.geometry.computeVertexNormals();
     });
+    prepModel(root, false);
     const k = 1.8 / H;                                             // 1.8 m tall, feet on the ground
     const g = new THREE.Group(); root.scale.setScalar(k); root.position.y = -box.min.y * k; g.add(root);
     return g;
@@ -553,7 +504,7 @@ function Astronaut({ t, pos, look, say, onTap }: { t: Terrain; pos: React.Mutabl
     const dt = Math.min(dtRaw, 0.05), P = pos.current, L = look.current;
     const fx = -Math.sin(L.yaw), fz = -Math.cos(L.yaw), rx = Math.cos(L.yaw), rz = -Math.sin(L.yaw);
     const tx = P.x + rx * 2.6 + fx * 6, tz = P.z + rz * 2.6 + fz * 6;
-    if (!placed.current) { r.position.set(tx, heightAt(t, tx, tz), tz); lastPrint.current.copy(r.position); placed.current = true; }
+    if (!placed.current) { r.position.set(tx, meshHeightAt(t, tx, tz), tz); lastPrint.current.copy(r.position); placed.current = true; }
     const dx = tx - r.position.x, dz = tz - r.position.z, d = Math.hypot(dx, dz);
     let speed = 0;
     if (d > 60) { r.position.set(tx, 0, tz); lastPrint.current.set(tx, 0, tz); }
@@ -568,7 +519,7 @@ function Astronaut({ t, pos, look, say, onTap }: { t: Terrain; pos: React.Mutabl
       const want = Math.atan2(P.x - r.position.x, P.z - r.position.z), diff = ((want - yaw.current + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
       yaw.current += diff * (1 - Math.exp(-dt * 2));
     }
-    r.position.y = heightAt(t, r.position.x, r.position.z);
+    r.position.y = meshHeightAt(t, r.position.x, r.position.z);
     r.rotation.set(0, yaw.current, 0);
     // the bunny hop: a slow, floaty bounce while moving
     const moving = speed > 0.5;
@@ -594,11 +545,13 @@ function Astronaut({ t, pos, look, say, onTap }: { t: Terrain; pos: React.Mutabl
   );
 }
 
-/** First-person walker: keys move, drag to look, height follows the real terrain. */
+/** First-person walker: keys move, drag to look, height follows the real terrain. Your own body is an invisible
+ *  shape that still casts a shadow, so you see your shadow on the ground. */
 function Walker({ t, keys, onMove, look, pos }: { pos: React.MutableRefObject<THREE.Vector3>; t: Terrain; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void; look: React.MutableRefObject<{ yaw: number; pitch: number }> }) {
   const { camera } = useThree();
   const p = pos;
   const last = useRef(0);
+  const me = useRef<THREE.Group>(null);
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05), k = keys.current, L = look.current;
     if (k.tl) L.yaw += dt * 1.6;
@@ -620,19 +573,29 @@ function Walker({ t, keys, onMove, look, pos }: { pos: React.MutableRefObject<TH
       const dx = p.current.x - r.x, dz = p.current.z - r.z, d = Math.hypot(dx, dz);
       if (d < r.r && d > 0.001) { p.current.x = r.x + (dx / d) * r.r; p.current.z = r.z + (dz / d) * r.r; }
     }
-    const ground = heightAt(t, p.current.x, p.current.z);
+    const ground = meshHeightAt(t, p.current.x, p.current.z);
     camera.position.set(p.current.x, ground + EYE, p.current.z);
     camera.rotation.set(L.pitch, L.yaw, 0, 'YXZ');
+    if (me.current) { me.current.position.set(p.current.x, ground, p.current.z); me.current.rotation.y = L.yaw; }
     last.current += dt;
     if (last.current > 0.1) { last.current = 0; onMove({ elev: ground, moving: len > 0, x: p.current.x, z: p.current.z }); }
   });
-  return null;
+  const body = useMemo(() => new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }), []);
+  return (
+    <group ref={me}>
+      {/* legs, torso, arms and head (with a suit helmet on the Moon), invisible to the camera but not to the Sun */}
+      {[-0.12, 0.12].map((x) => <mesh key={x} castShadow material={body} position={[x, 0.45, 0]}><capsuleGeometry args={[0.085, 0.75, 3, 8]} /></mesh>)}
+      <mesh castShadow material={body} position={[0, 1.18, 0]}><capsuleGeometry args={[0.2, 0.42, 3, 10]} /></mesh>
+      {[-0.27, 0.27].map((x) => <mesh key={x} castShadow material={body} position={[x, 1.08, 0]} rotation={[0, 0, x > 0 ? 0.12 : -0.12]}><capsuleGeometry args={[0.055, 0.6, 3, 8]} /></mesh>)}
+      <mesh castShadow material={body} position={[0, 1.66, 0]}><sphereGeometry args={[0.15, 12, 10]} /></mesh>
+    </group>
+  );
 }
 
 /** Blowing dust: grains streaming past you on the wind, wrapped around the camera so they never run out. */
 function Dust() {
   const { camera } = useThree();
-  const N = 5000, R = 40;
+  const N = 9000, R = 40;
   const ref = useRef<THREE.Points>(null);
   const [geo, seeds] = useMemo(() => {
     const g = new THREE.BufferGeometry(), p = new Float32Array(N * 3), sd = new Float32Array(N);
@@ -666,53 +629,165 @@ function Dust() {
   });
   return (
     <points ref={ref} geometry={geo} frustumCulled={false}>
-      <pointsMaterial color="#e2b48a" map={sprite} size={0.09} transparent opacity={0.75} depthWrite={false} />
+      <pointsMaterial color="#e08a4a" map={sprite} size={0.11} transparent opacity={0.8} depthWrite={false} />
     </points>
   );
 }
 
-function Sky({ world, storm, high, earthHigh }: { world: 'mars' | 'moon'; storm?: boolean; high?: boolean; earthHigh?: boolean }) {
-  const { scene } = useThree();
-  useEffect(() => {
-    if (storm) {
-      scene.background = new THREE.Color('#b8875e');
-      scene.fog = new THREE.FogExp2('#b8875e', 0.0105);    // dust storm: you see a couple of hundred metres
-    } else if (high) {
-      scene.background = new THREE.Color('#a4806c');
-      scene.fog = new THREE.Fog('#a98571', 9000, 75000);   // 21 km up: thin, clear air, you see far
-    } else if (world === 'mars') {
-      scene.background = new THREE.Color('#c9946c');
-      scene.fog = new THREE.Fog('#c9946c', 2500, 14000);   // dusty air
-    } else {
-      scene.background = new THREE.Color('#000000');
-      scene.fog = null;                                    // no air, no haze: far ridges stay razor sharp
-    }
-    return () => { scene.background = null; scene.fog = null; };
-  }, [scene, world, storm, high]);
-  if (storm) return <Dust />;
-  return world === 'mars' ? (
-    <mesh>
-      <sphereGeometry args={[100000, 32, 16]} />
-      <shaderMaterial side={THREE.BackSide} depthWrite={false} fog={false}
-        vertexShader={'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }'}
-        fragmentShader={high
-          ? 'varying vec3 vP; void main(){ float h = clamp(vP.y*1.4+0.05,0.0,1.0); vec3 c = mix(vec3(0.66,0.52,0.45), vec3(0.24,0.2,0.24), h); gl_FragColor = vec4(c,1.0); }'
-          : 'varying vec3 vP; void main(){ float h = clamp(vP.y*1.6+0.05,0.0,1.0); vec3 c = mix(vec3(0.82,0.6,0.43), vec3(0.55,0.36,0.27), h); gl_FragColor = vec4(c,1.0); }'} />
-    </mesh>
-  ) : (
-    <>
-      <Stars radius={15000} depth={2000} count={4000} factor={60} saturation={0} fade={false} speed={0} />
-      {/* From the lunar south pole, Earth hangs just above the horizon */}
-      {/* Near the equator on the near side (Apollo 16) Earth stands high in the sky instead */}
-      <group position={earthHigh ? [-3000, 15500, -6000] : [-9000, 2200, -14000]} scale={620}>
-        <Surface tex="tex/earth_base.webp" shade={1.1} />
-      </group>
-    </>
+/** Gusts of dust sweeping past you in the storm (three see-through curtains at different distances). */
+function DustSheets() {
+  const g = useRef<THREE.Group>(null);
+  const sheets = useMemo(() => [[15, 1, 0.8], [35, 1, 1.3], [80, 1, 2.2]].map(([r, sp, sc]) => ({ r, mat: makeDustSheetMaterial(sp, sc) })), []);
+  useEffect(() => () => sheets.forEach((s) => s.mat.dispose()), [sheets]);
+  useFrame(({ camera }) => { g.current?.position.set(camera.position.x, camera.position.y - 4, camera.position.z); });
+  return (
+    <group ref={g}>
+      {sheets.map((s, i) => (
+        <mesh key={i} material={s.mat} renderOrder={10 - i} frustumCulled={false}>
+          <cylinderGeometry args={[s.r, s.r, 34, 64, 1, true]} />
+        </mesh>
+      ))}
+    </group>
   );
+}
+
+/** Earth seen from the Moon: its true size (1.9°), lit only by the Sun, so its phase always matches the Sun's
+ *  direction in your sky. */
+function Earth({ dir }: { dir: THREE.Vector3 }) {
+  const map = useTexture('tex/earth_base.webp');
+  useEffect(() => { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; map.needsUpdate = true; }, [map]);
+  const D = 900, r = D * Math.tan(THREE.MathUtils.degToRad(0.95));
+  // the map has no clouds, so it is darker than the real Earth (Bond albedo ~0.3): brighten it to match
+  const bright = useMemo(() => new THREE.Color(2.6, 2.6, 2.6), []);
+  const air = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: { uSun: U.uSun }, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec3 vN; varying vec3 vW; void main(){ vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `uniform vec3 uSun; varying vec3 vN; varying vec3 vW;
+      void main(){ vec3 V = normalize(cameraPosition - vW); float rim = pow(1.0 - abs(dot(vN, V)), 2.5);
+        float lit = smoothstep(-0.25, 0.5, dot(vN, uSun));
+        gl_FragColor = vec4(vec3(0.3, 0.55, 1.0) * rim * lit * 1.6, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  }), []);
+  useEffect(() => () => air.dispose(), [air]);
+  const at = dir.clone().multiplyScalar(D);
+  return (
+    <group position={at}>
+      <mesh scale={r} rotation={[0.4, 2.2, 0.41]} renderOrder={-999}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshStandardMaterial map={map} color={bright} roughness={0.9} metalness={0} envMapIntensity={0} depthTest={false} depthWrite={false} />
+      </mesh>
+      <mesh scale={r * 1.035} material={air} renderOrder={-998}><sphereGeometry args={[1, 48, 48]} /></mesh>
+    </group>
+  );
+}
+
+/** A few hundred faint stars: from the sunlit Moon the glare of the ground hides almost all of them. */
+function Stars() {
+  const geo = useMemo(() => {
+    const rnd = mulberry32(42), N = 900, p = new Float32Array(N * 3), c = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const u = rnd() * 2 - 1, a = rnd() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+      p.set([Math.cos(a) * s * 950, u * 950, Math.sin(a) * s * 950], i * 3);
+      const b = 0.015 + Math.pow(rnd(), 6) * 0.12;
+      c.set([b, b, b * (0.9 + rnd() * 0.2)], i * 3);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    return g;
+  }, []);
+  return (
+    <points geometry={geo} renderOrder={-999} frustumCulled={false}>
+      <pointsMaterial size={1.6} sizeAttenuation={false} vertexColors depthTest={false} depthWrite={false} />
+    </points>
+  );
+}
+
+/** The sky, locked to the camera so it is infinitely far away: the analytic sky dome with the Sun's disk, and on
+ *  the Moon the stars and the Earth. Drawn first, behind everything. */
+function SkyDome({ world, earthDir }: { world: 'mars' | 'moon'; earthDir: THREE.Vector3 }) {
+  const g = useRef<THREE.Group>(null);
+  const mat = useMemo(() => makeSkyMaterial(true), []);
+  useEffect(() => () => mat.dispose(), [mat]);
+  useFrame(({ camera }) => { g.current?.position.copy(camera.position); });
+  return (
+    <group ref={g}>
+      <mesh material={mat} renderOrder={-1000} frustumCulled={false}><sphereGeometry args={[1000, 64, 32]} /></mesh>
+      {world === 'moon' && <><Stars /><Suspense fallback={null}><Earth dir={earthDir} /></Suspense></>}
+    </group>
+  );
+}
+
+/** Light from the sky and the sunlit ground, baked once into an environment map from the same sky function. On Mars
+ *  it is the butterscotch sky above and warm ground below; on the Moon the sky is black, so the only fill light is
+ *  sunlight bounced off the grey ground. */
+function SkyLight({ groundRad, intensity }: { groundRad: RGB; intensity: number }) {
+  const gl = useThree((s) => s.gl), scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const env = new THREE.Scene();
+    const skyMat = makeSkyMaterial(false);
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(100, 48, 24), skyMat); sky.renderOrder = -1;
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(400, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(...groundRad) }));
+    ground.position.y = -2;
+    env.add(sky, ground);
+    const pm = new THREE.PMREMGenerator(gl);
+    const rt = pm.fromScene(env, 0.04, 0.1, 1000);
+    pm.dispose();
+    scene.environment = rt.texture;
+    scene.environmentIntensity = intensity;
+    return () => {
+      scene.environment = null; rt.dispose(); skyMat.dispose();
+      sky.geometry.dispose(); ground.geometry.dispose(); (ground.material as THREE.Material).dispose();
+    };
+  }, [gl, scene, groundRad, intensity]);
+  return null;
+}
+
+/** The Sun, with a shadow map that travels with you: snapped to whole shadow texels so the shadows don't crawl. */
+function SunLight({ sun, intensity, color, shadow }: { sun: THREE.Vector3; intensity: number; color: string; shadow: number }) {
+  const L = useRef<THREE.DirectionalLight>(null);
+  const HALF = 100, MAP = 4096, D = 400;   // 5 cm shadow texels around you
+  const basis = useMemo(() => {
+    const z = sun.clone().normalize(), x = new THREE.Vector3(0, 1, 0).cross(z).normalize();
+    return { x, y: z.clone().cross(x), z };
+  }, [sun]);
+  const f = useMemo(() => new THREE.Vector3(), []), p = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera }) => {
+    const l = L.current; if (!l) return;
+    camera.getWorldDirection(f).setY(0);
+    if (f.lengthSq() < 1e-6) f.set(0, 0, -1);
+    f.normalize();
+    p.copy(camera.position).addScaledVector(f, HALF * 0.35);
+    const tx = (2 * HALF) / MAP;
+    const u = Math.round(p.dot(basis.x) / tx) * tx, v = Math.round(p.dot(basis.y) / tx) * tx, w = p.dot(basis.z);
+    p.copy(basis.x).multiplyScalar(u).addScaledVector(basis.y, v).addScaledVector(basis.z, w);
+    l.target.position.copy(p); l.target.updateMatrixWorld();
+    l.position.copy(p).addScaledVector(basis.z, D);
+  });
+  return (
+    <directionalLight ref={L} castShadow intensity={intensity} color={color}
+      shadow-mapSize={[MAP, MAP]} shadow-camera-left={-HALF} shadow-camera-right={HALF} shadow-camera-top={HALF} shadow-camera-bottom={-HALF}
+      shadow-camera-near={1} shadow-camera-far={2 * D} shadow-bias={-0.0004} shadow-normalBias={0.12} shadow-intensity={shadow} />
+  );
+}
+
+/** Tone mapping: the Khronos "neutral" curve keeps colours as they are and only rolls off the highlights, so the
+ *  measured albedos and sky colours come out close to NASA's natural-colour photos. Also runs the shared clock. */
+function Exposure({ world, exposure }: { world: 'mars' | 'moon'; exposure: number }) {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.toneMapping = THREE.NeutralToneMapping;
+    gl.toneMappingExposure = exposure;
+  }, [gl, world, exposure]);
+  useFrame((_, dt) => { U.uTime.value += dt; });
+  return null;
 }
 
 export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: { say?: string | null; onTap?: () => void; t: Terrain; id: string; world: 'mars' | 'moon'; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void }) {
   const st = styleFor(id, world);
+  const atm = ATMOS[world === 'moon' ? 'moon' : st.storm ? 'storm' : st.high ? 'high' : 'mars'];
+  const exposure = st.exposure ?? atm.exposure;
   const start = useMemo(() => new THREE.Vector3(0, 0, 0), []);
   const look = useRef(useMemo(() => {
     const h0 = heightAt(t, start.x, start.z);
@@ -735,11 +810,57 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
   }, [start]);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [grab, setGrab] = useState(false);
-  // Sun behind your shoulder when you land, so the view is lit. Mars: mid-afternoon. Moon pole: very low, long shadows.
-  const y0 = look.current.yaw;
-  const sun = world === 'mars'
-    ? new THREE.Vector3(Math.sin(y0) * 0.7 + 0.3, 0.45, Math.cos(y0) * 0.7)
-    : new THREE.Vector3(Math.sin(y0 + 0.5), st.sunHigh ? 0.55 : 0.16, Math.cos(y0 + 0.5));
+  if (import.meta.env.DEV) (window as unknown as { __walk?: unknown }).__walk = { look, pos };   // for screenshot scripts
+  // The Sun behind your shoulder when you land, so the view is lit and your shadow points ahead.
+  // Mars: mid-afternoon. Apollo 16: morning Sun ~30° up. Moon's south pole: the Sun skims the horizon, so we pick the
+  // nearest direction from which the Sun actually clears the hills around the landing spot.
+  const sun = useMemo(() => {
+    const y0 = look.current.yaw;
+    if (world === 'mars') return new THREE.Vector3(Math.sin(y0) * 0.7 + 0.3, 0.45, Math.cos(y0) * 0.7).normalize();
+    if (st.sunHigh || !st.sunElev) return new THREE.Vector3(Math.sin(y0 + 0.5), 0.55, Math.cos(y0 + 0.5)).normalize();
+    const el = THREE.MathUtils.degToRad(st.sunElev);
+    let az = y0 + 0.5, best = -1;
+    for (let k = 0; k < 24; k++) {
+      const a = y0 + 0.5 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 12);
+      const s = litFraction(t, start.x, start.z, a, el, world) - 0.012 * Math.ceil(k / 2);
+      if (s > best) { best = s; az = a; }
+      if (s > 0.85) break;
+    }
+    return new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  }, [t, world, st, start]);
+  const hz = useMemo(() => sunHorizon(t, sun, world), [t, sun, world]);
+  useEffect(() => () => { hz.near.dispose(); hz.far?.dispose(); }, [hz]);
+  // the shared shader settings for this place
+  useMemo(() => {
+    U.uSun.value.copy(sun);
+    U.uMoon.value = world === 'moon' ? 1 : 0;
+    U.uZen.value.setRGB(...atm.zen); U.uHor.value.setRGB(...atm.hor);
+    U.uTau.value = atm.tau; U.uAur.value = atm.aur;
+    U.uFogB.value = atm.fogB; U.uFogH.value = atm.fogH; U.uFogRefH.value = (t.min + t.max) / 2;
+    U.uInvTwoR.value = 1 / (2 * PLANET_R[world]);
+    U.uSand.value.setRGB(...st.sand); U.uDark.value.setRGB(...st.dark); U.uRock.value.setRGB(...st.rock);
+    U.uSlab.value.setRGB(...st.slab); U.uPeb.value.setRGB(...st.peb);
+    U.uPebDens.value = st.pebbles; U.uRipple.value = st.ripples; U.uPlates.value = st.plates; U.uPlateSize.value = st.plateSize;
+    U.uDarkAmt.value = st.darkAmt; U.uStreaks.value = st.streaks ?? 0; U.uDust.value = st.dust;
+    U.uBandA.value.setRGB(...(st.bands?.[0] ?? st.rock)); U.uBandB.value.setRGB(...(st.bands?.[1] ?? st.slab));
+    const soft = Math.max(world === 'moon' ? 0.0047 : 0.0031, 0.004);
+    U.uHorizon.value = hz.near; U.uTerr.value.set(t.size, t.n, soft, 1);
+    U.uHorizonFar.value = hz.far; U.uTerrFar.value.set(t.far?.size ?? 1, t.far?.n ?? 2, soft, hz.far ? 1 : 0);
+  }, [sun, world, atm, st, t, hz]);
+  // the light bounced off the sunlit ground (radiance), for the environment light
+  const groundRad = useMemo<RGB>(() => {
+    const s = Math.max(sun.y, 0.02);
+    if (world === 'moon') return st.sand.map((a) => (a * atm.sunI * ((2 * s) / (s + 0.6)) * 0.6) / Math.PI) as RGB;   // lunar-Lambert, grazing view
+    return st.sand.map((a, c) => (a * (atm.sunI * s + Math.PI * 0.5 * (atm.zen[c] + atm.hor[c]))) / Math.PI) as RGB;   // sun + sky on flat ground
+  }, [sun, world, atm, st]);
+  // Earth in the Moon's sky. At the south pole it hangs a few degrees over the horizon (toward the near side), here
+  // placed so it is gibbous and just ahead of you when you land; at Apollo 16 it stands ~66° up, opposite the
+  // morning Sun. Its phase comes from the real Sun direction, so it is always consistent.
+  const earthDir = useMemo(() => {
+    const az = Math.atan2(sun.x, sun.z) + (st.sunHigh ? Math.PI : Math.PI * 0.8), el = THREE.MathUtils.degToRad(st.sunHigh ? 66 : 5);
+    return new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  }, [sun, st]);
+  if (import.meta.env.DEV) (window as unknown as { __walkSky?: unknown }).__walkSky = { sun, earthDir, U };
   return (
     <div className={`walk__canvas${grab ? ' is-grab' : ''}`}
       onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY }; setGrab(true); (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
@@ -751,14 +872,17 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
       }}
       onPointerUp={() => { drag.current = null; setGrab(false); }}>
       <Safe3D fallback={<div className="no3d">3D view unavailable in this browser</div>}>
-        <Canvas dpr={[1, 1.5]} camera={{ fov: 70, near: 0.5, far: 160000 }} gl={{ antialias: true }}>
-          <hemisphereLight args={[world === 'mars' ? '#f2c9a5' : '#3a3a48', world === 'mars' ? '#7a4a32' : '#050507', st.storm ? 1.25 : world === 'mars' ? 0.75 : 0.18]} />
-          <directionalLight position={sun.multiplyScalar(10000)} intensity={st.storm ? 1.3 : world === 'mars' ? 2.6 : 3.4} color={world === 'mars' ? '#ffe2c4' : '#ffffff'} />
+        <Canvas dpr={[1, 1.5]} shadows="soft" camera={{ fov: 70, near: 0.5, far: 160000 }}
+          gl={{ antialias: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: exposure }}>
+          <Exposure world={world} exposure={exposure} />
+          <SkyLight groundRad={groundRad} intensity={atm.env} />
+          <SunLight sun={sun} intensity={atm.sunI} color={atm.sunCol} shadow={atm.shadow} />
+          <SkyDome world={world} earthDir={earthDir} />
+          {st.storm && <><Dust /><DustSheets /></>}
           <Suspense fallback={null}>
-            <Sky world={world} storm={st.storm} high={st.high} earthHigh={st.sunHigh} />
             <Ground t={t} world={world} st={st} />
-            {t.far && <Backdrop t={t} st={st} />}
-            <Rocks t={t} st={st} pos={pos} />
+            {t.far && <Backdrop t={t} world={world} st={st} />}
+            <Rocks t={t} st={st} world={world} pos={pos} />
           </Suspense>
           {world === 'moon' && <Footprints t={t} first={firstPrint} />}
           {world === 'moon' && <Suspense fallback={null}><Astronaut t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} /></Suspense>}

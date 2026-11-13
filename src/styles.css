@@ -697,7 +697,7 @@ details[open] > summary::before { content: '− '; }
 @media (max-width: 760px) { .rover-say { max-width: 220px; font-size: 12.5px; } }
 
 /* dust storm: brown haze crowding the edges of your view */
-.walk--storm::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 50% 55%, transparent 35%, rgba(120,72,38,.35) 75%, rgba(90,52,28,.6) 100%); }
+.walk--storm::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 50% 55%, rgba(170,70,20,.08) 25%, rgba(150,62,22,.4) 70%, rgba(105,40,14,.7) 100%); }
 .walk--storm > .walk__top, .walk--storm > .walk__hud, .walk--storm > .walk__help, .walk--storm > .walk__pad { z-index: 2; }
 
 /* Explore: "then ↔ now" intro (a real photo of the place, with an imagined past painted on) */

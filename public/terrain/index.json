@@ -5,7 +5,15 @@
   "min": -4509.27,
   "max": -3401.75,
   "valid_fraction": 0.9993,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W_dtm.tif"
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W/D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W_dtm.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": -4611.49,
+   "max": 811.39,
+   "source": "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+   "datum_shift_m": 31.0
+  }
  },
  "mars-jezero": {
   "n": 256,
@@ -13,7 +21,15 @@
   "min": -2645.12,
   "max": -2096.85,
   "valid_fraction": 1.0,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W_dtm.tif"
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W_dtm.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": -3444.01,
+   "max": -485.06,
+   "source": "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+   "datum_shift_m": 28.0
+  }
  },
  "mars-olympus": {
   "n": 256,
@@ -36,7 +52,15 @@
   "min": -2294.69,
   "max": 1736.96,
   "valid_fraction": 0.9721,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site04/Site04.tif"
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site04/Site04.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": -4173.54,
+   "max": 1930.59,
+   "source": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/float_img/ldem_75s_120m_float.img",
+   "datum_shift_m": -3.3
+  }
  },
  "moon-malapert-massif": {
   "n": 256,
@@ -44,7 +68,15 @@
   "min": 2775.37,
   "max": 5172.81,
   "valid_fraction": 1.0,
-  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site23/Site23.tif"
+  "source": "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/barker_south_pole_dems/Site23/Site23.tif",
+  "far": {
+   "n": 200,
+   "size_m": 120000.0,
+   "min": -3975.36,
+   "max": 5162.98,
+   "source": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/float_img/ldem_75s_240m_float.img",
+   "datum_shift_m": 2.6
+  }
  },
  "moon-highlands": {
   "n": 256,
