@@ -108,6 +108,18 @@ export default function TrailStory({ story }: { story: Story }) {
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
   }, [go]);
+  useEffect(() => {
+    const section = box.current?.closest('.trails');
+    if (!section) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) {
+        setAuto(false);
+        pauseNarration();
+      }
+    });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => () => audioRef.current?.pause(), []);
 
   const onNarrationEnded = () => {

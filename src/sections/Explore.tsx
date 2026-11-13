@@ -284,7 +284,7 @@ export default function Explore() {
 
       <AnimatePresence mode="wait">
         {world && (
-          <motion.div key={world} className="explore__regions" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <motion.div key={world} className={`explore__regions explore__regions--${world}`} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             {regions.map((r, k) => (
               <button key={r.id} className="xregion" onClick={() => open(r)} style={{ ['--k' as string]: k }} aria-label={`Walk on ${r.name}`}>
                 <span className="xregion__img"><img src={`hillshade/${r.id}.webp`} alt="" /></span>

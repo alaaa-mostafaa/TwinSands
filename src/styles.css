@@ -952,7 +952,14 @@ details[open] > summary::before { content: '− '; }
 @keyframes xregionNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) { .xregion, .xregion__go i { animation: none; } }
 /* leave room on the right for the guide rover and its speech bubble */
-@media (min-width: 1100px) { .explore__regions { padding-right: calc(var(--gutter) + 250px) !important; } }
+@media (min-width: 1100px) {
+  .explore__regions { padding-right: calc(var(--gutter) + 250px) !important; }
+  .explore__regions--moon {
+    padding-right: max(var(--gutter), calc(var(--gutter) + (100% - 2 * var(--gutter) - 250px - 928px) / 2)) !important;
+    grid-template-columns: repeat(3, minmax(0, 300px));
+    justify-content: end;
+  }
+}
 
 /* Twin Score: plain summary, most/least alike, disclaimer */
 .found { margin-bottom: 28px !important; }
