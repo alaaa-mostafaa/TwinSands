@@ -855,5 +855,19 @@ details[open] > summary::before { content: '− '; }
 /* Twin Trails: stable size. The question always reserves two lines, and the stage below is one fixed height
    (tall enough for the biggest view), so switching trail or Map/See/Hear/Smell/Feel never shifts the page. */
 .trail__q { min-height: 2.4em; display: flex; align-items: center; justify-content: center; }
-.trail__body { min-height: 880px; }
+.trail__body { min-height: 670px; }
 @media (max-width: 900px) { .trail__body { min-height: 0; } .trail__q { min-height: 0; } }
+
+/* Every card is one-third of the row wide, whether 3, 2 or 1 worlds are shown (centred), so cards keep the same
+   size and the globes, play buttons and pictures sit in the same place in Map, Hear, Smell and Feel. */
+.trails .panels { grid-template-columns: repeat(var(--n, 3), calc((100% - 36px) / 3)); justify-content: center; }
+@media (max-width: 900px) { .trails .panels { grid-template-columns: 1fr; } }
+
+/* Story photos are one size on every step: a single photo is as big as one photo of a pair, and the spinning
+   wind globes use the same 4:3 frame, so the text and the arrows below never jump between steps. */
+.trails .story__photos--one { grid-template-columns: minmax(0, calc((100% - 14px) / 2)); }
+.trails .story__photo:has(.windglobe) { aspect-ratio: 4 / 3; }
+.trails .panel { min-height: 580px; }
+/* Twin Trails fits on one screen: trail bar, question, sense buttons and cards sit close together */
+.trails .trail__intro { padding-top: 16px !important; padding-bottom: 14px !important; gap: 12px; }
+.trails .trail__q { font-size: clamp(22px, 2.3vw, 32px); }

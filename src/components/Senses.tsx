@@ -135,7 +135,7 @@ export default function Senses({ id, mode, sense, snd, shot }: { id: string; mod
             {celsius != null ? <Thermometer c={celsius} /> : sense.feel.img ? (
               <motion.img src={`senses/${sense.feel.img}.webp`} alt="" className="sense-obj" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1, rotate: -4 }} />
             ) : <span className="sense-none">∅</span>}
-            <p className="feel-big" style={sense.feel.big.length > 6 ? { fontSize: 'clamp(24px, 2.6vw, 38px)' } : undefined}>{sense.feel.big}</p>
+            <p className="feel-big" style={sense.feel.big.length > 6 ? { fontSize: 'clamp(20px, 2vw, 30px)' } : undefined}>{sense.feel.big}</p>
           </div>
           )}
           <p className="sense-line sense-line--small">{sense.feel.small}</p>

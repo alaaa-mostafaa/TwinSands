@@ -128,7 +128,7 @@ export default function Trails() {
           {/* fixed-height stage: switching trail or sense never makes the page jump */}
           <div className="trail__body">
           {mode === 'see' && STORIES[t.id] ? <TrailStory key={t.id} story={STORIES[t.id]} /> : (
-          <div className="panels" style={{ gridTemplateColumns: `repeat(${shown.length}, minmax(0, 1fr))` }}>
+          <div className="panels" style={{ ['--n' as string]: shown.length }}>
             {shown.includes('earth') && (
             <WorldPanel world="earth" read={MAP_READ[t.id]?.earth} layer={earthLayer} pins={t.earth.pins} cloud={earthCloud} sound={SOUNDS[t.id]?.earth} soundId={t.id + '-earth'} sense={SENSES[t.id]?.earth} mode={mode} shot={SEE[t.id]?.earth}
               home={t.id === 'ice' ? [58, 95] : undefined} />
