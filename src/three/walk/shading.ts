@@ -29,7 +29,7 @@ export const U = {
   uSand: col(), uDark: col(), uRock: col(), uSlab: col(), uPeb: col(),
   uPebDens: f(0.3), uRipple: f(0), uPlates: f(0), uPlateSize: f(0.9), uDarkAmt: f(0.3), uStreaks: f(0),
   // rocks
-  uDust: f(0.6), uBandA: col(), uBandB: col(),
+  uDust: f(0.6),
   // the Moon's opposition surge
   uSurgeB0: f(0.9), uSurgeH: f(0.06),
 };
@@ -143,7 +143,6 @@ uniform sampler2D uHorizon; uniform vec4 uTerr; uniform sampler2D uHorizonFar; u
 uniform vec3 uZen, uHor; uniform float uTau, uAur, uMoon, uFogB, uFogH, uFogRefH;
 uniform vec3 uSand, uDark, uRock, uSlab, uPeb;
 uniform float uPebDens, uRipple, uPlates, uPlateSize, uDarkAmt, uStreaks, uDust;
-uniform vec3 uBandA, uBandB;
 uniform float uSurgeB0, uSurgeH;
 varying vec3 vTW;   // world position (before curvature)
 varying vec3 vNW;   // world normal of the mesh
@@ -344,21 +343,9 @@ float wMicroSun = 1.0;          // sunlight blocked by small relief drawn by the
   vec3 n2 = wfbm(vTW.xz + vTW.y * 1.7, 2.5, 3, fp);
   float cap = smoothstep(0.45, 0.85, Nw.y + 0.35 * (n2.x - 0.5)) * uDust;
   vec3 base = diffuseColor.rgb * (0.8 + 0.4 * n1.x);
-  float layerG = 0.0;
-#ifdef WALK_LAYERS
-  // layered sandstone: beds of different tones, each made of fine laminae (cross-bedded in some beds), and the
-  // softer laminae weathered back into grooves that catch the light
-  float bed = floor(vOP.y * 9.0 + 0.4 * n1.x);
-  float bh = fract(sin(bed * 12.9898 + 4.1) * 43758.5453);
-  float slant = (bh - 0.5) * 1.4 * step(0.45, bh);
-  float lam = vOP.y * (40.0 + 30.0 * bh) + slant * dot(vOP.xz, vec2(0.8, 0.6)) * 55.0 + 1.5 * n1.x;
-  float laa = 1.0 - smoothstep(0.3, 0.7, fwidth(lam));
-  base = mix(uBandA, uBandB, smoothstep(0.2, 0.8, bh)) * (0.85 + 0.3 * n1.x) * (1.0 + 0.12 * sin(lam * 6.2831) * laa);
-  layerG = (1.0 - abs(Nw.y)) * 0.25 * cos(lam * 6.2831) * laa;
-#endif
   diffuseColor.rgb = mix(base, uSand * (0.9 + 0.2 * n2.x), cap);
   diffuseColor.rgb *= mix(0.72, 1.0, smoothstep(-0.16, 0.04, vOP.y));   // darker where it meets the ground
-  vec3 nW = normalize(Nw + vec3(n2.y, 0.0, n2.z) * 0.035 + vec3(n1.y, 0.0, n1.z) * 0.01 + vec3(0.0, layerG, 0.0));
+  vec3 nW = normalize(Nw + vec3(n2.y, 0.0, n2.z) * 0.035 + vec3(n1.y, 0.0, n1.z) * 0.01);
   normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
 }
 #endif
@@ -383,14 +370,14 @@ const AERIAL_GLSL = /* glsl */ `
 
 export type PatchFlags = {
   ground?: boolean; moon?: boolean; lunar?: boolean; aerial?: boolean; curve?: boolean; far?: boolean;
-  rock?: boolean; layers?: boolean; plates?: boolean; streaks?: boolean;
+  rock?: boolean; plates?: boolean; streaks?: boolean;
 };
 
 /** Patch a MeshStandardMaterial with the walk's shading. The key must be unique per flag set. */
 export function patchMaterial<M extends THREE.Material>(mat: M, flags: PatchFlags): M {
   const defs = Object.entries({
     WALK_GROUND: flags.ground, WALK_MOON: flags.moon, WALK_LUNAR: flags.lunar, WALK_AERIAL: flags.aerial,
-    WALK_CURVE: flags.curve, WALK_FAR: flags.far, WALK_ROCK: flags.rock, WALK_LAYERS: flags.layers,
+    WALK_CURVE: flags.curve, WALK_FAR: flags.far, WALK_ROCK: flags.rock,
     WALK_PLATES: flags.plates, WALK_STREAKS: flags.streaks,
   }).filter(([, on]) => on).map(([k]) => k);
   const key = 'walk:' + defs.join(',');

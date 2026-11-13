@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import Safe3D from '../components/Safe3D';
 import { cavity, litFraction, PLANET_R, sunHorizon } from './walk/horizon';
-import { makeOutcrop, makeRock, mulberry32, vnoise } from './walk/rocks';
+import { fbm3, makeRock, mulberry32, vnoise } from './walk/rocks';
 import { makeDustSheetMaterial, makeSkyMaterial, patchMaterial, U } from './walk/shading';
 
 export type Terrain = { n: number; size: number; min: number; max: number; h: Float32Array; far?: Terrain };
@@ -26,7 +26,7 @@ export type GroundStyle = {
   rockCol: RGB;             // dust-free rock
   dust: number;             // 0..1 dust settled on the tops of rocks
   outcrops?: number;        // chance per 30 m cell of a low layered outcrop
-  bands?: [RGB, RGB];       // its alternating layer colours
+  bands?: [string, string]; // its alternating layer colours
   clusters?: number;        // chance per cell of a cluster of blocks thrown out by a small impact
   storm?: boolean;          // dust storm: haze, a dim Sun, blowing dust, the rover puts its gear on
   high?: boolean;           // very high up: thin, clear air, darker sky
@@ -48,7 +48,7 @@ export const STYLES: Record<string, GroundStyle> = {
   // in the gaps.
   'mars-gale': { ...MARS_SAND, sand: [0.2, 0.105, 0.06], dark: [0.14, 0.08, 0.05], rock: [0.22, 0.16, 0.115], slab: [0.3, 0.19, 0.13], peb: [0.11, 0.09, 0.075],
     pebbles: 0.25, ripples: 0, plates: 0.88, plateSize: 1.1, darkAmt: 0.15, rockK: 0.02, rockCol: [0.1, 0.085, 0.072], dust: 0.5, clusters: 0.06,
-    outcrops: 2.2, bands: [[0.1, 0.088, 0.08], [0.21, 0.155, 0.12]] },
+    outcrops: 0.85, bands: ['#a87258', '#c08f72'] },
   // Jezero floor (Máaz): dusty soil and dark sand, flat light 'paver' rocks, clusters of blocky dark rocks on low rises.
   // The haze is a heavy dust storm (optical depth ~4), thicker than the one Perseverance watched in January 2022 (~2).
   'mars-jezero': { ...MARS_SAND, sand: [0.3, 0.17, 0.09], dark: [0.11, 0.08, 0.055], rock: [0.13, 0.09, 0.065], slab: [0.28, 0.21, 0.15], peb: [0.08, 0.07, 0.06],
@@ -169,7 +169,81 @@ const BINS = [0.13, 0.2, 0.32, 0.5, 0.8, 1.25, 2, 3.2];   // rock diameter class
 const CULL = 0.0032;          // don't draw a rock smaller than this fraction of its distance (under ~2 pixels)
 const LODS = [{ upTo: 0.5, detail: 2, cap: 2000 }, { upTo: 1.25, detail: 3, cap: 500 }, { upTo: 99, detail: 3, cap: 160 }];
 const VARIANTS = 4;
-const OUT_CAP = 260, OUT_NEAR = 70;   // outcrops per mesh; closer than this they use the detailed shape
+
+/** Push every vertex in or out by noise (same position -> same push, so seams stay closed),
+ *  then shade: dusty light tops, plain sides, dark undersides. */
+function roughen(g: THREE.BufferGeometry, amt: number, freq: number, radialOnly = false) {
+  const p = g.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const n = fbm3(x * freq + 7.3, y * freq * (radialOnly ? 3 : 1), z * freq - 2.1) * amt;
+    if (radialOnly) {
+      const r = Math.hypot(x, z) || 1;
+      p.setXYZ(i, x + (x / r) * n, y + (Math.abs(y) > 0.49 ? n * 0.25 : 0), z + (z / r) * n);
+    } else {
+      const r = Math.hypot(x, y, z) || 1;
+      p.setXYZ(i, x * (1 + n / r), y * (1 + n / r), z * (1 + n / r));
+    }
+  }
+  g.computeVertexNormals();
+  const nr = g.attributes.normal as THREE.BufferAttribute, col = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) {
+    const up = nr.getY(i);
+    const k = up > 0.55 ? 1.18 : up < -0.3 ? 0.6 : 0.95 + up * 0.15;
+    col.set([k * (up > 0.55 ? 1.04 : 1), k, k * (up > 0.55 ? 0.94 : 1)], i * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+
+/** Rock surface: grain, fine horizontal bedding lines and a few cracks. Greyscale, tinted per rock. */
+function useRockTexture() {
+  const tex = useMemo(() => {
+    const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+    const g = c.getContext('2d')!, img = g.createImageData(S, S);
+    for (let y = 0; y < S; y++) {
+      const bed = 0.08 * Math.sin(y * 0.21 + Math.sin(y * 0.037) * 4) + 0.05 * vnoise(0, y * 0.09, 3);
+      for (let x = 0; x < S; x++) {
+        const n = fbm3(x * 0.018, y * 0.05, 1.7) * 0.18 + (Math.random() - 0.5) * 0.12;
+        const k = Math.round(Math.max(0, Math.min(1, 0.9 + n + bed)) * 255);
+        img.data.set([k, k, k, 255], (y * S + x) * 4);
+      }
+    }
+    g.putImageData(img, 0, 0);
+    g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 1.2;
+    for (let i = 0; i < 14; i++) {                      // cracks: short wandering vertical lines
+      let x = Math.random() * S, y = Math.random() * S;
+      g.beginPath(); g.moveTo(x, y);
+      for (let k = 0; k < 10; k++) { x += (Math.random() - 0.5) * 14; y += 6 + Math.random() * 10; g.lineTo(x, y); }
+      g.stroke();
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 1); t.anisotropy = 8; t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, []);
+  useEffect(() => () => tex.dispose(), [tex]);
+  return tex;
+}
+
+/** A broken-edged plate: notched outline, slightly undercut (top wider than bottom), rough faces. */
+function useJaggedPlate() {
+  const geo = useMemo(() => {
+    const SEG = 18, g = new THREE.CylinderGeometry(0.52, 0.46, 1, SEG, 3);
+    const jit = Array.from({ length: SEG + 1 }, (_, k) => 0.7 + ((Math.sin(k * 12.9898) * 43758.5453) % 1 + 1) % 1 * 0.5);
+    jit[SEG] = jit[0];
+    const p = g.attributes.position as THREE.BufferAttribute;
+    for (let v = 0; v < p.count; v++) {
+      const x = p.getX(v), z = p.getZ(v), r = Math.hypot(x, z);
+      if (r < 1e-4) continue;
+      const a = Math.atan2(x, z), f = ((a + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * SEG, k = Math.floor(f), m = f - k;
+      const j = jit[k] * (1 - m) + jit[(k + 1) % (SEG + 1)] * m;
+      p.setX(v, x * j); p.setZ(v, z * j);
+    }
+    return roughen(g, 0.07, 4, true);
+  }, []);
+  useEffect(() => () => geo.dispose(), [geo]);
+  return geo;
+}
 
 /** Expected rocks per square metre in each size class, from the rock cover k (Golombek & Rapp 1997):
  *  the area covered by rocks wider than D is k * exp(-q D), with q = 1.79 + 0.152 / k. */
@@ -191,22 +265,26 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
   const geos = useMemo(() => LODS.map((l, li) => Array.from({ length: VARIANTS }, (_, v) =>
     makeRock(li * 31 + v * 7 + (moon ? 100 : 0), l.detail, moon && v % 2 ? 'rounded' : 'angular'))), [moon]);
   // outcrops: 3 shapes, each in a detailed (near) and a coarse (far) version
-  const outGeos = useMemo(() => (st.outcrops ? [0, 1, 2].flatMap((v) => [makeOutcrop(v + 1, 22, 18), makeOutcrop(v + 1, 10, 9)]) : []), [st]);
   const rockMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 }), { rock: true, aerial: !moon }), [moon]);
-  const outMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0 }), { rock: true, layers: true, aerial: !moon }), [moon]);
   const meshes = useMemo(() => LODS.map((l, li) => geos[li].map((g) => {
     const m = new THREE.InstancedMesh(g, rockMat, l.cap);
     m.castShadow = m.receiveShadow = true; m.frustumCulled = false; m.count = 0;
     m.setColorAt(0, new THREE.Color());
     return m;
   })), [geos, rockMat]);
-  const outMeshes = useMemo(() => outGeos.map((g) => {
-    const m = new THREE.InstancedMesh(g, outMat, OUT_CAP);
+  // the layered rock ledges ("layer cakes"): broad broken plates stacked like pages, as in the first version
+  const jagged = useJaggedPlate(), rockTex = useRockTexture();
+  const layerMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ map: rockTex, vertexColors: true, roughness: 1, flatShading: true }), { aerial: !moon }), [rockTex, moon]);
+  const layers = useMemo(() => {
+    if (!st.outcrops) return null;
+    const m = new THREE.InstancedMesh(jagged, layerMat, (RING * 2 + 1) ** 2 * 15);
     m.castShadow = m.receiveShadow = true; m.frustumCulled = false; m.count = 0;
+    m.setColorAt(0, new THREE.Color());
     return m;
-  }), [outGeos, outMat]);
-  useEffect(() => () => { geos.flat().forEach((g) => g.dispose()); outGeos.forEach((g) => g.dispose()); rockMat.dispose(); outMat.dispose(); meshes.flat().forEach((m) => m.dispose()); outMeshes.forEach((m) => m.dispose()); },
-    [geos, outGeos, rockMat, outMat, meshes, outMeshes]);
+  }, [st, jagged, layerMat]);
+  const bandA = useMemo(() => new THREE.Color(st.bands?.[0] ?? '#80543f'), [st]), bandB = useMemo(() => new THREE.Color(st.bands?.[1] ?? '#80543f'), [st]);
+  useEffect(() => () => { geos.flat().forEach((g) => g.dispose()); rockMat.dispose(); layerMat.dispose(); meshes.flat().forEach((m) => m.dispose()); layers?.dispose(); },
+    [geos, rockMat, layerMat, meshes, layers]);
   const dens = useMemo(() => rockDensity(st.rockK), [st]);
   const dClus = useMemo(() => rockDensity(0.15), []);
   const base = useMemo(() => new THREE.Color(...st.rockCol), [st]);
@@ -218,7 +296,8 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
     if (key === cur.current) return;
     cur.current = key;
     ROCKS.length = 0;
-    const counts = meshes.map((l) => l.map(() => 0)), oc = outMeshes.map(() => 0);
+    const counts = meshes.map((l) => l.map(() => 0));
+    let li = 0;
     const px = pos.current.x, pz = pos.current.z;
     const put = (x: number, z: number, D: number, rnd: () => number) => {
       const dist = Math.hypot(x - px, z - pz);
@@ -263,50 +342,40 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
           }
         }
       }
-      // ledges of layered rock, with broken blocks fallen at their feet
-      const ro = mulberry32(cellSeed(gx, gz, 77));
-      const nOut = st.outcrops && outMeshes.length ? Math.floor(st.outcrops + ro()) : 0;
-      for (let q = 0; q < nOut; q++) {
-        const x = (gx + 0.1 + ro() * 0.8) * CELL, z = (gz + 0.1 + ro() * 0.8) * CELL;
-        // three sizes: knee-to-head-high ledges, big ledges, and now and then a tall layered butte (a 'layer cake')
-        const cls = ro();
-        const tall = cls < 0.1, big = cls < 0.25;
-        const W = tall ? 14 + ro() * 16 : big ? 10 + ro() * 14 : 2.5 + Math.pow(ro(), 1.3) * 9;
-        const H = tall ? Math.min(26, W * (0.6 + ro() * 0.3)) : big ? Math.min(8, W * (0.25 + ro() * 0.2)) : Math.min(4, Math.max(0.6, W * (0.16 + ro() * 0.2)));
-        const shape = Math.floor(ro() * 3), D2 = W * (tall ? 0.6 + ro() * 0.3 : 0.35 + ro() * 0.45), rot = ro() * Math.PI * 2, tx = (ro() - 0.5) * 0.08, tz = (ro() - 0.5) * 0.08;
-        const dist = Math.hypot(x - px, z - pz), v = shape * 2 + (dist < OUT_NEAR + W ? 0 : 1);
-        if (Math.hypot(x, z) < W * 0.5 + 5 || dist > 240 || oc[v] >= OUT_CAP) continue;
-        const grade = Math.hypot(heightAt(t, x + 4, z) - heightAt(t, x - 4, z), heightAt(t, x, z + 4) - heightAt(t, x, z - 4)) / 8;
-        o.position.set(x, meshHeightAt(t, x, z) - H * Math.min(0.25, 0.1 + grade * 2), z);
-        o.rotation.set(tx, rot, tz);
-        o.scale.set(W, H, D2);
-        o.updateMatrix(); outMeshes[v].setMatrixAt(oc[v]++, o.matrix);
-        // a row of circles along the long side, so you can't walk into the ends of a long ledge
-        const long = Math.max(W, D2), short = Math.min(W, D2), nc = Math.max(1, Math.ceil(long / short)), ax = W >= D2;
-        for (let k = 0; k < nc; k++) {
-          const u = (nc === 1 ? 0 : (k / (nc - 1) - 0.5) * (long - short)) * 0.9;
-          const lx = ax ? u : 0, lz = ax ? 0 : u;
-          ROCKS.push({ x: x + lx * Math.cos(rot) + lz * Math.sin(rot), z: z - lx * Math.sin(rot) + lz * Math.cos(rot), r: short * 0.45 + 0.5, h: H });
+      // Layered rock ledge: broad broken plates stacked like pages. Each layer steps back the same way,
+      // so one side is a cliff of exposed layers and the other a gentle slope (like tilted sediment).
+      const rnd = mulberry32(cellSeed(gx, gz, 77));
+      if (layers && rnd() < st.outcrops!) {
+        const x = (gx + 0.2 + rnd() * 0.6) * CELL, z = (gz + 0.2 + rnd() * 0.6) * CELL;
+        // three size classes: knee-high ledges, house-size blocks, and big mesas tens of metres across
+        const cls = rnd(), w = cls < 0.4 ? 3 + rnd() * 6 : cls < 0.75 ? 9 + rnd() * 18 : 28 + Math.pow(rnd(), 0.8) * 45;
+        const thick = w > 28 ? 1.4 + rnd() * 0.8 : w > 9 ? 1.1 + rnd() * 0.4 : 1;
+        const n = Math.min(4 + Math.floor(rnd() * 11), 2 + Math.floor(w / 1.6)), rot = rnd() * Math.PI * 2;
+        const sx = Math.cos(rot), sz = -Math.sin(rot), tilt = (rnd() - 0.5) * 0.14;
+        if (Math.hypot(x, z) < w * 0.6 + 8) continue;   // keep the landing spot clear
+        let y = heightAt(t, x, z) - 0.4, ww = w, d = w * (0.35 + rnd() * 0.45), off = 0;
+        for (let k = 0; k < n; k++) {
+          const th = (0.3 + rnd() * 0.7) * thick;
+          o.position.set(x + sx * off, y + th / 2, z + sz * off);
+          o.rotation.set(tilt, rot + (rnd() - 0.5) * 0.25, (rnd() - 0.5) * 0.06);
+          o.scale.set(ww, th, d);
+          o.updateMatrix(); layers.setMatrixAt(li, o.matrix);
+          layers.setColorAt(li++, c.copy(k % 2 ? bandA : bandB).multiplyScalar(0.8 + rnd() * 0.35));
+          y += th * 0.92; off += ww * (0.06 + rnd() * 0.1); ww *= 0.78 + rnd() * 0.2; d *= 0.85 + rnd() * 0.15;
         }
-        const nb = 5 + Math.floor(ro() * 10 * Math.min(4, H));
-        for (let k = 0; k < nb; k++) {
-          const a = ro() * Math.PI * 2, rr = 0.42 + ro() * 0.35, ca = Math.cos(a), sa = Math.sin(a);
-          const lx = ca * W * rr, lz = sa * D2 * rr;          // around the footprint, in the ledge's own frame
-          const bx = x + lx * Math.cos(rot) + lz * Math.sin(rot), bz = z - lx * Math.sin(rot) + lz * Math.cos(rot);
-          put(bx, bz, 0.14 + Math.pow(ro(), 2.2) * Math.min(1.8, H * 0.6), ro);
-        }
+        ROCKS.push({ x, z, r: w * 0.4 + 0.6 });
       }
     }
     meshes.forEach((l, li) => l.forEach((m, v) => {
       m.count = counts[li][v]; m.instanceMatrix.needsUpdate = true;
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }));
-    outMeshes.forEach((m, v) => { m.count = oc[v]; m.instanceMatrix.needsUpdate = true; });
+    if (layers) { layers.count = li; layers.instanceMatrix.needsUpdate = true; if (layers.instanceColor) layers.instanceColor.needsUpdate = true; }
   });
   return (
     <>
       {meshes.flat().map((m, i) => <primitive key={'r' + i} object={m} />)}
-      {outMeshes.map((m, i) => <primitive key={'o' + i} object={m} />)}
+      {layers && <primitive object={layers} />}
     </>
   );
 }
@@ -865,7 +934,6 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
     U.uSlab.value.setRGB(...st.slab); U.uPeb.value.setRGB(...st.peb);
     U.uPebDens.value = st.pebbles; U.uRipple.value = st.ripples; U.uPlates.value = st.plates; U.uPlateSize.value = st.plateSize;
     U.uDarkAmt.value = st.darkAmt; U.uStreaks.value = st.streaks ?? 0; U.uDust.value = st.dust;
-    U.uBandA.value.setRGB(...(st.bands?.[0] ?? st.rock)); U.uBandB.value.setRGB(...(st.bands?.[1] ?? st.slab));
     const soft = Math.max(world === 'moon' ? 0.0047 : 0.0031, 0.004);
     U.uHorizon.value = hz.near; U.uTerr.value.set(t.size, t.n, soft, 1);
     U.uHorizonFar.value = hz.far; U.uTerrFar.value.set(t.far?.size ?? 1, t.far?.n ?? 2, soft, hz.far ? 1 : 0);
