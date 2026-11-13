@@ -871,3 +871,67 @@ details[open] > summary::before { content: '− '; }
 /* Twin Trails fits on one screen: trail bar, question, sense buttons and cards sit close together */
 .trails .trail__intro { padding-top: 16px !important; padding-bottom: 14px !important; gap: 12px; }
 .trails .trail__q { font-size: clamp(22px, 2.3vw, 32px); }
+
+/* ------------------------------------------------------------ scroll rover: Perseverance hanging on a cable, riding along with the page */
+/* --s = drawing scale (set from JS). .rv__body is a 0x0 point at the cable hook; frame geometry is set inline from ScrollRover.tsx. */
+.rv { --s: .52; position: fixed; top: 0; width: 0; height: 0; z-index: 45; pointer-events: none; }
+.rv__cable { position: absolute; left: -.75px; top: 0; width: 1.5px; height: 100vh; will-change: transform; /* height set from JS */
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.5) 60%, rgba(255,255,255,.65)); }
+.rv__body, .rv__swing, .rv__act { position: absolute; left: 0; top: 0; }
+.rv__body, .rv__swing { will-change: transform; }
+.rv__act { transform-origin: 0 0; }
+.rv__sprite { position: absolute; background-repeat: no-repeat; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+.rv__btn { position: absolute; pointer-events: auto; border-radius: 30%; -webkit-tap-highlight-color: transparent; }
+.rv__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rv__act:has(.rv__btn:hover) .rv__sprite { filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,138,92,.35)); }
+
+/* whole-body tricks (the rest — spin, arm wave, look around, mast nap — are real frames picked in JS) */
+.rv__act.is-hop { animation: rvHop .9s ease-out; }
+@keyframes rvHop { 0% { transform: translateY(0); } 25% { transform: translateY(12px) scaleY(.95); } 50% { transform: translateY(-5px); } 75% { transform: translateY(3px); } 100% { transform: translateY(0); } }
+.rv__act.is-wiggle { animation: rvWiggle .9s ease-in-out; }
+@keyframes rvWiggle { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-8deg); } 35% { transform: rotate(7deg); } 55% { transform: rotate(-5deg); } 75% { transform: rotate(3deg); } }
+
+/* revving before leading the tour, a bouncy dance, a camera flash for the selfie */
+.rv__act.is-rev { animation: rvRev .55s linear; }
+@keyframes rvRev { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(-1.5px, 1px) rotate(-1.5deg); } 40% { transform: translate(1.5px, -1px) rotate(1deg); } 60% { transform: translate(-1px, 1px) rotate(-1deg); } 80% { transform: translate(1px, 0) rotate(1deg); } }
+.rv__act.is-dance { animation: rvDance 2s ease-in-out; }
+@keyframes rvDance { 0%, 25%, 50%, 75%, 100% { transform: translateY(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: translateY(-7px); } }
+.rv__flash { position: absolute; width: 0; height: 0; }
+.rv__flash::after { content: ''; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle, #fff 0 18%, rgba(255,255,255,.75) 30%, rgba(255,240,210,.25) 55%, transparent 72%); }
+.is-selfie .rv__flash::after { animation: rvFlash 2.6s linear; }
+@keyframes rvFlash { 0%, 52% { opacity: 0; transform: scale(.4); } 54% { opacity: 1; transform: scale(1.3); } 62% { opacity: 0; transform: scale(1.6); } 100% { opacity: 0; } }
+
+/* hearts and sparkles popping off when you tap or it cheers */
+.rv__bit { position: absolute; font-style: normal; font-size: 13px; line-height: 1; pointer-events: none; animation: rvBit 1.25s ease-out forwards; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.rv__bit--heart { color: #ff6b6b; }
+.rv__bit--spark { color: var(--go); font-size: 11px; }
+@keyframes rvBit { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 15% { opacity: 1; transform: translate(calc(var(--dx) * .2), -8px) scale(1.15); } 100% { opacity: 0; transform: translate(var(--dx), -46px) scale(.8); } }
+
+/* hover: where a tap will take you */
+.rv__tag { position: absolute; width: max-content; padding: 6px 12px; border-radius: 999px; background: rgba(8,6,10,.22); border: 1px solid rgba(255,138,92,.45); color: #ffe2d6; font: 500 11px/1 var(--cond); letter-spacing: .14em; text-transform: uppercase; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 8px rgba(0,0,0,.6); animation: rvIn .45s cubic-bezier(.22,1,.36,1) both; transform-origin: 100% 0; }
+
+/* nap: floating z's (the mast folds down in JS) */
+.rv__z { position: absolute; display: none; font: 700 12px/1 var(--display); color: var(--ink-2); }
+.is-sleep .rv__z { display: block; }
+.rv__z i { position: absolute; font-style: normal; opacity: 0; animation: rvZ 3s ease-out infinite; }
+.rv__z i:nth-child(2) { animation-delay: 1s; font-size: 10px; }
+.rv__z i:nth-child(3) { animation-delay: 2s; font-size: 8px; }
+@keyframes rvZ { 0% { opacity: 0; transform: translate(0, 0); } 20% { opacity: .9; } 100% { opacity: 0; transform: translate(-14px, -26px); } }
+
+/* speech bubble, to the left of the rover, tail pointing at it */
+/* see-through: a faint dark tint and a thin outline, no blur, so the page stays visible behind the words;
+   white text with a soft shadow keeps it readable over anything */
+.rv__say { position: absolute; width: max-content; max-width: 240px; padding: 10px 14px; border-radius: 16px 16px 5px 16px;
+  background: rgba(8,6,10,.22); border: 1px solid rgba(255,255,255,.28);
+  color: #fff; font: 500 13.5px/1.45 var(--body); letter-spacing: .005em; text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 10px rgba(0,0,0,.65);
+  transform-origin: 100% 100%; pointer-events: none;
+  animation: rvIn .5s cubic-bezier(.22,1,.36,1) both; }
+.rv__say.is-out { animation: rvOut .45s ease forwards; }
+@keyframes rvOut { from { opacity: 1; transform: none; filter: blur(0); } to { opacity: 0; transform: translateY(-6px) scale(.97); filter: blur(2px); } }
+@keyframes rvIn { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+.rv__w { display: inline; opacity: 0; filter: blur(3px); animation: rvWord .55s ease-out forwards; }
+@keyframes rvWord { to { opacity: 1; filter: blur(0); } }
+@media (max-width: 760px) { .rv__say { max-width: 170px; font-size: 12.5px; padding: 8px 11px; } }
+@media print { .rv { display: none; } }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ScrollRover from './components/ScrollRover';
 import { Boots } from './sections/Boots';
 import Explore from './sections/Explore';
 import Hero from './sections/Hero';
@@ -55,6 +56,7 @@ export default function App() {
         <TwinScore target={target} setTarget={setTarget} />
         <Boots />
       </main>
+      <ScrollRover />
     </>
   );
 }

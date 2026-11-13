@@ -25,6 +25,8 @@ Everything the site shows is already in `public/`, so no backend and no API keys
 | 05 | Field Guides | What matches, what doesn't, what to practice there |
 | 06 | We Had to See It for Ourselves | Our field photos from Egypt and Saudi Arabia, alongside places and features from other worlds |
 
+**Percy**, the little Perseverance hanging on a cable at the right edge, rides down the page as you scroll and says something in every chapter. Tap it for a guided tour: it leads you to the next chapter (and through each stage of Meet Mars). Its lines are in `src/components/roverLines.ts`.
+
 ## Adding your field photos
 
 The Fayoum album in `public/photos/fayoum/` is paired with the Curiosity panorama; the Dahab album in `public/photos/dahab/` appears in the next card, paired with Curiosity at Rocknest. The Al Madinah Al Munawwarah, Saudi Arabia album in `public/photos/madina/` is paired with the Mars dust-devil image. The White Desert album in `public/photos/white-desert/` is paired with the wind-carved terrain comparison. Use the arrows to browse the albums; videos have playback controls. Other field slots can use `public/field/<slot>.jpg`; JPG is fine there. The slots are `concretion` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`). Until a photo exists, the slot shows a drop zone; dropping a photo there only previews it in your browser.
@@ -41,6 +43,7 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python pillow n
 .venv/bin/python pipeline/land_distance.py         # distance-to-coast map for the Meet Mars ball animation
 uv pip install --python .venv/bin/python imageio-ffmpeg && .venv/bin/python pipeline/fetch_sounds.py   # Twin Trails sounds
 uv pip install --python .venv/bin/python "rembg[cpu]" && .venv/bin/python pipeline/fetch_senses.py   # smell cut-outs + extra photos
+uv pip install --python .venv/bin/python playwright && .venv/bin/playwright install chromium && .venv/bin/python pipeline/render_rover_sprite.py   # frames for the rover that rides down the page
 ```
 
 Postcard photos of Earth twins come from Wikimedia Commons. Each one's author and licence are in `public/data/postcards.json` and shown on its card; CC BY / BY-SA photos require that credit, so keep it.
@@ -79,6 +82,7 @@ Findings worth putting in the proposal:
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.
 - **Volcanoes:** Smithsonian Global Volcanism Program, Volcanoes of the World.
 - **Sounds:** Perseverance microphone recordings (NASA/JPL-Caltech/LANL/CNES) and Apollo surface audio (NASA), public domain; Earth field recordings from Wikimedia Commons, with authors and licences in `public/data/sounds.json` and on screen. Silent Moon panels are silent on purpose: there is no air to carry sound.
+- **Rover companion:** the little Perseverance hanging on a cable at the right edge is drawn from NASA's Perseverance 3D model (NASA-3D-Resources, public domain), with the model's own mast and arm animations, rendered by `pipeline/render_rover_sprite.py`.
 - **Photos:** NASA Image and Video Library (public domain). The title, date and link for each photo are in `public/data/photos.json`. The Fayoum comparison also shows Curiosity's hill Bolívar and sand-ridges panorama, credited to NASA/JPL-Caltech/MSSS and sourced from [Phys.org](https://phys.org/news/2022-10-nasa-curiosity-mars-rover-long-awaited.html).
 
 Earth-twin coordinates written by hand in `src/content.ts` are approximate, and the site says so. Nothing here identifies a safe landing or habitat site.
