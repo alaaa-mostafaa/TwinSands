@@ -254,6 +254,7 @@ float wMicroSun = 1.0;          // sunlight blocked by small relief drawn by the
   vec3 sm = wfbm(P - 91.0, 1.3, 4, fp);       // ~1 m and below
   float cav = vCav;
   vec2 g = vec2(0.0);                          // height gradient of the fine relief (m per m)
+  float pebMask = 1.0;                         // less gravel on bare rock
   float rockiness = smoothstep(0.1, 0.32, slope * 1.5 + 0.3 * (big.x - 0.5) + 0.2 * (mid.x - 0.5) - 0.2 * cav);
   vec3 alb = uSand * (0.84 + 0.32 * big.x) * (0.9 + 0.2 * mid.x) * (0.92 + 0.16 * sm.x);
   float dk = smoothstep(0.5, 0.66, 0.55 * big.x + 0.45 * mid.x + 0.12 * cav) * uDarkAmt;
@@ -267,17 +268,33 @@ float wMicroSun = 1.0;          // sunlight blocked by small relief drawn by the
   alb = mix(alb, uSand * 1.08, smoothstep(0.15, 0.8, cav) * (1.0 - rockiness) * 0.5);   // fine dust settles in hollows
   g += 0.22 * mid.yz + 0.02 * sm.yz;
 #ifdef WALK_PLATES
-  // flat bedrock plates flush with the ground, broken into slabs with sand in the cracks (Gale mudstone, Jezero pavers)
-  float pm = smoothstep(0.56, 0.62, 0.55 * big.x + 0.45 * mid.x + 0.12 * (uPlates - 0.5)) * (1.0 - rockiness) * (1.0 - smoothstep(0.05, 0.12, slope)) * step(0.01, uPlates);
-  if (pm > 0.0) {
-    vec3 v = wvor(P / uPlateSize);
-    float cw = 0.045 + 0.8 * fp / uPlateSize;
-    float crack = 1.0 - smoothstep(cw * 0.5, cw, v.y);
-    vec3 plate = uSlab * (0.82 + 0.3 * v.z) * (0.9 + 0.2 * sm.x);
-    float edge = smoothstep(0.0, 0.6, pm);
-    alb = mix(alb, mix(plate, uSand * 0.62, crack), edge);
-    g += pm * ((vec2(fract(v.z * 7.13), fract(v.z * 3.71)) - 0.5) * 0.09) * (1.0 - smoothstep(0.03, 0.2, fp));
-  }
+  // Bedrock pavement (Gale's Yellowknife Bay, Jezero's pavers): flat slabs broken by two sets of joints (plates ~1 m
+  // inside blocks ~4 m). Each slab sits a little higher or lower than its neighbour and its edges are worn; sand and
+  // gravel lie only in the cracks and the hollows. Relief comes from screen derivatives, so it stays out of branches.
+  // bedrock is the rule; sand only fills winding channels and the hollows (uPlates = share of bare rock)
+  float pt = mix(0.3, 0.72, uPlates);
+  float sandy = 0.62 * mid.x + 0.38 * (1.0 - big.x) + 0.25 * max(cav, 0.0) + 0.08 * (sm.x - 0.5);
+  float pm = (1.0 - smoothstep(pt - 0.03, pt + 0.03, sandy)) * step(0.01, uPlates) * (1.0 - smoothstep(0.35, 0.6, slope));
+  vec2 Pw = P + vec2(mid.x - 0.5, mid.y * 0.0 + big.x - 0.5) * 3.0 + vec2(sm.x - 0.5, 0.5 - sm.x) * 0.25;   // wavy, jagged joints
+  vec3 v = wvor(Pw / uPlateSize);
+  vec3 vb = wvor(Pw / (uPlateSize * 4.3) + 7.7);
+  float cw = 0.02 + 0.7 * fp / uPlateSize, cwb = 0.014 + 0.7 * fp / (uPlateSize * 4.3);
+  float hair = (1.0 - smoothstep(cw * 0.5, cw, v.y)) * smoothstep(0.35, 0.6, fract(v.z * 5.3 + vb.z * 2.1));   // only some small cracks
+  float joint = 1.0 - smoothstep(cwb * 0.5, cwb, vb.y);
+  float crack = max(hair * 0.7, joint);
+  float tone = fract(vb.z * 1.7) * 0.7 + fract(v.z * 3.1) * 0.3;
+  vec3 plate = uSlab * (0.82 + 0.3 * tone) * (0.9 + 0.2 * sm.x);
+  plate = mix(plate, vec3(0.7, 0.68, 0.7) * dot(uSlab, vec3(0.333)), smoothstep(0.85, 0.95, vb.z) * 0.18);   // dust-free blue-grey slabs
+  plate *= 0.95 + 0.05 * sin(dot(P, vec2(0.6, 0.8)) * 38.0 + 6.0 * mid.x) * (1.0 - smoothstep(0.01, 0.04, fp));   // laminae
+  float veneer = smoothstep(0.52, 0.7, wfbm(P + 71.0, 0.35, 2, fp).x) * 0.6;     // thin dust drifted onto the rock
+  plate = mix(plate, uSand * 1.05, veneer);
+  alb = mix(alb, mix(plate, uSand * 0.7, crack), pm);
+  float Hp = pm * ((v.z - 0.5) * 0.025 + (vb.z - 0.5) * 0.09 - 0.012 * hair - 0.04 * (1.0 - smoothstep(0.0, 0.04, vb.y)));
+  vec2 dpx = dFdx(P), dpy = dFdy(P);
+  float hx = dFdx(Hp), hy = dFdy(Hp), det = dpx.x * dpy.y - dpx.y * dpy.x;
+  vec2 gp = abs(det) > 1e-12 ? vec2(hx * dpy.y - hy * dpx.y, hy * dpx.x - hx * dpy.x) / det : vec2(0.0);
+  g = mix(g, g * 0.3, pm) + clamp(gp, -1.5, 1.5) * (1.0 - smoothstep(0.03, 0.12, fp));
+  pebMask = 1.0 - pm * (1.0 - veneer * 0.6) * 0.95;
 #endif
 #ifdef WALK_MOON
   // craters at every scale (each fades out before it gets too small to see), and "elephant hide" lineations on slopes
@@ -298,10 +315,10 @@ float wMicroSun = 1.0;          // sunlight blocked by small relief drawn by the
   vec3 pb = pw > 0.0 ? wpebbles(P, 14.0, uPebDens) : vec3(0.0);
   vec3 gb = gw > 0.0 ? wpebbles(P + 31.7, 34.0, uPebDens * 0.8) : vec3(0.0);
   float pk = max(smoothstep(0.0, 0.004, pb.x) * pw, smoothstep(0.0, 0.0015, gb.x) * gw * 0.8);
-  g += (pb.yz * pw + gb.yz * gw) * (1.0 - rockiness * 0.5);
+  g += (pb.yz * pw + gb.yz * gw) * (1.0 - rockiness * 0.5) * pebMask;
   vec3 pebCol = uPeb * (0.7 + 0.6 * fract(pb.x * 913.0 + gb.x * 2711.0));
-  alb = mix(alb, pebCol, pk * 0.85);
-  alb = mix(alb, mix(alb, uPeb, uPebDens * 0.5) * 0.93, (1.0 - pw) * 0.9);   // the gravel's average, with its shading
+  alb = mix(alb, pebCol, pk * 0.85 * pebMask);
+  alb = mix(alb, mix(alb, uPeb, uPebDens * 0.5 * pebMask) * mix(1.0, 0.93, pebMask), (1.0 - pw) * 0.9);   // the gravel's average, with its shading
   if (uRipple > 0.0) {
     // wind ripples, crests across the wind, in sandy patches
     vec2 wd = normalize(vec2(0.8, 0.6));
@@ -327,13 +344,21 @@ float wMicroSun = 1.0;          // sunlight blocked by small relief drawn by the
   vec3 n2 = wfbm(vTW.xz + vTW.y * 1.7, 2.5, 3, fp);
   float cap = smoothstep(0.45, 0.85, Nw.y + 0.35 * (n2.x - 0.5)) * uDust;
   vec3 base = diffuseColor.rgb * (0.8 + 0.4 * n1.x);
+  float layerG = 0.0;
 #ifdef WALK_LAYERS
-  float ly = vOP.y * 9.0 + 0.6 * n1.x;
-  base = mix(uBandA, uBandB, smoothstep(0.35, 0.65, fract(ly))) * (0.82 + 0.36 * n1.x) * (0.85 + 0.3 * fract(floor(ly) * 0.618));
+  // layered sandstone: beds of different tones, each made of fine laminae (cross-bedded in some beds), and the
+  // softer laminae weathered back into grooves that catch the light
+  float bed = floor(vOP.y * 9.0 + 0.4 * n1.x);
+  float bh = fract(sin(bed * 12.9898 + 4.1) * 43758.5453);
+  float slant = (bh - 0.5) * 1.4 * step(0.45, bh);
+  float lam = vOP.y * (40.0 + 30.0 * bh) + slant * dot(vOP.xz, vec2(0.8, 0.6)) * 55.0 + 1.5 * n1.x;
+  float laa = 1.0 - smoothstep(0.3, 0.7, fwidth(lam));
+  base = mix(uBandA, uBandB, smoothstep(0.2, 0.8, bh)) * (0.85 + 0.3 * n1.x) * (1.0 + 0.12 * sin(lam * 6.2831) * laa);
+  layerG = (1.0 - abs(Nw.y)) * 0.25 * cos(lam * 6.2831) * laa;
 #endif
   diffuseColor.rgb = mix(base, uSand * (0.9 + 0.2 * n2.x), cap);
   diffuseColor.rgb *= mix(0.72, 1.0, smoothstep(-0.16, 0.04, vOP.y));   // darker where it meets the ground
-  vec3 nW = normalize(Nw + vec3(n2.y, 0.0, n2.z) * 0.035 + vec3(n1.y, 0.0, n1.z) * 0.01);
+  vec3 nW = normalize(Nw + vec3(n2.y, 0.0, n2.z) * 0.035 + vec3(n1.y, 0.0, n1.z) * 0.01 + vec3(0.0, layerG, 0.0));
   normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
 }
 #endif

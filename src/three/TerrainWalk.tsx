@@ -43,14 +43,16 @@ const MOON_DUST: GroundStyle = {
   pebbles: 0.12, ripples: 0, plates: 0, plateSize: 1, darkAmt: 0.2, rockK: 0.003, rockCol: [0.17, 0.16, 0.15], dust: 0.35, clusters: 0.035,
 };
 export const STYLES: Record<string, GroundStyle> = {
-  // Gale floor (Aeolis Palus, near Bradbury Landing): dusty brown fines carpeted with rounded pebbles, sparse cobbles,
-  // flat cracked mudstone and conglomerate pavement, and low tilted outcrops of layered rock.
-  'mars-gale': { ...MARS_SAND, pebbles: 0.45, ripples: 0, plates: 0.7, plateSize: 0.8, darkAmt: 0.35, rockK: 0.012, rockCol: [0.085, 0.07, 0.06], dust: 0.7,
-    outcrops: 0.22, bands: [[0.2, 0.14, 0.1], [0.28, 0.2, 0.14]] },
+  // Gale (Yellowknife Bay, the Kimberley, the Murray formation): exposed bedrock everywhere. Flat cracked mudstone
+  // pavement, ledges of layered and cross-bedded sandstone with broken blocks at their feet, gravel and dark sand only
+  // in the gaps.
+  'mars-gale': { ...MARS_SAND, sand: [0.2, 0.105, 0.06], dark: [0.14, 0.08, 0.05], rock: [0.22, 0.16, 0.115], slab: [0.3, 0.19, 0.13], peb: [0.11, 0.09, 0.075],
+    pebbles: 0.25, ripples: 0, plates: 0.88, plateSize: 1.1, darkAmt: 0.15, rockK: 0.02, rockCol: [0.1, 0.085, 0.072], dust: 0.5, clusters: 0.06,
+    outcrops: 2.2, bands: [[0.1, 0.088, 0.08], [0.21, 0.155, 0.12]] },
   // Jezero floor (Máaz): dusty soil and dark sand, flat light 'paver' rocks, clusters of blocky dark rocks on low rises.
   // The haze is a heavy dust storm (optical depth ~4), thicker than the one Perseverance watched in January 2022 (~2).
   'mars-jezero': { ...MARS_SAND, sand: [0.3, 0.17, 0.09], dark: [0.11, 0.08, 0.055], rock: [0.13, 0.09, 0.065], slab: [0.28, 0.21, 0.15], peb: [0.08, 0.07, 0.06],
-    pebbles: 0.35, ripples: 0.6, plates: 0.55, plateSize: 1.6, darkAmt: 0.45, rockK: 0.022, rockCol: [0.06, 0.055, 0.045], dust: 0.55, clusters: 0.06, storm: true },
+    pebbles: 0.35, ripples: 0.6, plates: 0.3, plateSize: 1.6, darkAmt: 0.45, rockK: 0.022, rockCol: [0.06, 0.055, 0.045], dust: 0.55, clusters: 0.06, storm: true },
   // Olympus Mons summit: a thick blanket of bright fine dust (very low thermal inertia), dark wind streaks, few rocks.
   'mars-olympus': { ...MARS_SAND, sand: [0.34, 0.2, 0.11], dark: [0.17, 0.1, 0.06], rock: [0.12, 0.08, 0.06], peb: [0.12, 0.08, 0.06],
     pebbles: 0.08, ripples: 0.25, darkAmt: 0.2, streaks: 0.6, rockK: 0.004, rockCol: [0.07, 0.055, 0.045], dust: 0.8, high: true },
@@ -160,13 +162,14 @@ function Backdrop({ t, world, st }: { t: Terrain; world: 'mars' | 'moon'; st: Gr
 }
 
 /** Rocks you can bump into (filled by the rock field around you). */
-export const ROCKS: { x: number; z: number; r: number }[] = [];
+export const ROCKS: { x: number; z: number; r: number; h?: number }[] = [];
 
 const CELL = 30, RING = 8;   // rocks are generated in 30 m cells, 8 cells around you (about 250 m)
 const BINS = [0.13, 0.2, 0.32, 0.5, 0.8, 1.25, 2, 3.2];   // rock diameter classes, metres
 const CULL = 0.0032;          // don't draw a rock smaller than this fraction of its distance (under ~2 pixels)
 const LODS = [{ upTo: 0.5, detail: 2, cap: 2000 }, { upTo: 1.25, detail: 3, cap: 500 }, { upTo: 99, detail: 3, cap: 160 }];
 const VARIANTS = 4;
+const OUT_CAP = 260, OUT_NEAR = 70;   // outcrops per mesh; closer than this they use the detailed shape
 
 /** Expected rocks per square metre in each size class, from the rock cover k (Golombek & Rapp 1997):
  *  the area covered by rocks wider than D is k * exp(-q D), with q = 1.79 + 0.152 / k. */
@@ -187,7 +190,8 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
   const moon = world === 'moon';
   const geos = useMemo(() => LODS.map((l, li) => Array.from({ length: VARIANTS }, (_, v) =>
     makeRock(li * 31 + v * 7 + (moon ? 100 : 0), l.detail, moon && v % 2 ? 'rounded' : 'angular'))), [moon]);
-  const outGeos = useMemo(() => (st.outcrops ? Array.from({ length: 3 }, (_, v) => makeOutcrop(v + 1)) : []), [st]);
+  // outcrops: 3 shapes, each in a detailed (near) and a coarse (far) version
+  const outGeos = useMemo(() => (st.outcrops ? [0, 1, 2].flatMap((v) => [makeOutcrop(v + 1, 22, 18), makeOutcrop(v + 1, 10, 9)]) : []), [st]);
   const rockMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 }), { rock: true, aerial: !moon }), [moon]);
   const outMat = useMemo(() => patchMaterial(new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0 }), { rock: true, layers: true, aerial: !moon }), [moon]);
   const meshes = useMemo(() => LODS.map((l, li) => geos[li].map((g) => {
@@ -197,7 +201,7 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
     return m;
   })), [geos, rockMat]);
   const outMeshes = useMemo(() => outGeos.map((g) => {
-    const m = new THREE.InstancedMesh(g, outMat, 140);
+    const m = new THREE.InstancedMesh(g, outMat, OUT_CAP);
     m.castShadow = m.receiveShadow = true; m.frustumCulled = false; m.count = 0;
     return m;
   }), [outGeos, outMat]);
@@ -259,19 +263,38 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
           }
         }
       }
-      // a low, tilted outcrop of layered rock
+      // ledges of layered rock, with broken blocks fallen at their feet
       const ro = mulberry32(cellSeed(gx, gz, 77));
-      if (st.outcrops && outMeshes.length && ro() < st.outcrops) {
-        const x = (gx + 0.15 + ro() * 0.7) * CELL, z = (gz + 0.15 + ro() * 0.7) * CELL;
-        const W = ro() < 0.12 ? 10 + ro() * 9 : 2.5 + Math.pow(ro(), 1.5) * 7, H = Math.min(1.9, Math.max(0.35, W * (0.07 + ro() * 0.09)));
-        const v = Math.floor(ro() * outMeshes.length);
-        if (Math.hypot(x, z) < W * 0.6 + 8 || Math.hypot(x - px, z - pz) > 230 || oc[v] >= 140) continue;
+      const nOut = st.outcrops && outMeshes.length ? Math.floor(st.outcrops + ro()) : 0;
+      for (let q = 0; q < nOut; q++) {
+        const x = (gx + 0.1 + ro() * 0.8) * CELL, z = (gz + 0.1 + ro() * 0.8) * CELL;
+        // three sizes: knee-to-head-high ledges, big ledges, and now and then a tall layered butte (a 'layer cake')
+        const cls = ro();
+        const tall = cls < 0.1, big = cls < 0.25;
+        const W = tall ? 14 + ro() * 16 : big ? 10 + ro() * 14 : 2.5 + Math.pow(ro(), 1.3) * 9;
+        const H = tall ? Math.min(26, W * (0.6 + ro() * 0.3)) : big ? Math.min(8, W * (0.25 + ro() * 0.2)) : Math.min(4, Math.max(0.6, W * (0.16 + ro() * 0.2)));
+        const shape = Math.floor(ro() * 3), D2 = W * (tall ? 0.6 + ro() * 0.3 : 0.35 + ro() * 0.45), rot = ro() * Math.PI * 2, tx = (ro() - 0.5) * 0.08, tz = (ro() - 0.5) * 0.08;
+        const dist = Math.hypot(x - px, z - pz), v = shape * 2 + (dist < OUT_NEAR + W ? 0 : 1);
+        if (Math.hypot(x, z) < W * 0.5 + 5 || dist > 240 || oc[v] >= OUT_CAP) continue;
         const grade = Math.hypot(heightAt(t, x + 4, z) - heightAt(t, x - 4, z), heightAt(t, x, z + 4) - heightAt(t, x, z - 4)) / 8;
-        o.position.set(x, meshHeightAt(t, x, z) - H * (0.1 + grade * 2), z);
-        o.rotation.set((ro() - 0.5) * 0.08, ro() * Math.PI * 2, (ro() - 0.5) * 0.08);
-        o.scale.set(W, H, W * (0.45 + ro() * 0.4));
+        o.position.set(x, meshHeightAt(t, x, z) - H * Math.min(0.25, 0.1 + grade * 2), z);
+        o.rotation.set(tx, rot, tz);
+        o.scale.set(W, H, D2);
         o.updateMatrix(); outMeshes[v].setMatrixAt(oc[v]++, o.matrix);
-        ROCKS.push({ x, z, r: W * 0.36 + 0.5 });
+        // a row of circles along the long side, so you can't walk into the ends of a long ledge
+        const long = Math.max(W, D2), short = Math.min(W, D2), nc = Math.max(1, Math.ceil(long / short)), ax = W >= D2;
+        for (let k = 0; k < nc; k++) {
+          const u = (nc === 1 ? 0 : (k / (nc - 1) - 0.5) * (long - short)) * 0.9;
+          const lx = ax ? u : 0, lz = ax ? 0 : u;
+          ROCKS.push({ x: x + lx * Math.cos(rot) + lz * Math.sin(rot), z: z - lx * Math.sin(rot) + lz * Math.cos(rot), r: short * 0.45 + 0.5, h: H });
+        }
+        const nb = 5 + Math.floor(ro() * 10 * Math.min(4, H));
+        for (let k = 0; k < nb; k++) {
+          const a = ro() * Math.PI * 2, rr = 0.42 + ro() * 0.35, ca = Math.cos(a), sa = Math.sin(a);
+          const lx = ca * W * rr, lz = sa * D2 * rr;          // around the footprint, in the ledge's own frame
+          const bx = x + lx * Math.cos(rot) + lz * Math.sin(rot), bz = z - lx * Math.sin(rot) + lz * Math.cos(rot);
+          put(bx, bz, 0.14 + Math.pow(ro(), 2.2) * Math.min(1.8, H * 0.6), ro);
+        }
       }
     }
     meshes.forEach((l, li) => l.forEach((m, v) => {
@@ -810,7 +833,7 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
   }, [start]);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [grab, setGrab] = useState(false);
-  if (import.meta.env.DEV) (window as unknown as { __walk?: unknown }).__walk = { look, pos };   // for screenshot scripts
+  if (import.meta.env.DEV) (window as unknown as { __walk?: unknown }).__walk = { look, pos, ROCKS };   // for screenshot scripts
   // The Sun behind your shoulder when you land, so the view is lit and your shadow points ahead.
   // Mars: mid-afternoon. Apollo 16: morning Sun ~30° up. Moon's south pole: the Sun skims the horizon, so we pick the
   // nearest direction from which the Sun actually clears the hills around the landing spot.

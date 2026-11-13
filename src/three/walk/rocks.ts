@@ -51,34 +51,52 @@ export function makeRock(seed: number, detail: number, shape: 'angular' | 'round
   return toCreasedNormals(g, shape === 'angular' ? 0.38 : 0.9);
 }
 
-/** A low layered outcrop about 1 x 1 m in plan and 1 m tall (scaled per instance): an irregular outline, beds that
- *  recess or jut, a stepped and tilted top. Its local y (0..1) gives the layer colours in the shader. */
-export function makeOutcrop(seed: number) {
-  const SEG = 28, ROWS = 12;
-  let g: THREE.BufferGeometry = new THREE.BoxGeometry(1, 1, 1, SEG, ROWS, SEG);
+/** A layered outcrop about 1 x 1 m in plan and 1 m tall (scaled per instance): an angular, jointed outline (a
+ *  polygon with V-shaped joints cut into it), beds that recess or jut out as ledges, broken corners from fracture
+ *  planes, and a flat, stepped top. Its local y (0..1) gives the layer colours in the shader. seg/rows set the detail. */
+export function makeOutcrop(seed: number, seg = 22, rows = 18) {
+  let g: THREE.BufferGeometry = new THREE.BoxGeometry(1, 1, 1, seg, rows, seg);
   g.deleteAttribute('normal'); g.deleteAttribute('uv');
   g = mergeVertices(g);
   const rnd = mulberry32(seed * 104729 + 7), p = g.attributes.position as THREE.BufferAttribute;
-  const nL = 5 + Math.floor(rnd() * 5);
+  const nL = Math.max(4, Math.round(rows / 2));
   const soft = Array.from({ length: nL + 1 }, () => rnd());
-  const o = seed * 5.3;
-  const outline = (a: number) => 0.78 + 0.22 * vnoise(Math.cos(a) * 1.3 + o, Math.sin(a) * 1.3, 0.5) + 0.07 * vnoise(Math.cos(a) * 5 + o, Math.sin(a) * 5, 2.5);
-  const tilt = 0.25 + rnd() * 0.5;                 // one side higher: the top is a dipping bed
+  const off = Array.from({ length: nL + 1 }, () => [(rnd() - 0.5) * 0.06, (rnd() - 0.5) * 0.06]);
+  // planform: an irregular polygon, plus a few vertical joints (narrow V notches)
+  const K = 5 + Math.floor(rnd() * 4), ang = Array.from({ length: K }, (_, k) => ((k + 0.2 + rnd() * 0.6) / K) * Math.PI * 2), rad = ang.map(() => 0.7 + rnd() * 0.3);
+  const joints = Array.from({ length: 2 + Math.floor(rnd() * 3) }, () => ({ a: rnd() * Math.PI * 2, w: 0.05 + rnd() * 0.08, d: 0.12 + rnd() * 0.2 }));
+  const outline = (a: number) => {
+    a = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    let k = K - 1; while (k > 0 && ang[k] > a) k--;
+    if (a < ang[0]) k = K - 1;
+    const a0 = ang[k], a1 = k === K - 1 ? ang[0] + Math.PI * 2 : ang[k + 1], aa = a < a0 ? a + Math.PI * 2 : a;
+    const tt = (aa - a0) / (a1 - a0);
+    // straight edge between the two corners (in polar form, so the side is a line, not an arc)
+    const c0 = [Math.cos(a0) * rad[k], Math.sin(a0) * rad[k]], c1 = [Math.cos(a1) * rad[(k + 1) % K], Math.sin(a1) * rad[(k + 1) % K]];
+    const ex = c1[0] - c0[0], ez = c1[1] - c0[1], dx = Math.cos(aa), dz = Math.sin(aa);
+    const den = dx * ez - dz * ex, r = Math.abs(den) > 1e-6 ? (c0[0] * ez - c0[1] * ex) / den : rad[k] * (1 - tt) + rad[(k + 1) % K] * tt;
+    let jr = 1;
+    for (const j of joints) { const da = Math.abs(((a - j.a + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (da < j.w) jr = Math.min(jr, 1 - j.d * (1 - da / j.w)); }
+    return Math.max(0.3, r) * jr;
+  };
+  const planes = Array.from({ length: 3 + Math.floor(rnd() * 3) }, () => ({ n: new THREE.Vector3(rnd() - 0.5, rnd() * 0.6 + 0.2, rnd() - 0.5).normalize(), d: 0.42 + rnd() * 0.12 }));
+  const o = seed * 5.3, tilt = 0.15 + rnd() * 0.35, v = new THREE.Vector3();
   for (let i = 0; i < p.count; i++) {
-    let x = p.getX(i), y = p.getY(i) + 0.5, z = p.getZ(i);
-    // square -> disc, then the noisy outline
-    const m = Math.max(Math.abs(x), Math.abs(z)), r = Math.hypot(x, z);
-    if (r > 1e-6) { const k = (m / r); x *= k; z *= k; }
-    const a = Math.atan2(z, x), R = Math.hypot(x, z) * 2;           // 0..1 from centre to edge
-    const L = Math.min(nL, Math.floor(y * nL));
-    const recess = 1 - 0.09 * soft[L] - 0.05 * vnoise(a * 3 + o, y * 6, 1.7);
-    const taper = 1 - 0.32 * Math.pow(y, 1.4);
-    const rr = 0.5 * outline(a) * recess * taper * R;
-    x = Math.cos(a) * rr; z = Math.sin(a) * rr;
-    // dip: the top surface (and the beds) slope up toward +x, in steps
-    let yy = y * (0.75 + tilt * (x + 0.5) * 0.6);
-    if (y > 0.97) yy = Math.floor(yy * nL * 0.999) / nL + 0.04 + 0.03 * vnoise(x * 6 + o, 0, z * 6);
-    p.setXYZ(i, x, yy - 0.18, z);
+    let x = p.getX(i), z = p.getZ(i);
+    const y = p.getY(i) + 0.5;
+    const m = Math.max(Math.abs(x), Math.abs(z)), r = Math.hypot(x, z);   // square -> disc
+    if (r > 1e-6) { const k = m / r; x *= k; z *= k; }
+    const a = Math.atan2(z, x), R = Math.hypot(x, z) * 2;
+    const L = Math.min(nL - 1, Math.floor(y * nL));
+    const recess = soft[L] > 0.55 ? 1 - 0.18 * (soft[L] - 0.55) / 0.45 : 1 + 0.03 * soft[L];   // soft beds weather back
+    const taper = 1 - 0.18 * Math.pow(y, 1.5);
+    const rr = 0.5 * outline(a) * recess * taper * R * (1 + 0.025 * vnoise(a * 5 + o, y * 7, 1.3));
+    x = Math.cos(a) * rr + off[L][0] * R; z = Math.sin(a) * rr + off[L][1] * R;
+    let yy = y * (0.8 + tilt * (x + 0.5) * 0.5);
+    if (y > 0.97) yy = Math.floor(yy * nL * 0.999) / nL + 0.03 + 0.02 * vnoise(x * 6 + o, 0, z * 6);
+    v.set(x, yy - 0.5, z);
+    for (const pl of planes) { const e = v.dot(pl.n) - pl.d; if (e > 0) v.addScaledVector(pl.n, -e * 0.9); }   // broken corners
+    p.setXYZ(i, v.x, v.y + 0.5 - 0.18, v.z);
   }
-  return toCreasedNormals(g, 0.6);
+  return toCreasedNormals(g, 0.45);
 }
