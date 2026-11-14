@@ -97,7 +97,7 @@ export default function Trails() {
   const earthLayer = t.earth;
 
   return (
-    <section className="trails" id="trails" style={{ ['--trails-img' as string]: 'url(photos/trails_bg.webp)' }}>
+    <section className="trails" id="trails" style={{ ['--trails-img' as string]: `url(${new URL('photos/trails_bg.webp', document.baseURI).href})` }}>
       <header className="chapter-head">
         <h2>Twin Trails</h2>
         <p>Six big questions, asked of Earth, Mars and the Moon. Look at the maps, then see, hear, smell and feel each world.</p>

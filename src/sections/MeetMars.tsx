@@ -225,7 +225,7 @@ export default function MeetMars() {
   return (
     <section className="meet" id="meet" ref={wrap}>
       <div className="meet__sticky">
-        <div className="meet__bg" aria-hidden style={{ ['--meet-img' as string]: 'url(photos/meet_bg.webp)' }}>
+        <div className="meet__bg" aria-hidden style={{ ['--meet-img' as string]: `url(${new URL('photos/meet_bg.webp', document.baseURI).href})` }}>
           <div className="meet__dust" />
         </div>
         <header className="chapter-head">

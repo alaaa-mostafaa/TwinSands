@@ -736,7 +736,7 @@ details[open] > summary::before { content: '− '; }
 @keyframes labradorGlow { 0%, 100% { box-shadow: 0 8px 30px rgba(0,0,0,.5); } 50% { box-shadow: 0 0 34px rgba(70,150,255,.55), 0 8px 30px rgba(0,0,0,.5); } }
 
 /* Explore section background: the team's image, exactly as given */
-.explore { background: url(photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
+.explore { background: url(/photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
 
 /* Explore: pick a world. The planets themselves; the picked one grows and lights up, the other shrinks into shadow */
 .explore__worlds { display: flex !important; justify-content: center; align-items: center; gap: clamp(24px, 8vw, 120px); padding-top: 10px; padding-bottom: 10px; }
@@ -775,10 +775,10 @@ details[open] > summary::before { content: '− '; }
 .score { background:
   linear-gradient(90deg, rgba(4,6,14,.55), rgba(4,6,14,.25) 45%, rgba(4,6,14,.5)),
   linear-gradient(180deg, rgba(4,6,14,.35), transparent 30%, transparent 70%, rgba(4,6,14,.55)),
-  url(photos/score_bg.webp) center / cover no-repeat, #05070a;
+  url(/photos/score_bg.webp) center / cover no-repeat, #05070a;
   background-attachment: scroll, scroll, fixed; }   /* image sized to the screen, not the tall section: no stretching */
 @media (hover: none) { .score { background-attachment: scroll; } }
-.boots { background: url(photos/boots_bg.webp) center bottom / cover no-repeat, #0a0806; }   /* stars on top, dunes at the bottom */
+.boots { background: url(/photos/boots_bg.webp) center bottom / cover no-repeat, #0a0806; }   /* stars on top, dunes at the bottom */
 /* keep text readable on the new backgrounds */
 .score .chip:not(.is-on) { background: rgba(5,7,10,.62); backdrop-filter: blur(6px); color: rgba(255,255,255,.82); }
 .score .chapter-head h2, .score .chapter-head p { text-shadow: 0 2px 18px rgba(0,0,0,.85); }
@@ -822,17 +822,17 @@ details[open] > summary::before { content: '− '; }
   var(--trails-img) center 70% / cover no-repeat, #0a0608; }
 .explore { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
-  url(photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
+  url(/photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
 .score { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
   linear-gradient(90deg, rgba(4,6,14,.55), rgba(4,6,14,.25) 45%, rgba(4,6,14,.5)),
   linear-gradient(180deg, rgba(4,6,14,.35), transparent 30%, transparent 70%, rgba(4,6,14,.55)),
-  url(photos/score_bg.webp) center / cover no-repeat, #05070a;
+  url(/photos/score_bg.webp) center / cover no-repeat, #05070a;
   background-attachment: scroll, scroll, scroll, fixed; }
 @media (hover: none) { .score { background-attachment: scroll; } }
 .boots { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
-  url(photos/boots_bg.webp) center bottom / cover no-repeat, #0a0806; }
+  url(/photos/boots_bg.webp) center bottom / cover no-repeat, #0a0806; }
 .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; pointer-events: none; z-index: 1; background: linear-gradient(180deg, transparent, var(--seam-c)); }
 
 /* logo: Mars and Earth wrapped in one ring of sand */
@@ -982,7 +982,7 @@ details[open] > summary::before { content: '− '; }
 .score { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
   linear-gradient(rgba(4,6,14,.62), rgba(4,6,14,.62)),
-  url(photos/score_bg.webp) center / cover no-repeat, #05070a;
+  url(/photos/score_bg.webp) center / cover no-repeat, #05070a;
   background-attachment: scroll, scroll, fixed; }
 @media (hover: none) { .score { background-attachment: scroll; } }
 .score .sstep { margin-top: 20px !important; padding: 22px 24px !important; border-radius: 18px; background: rgba(6,8,16,.72); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
