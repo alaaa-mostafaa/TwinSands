@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FIELD_PAIRS } from '../content';
+import { FIELD_PAIRS, SOURCES } from '../content';
 import { usePhotos } from '../data';
 
 const FAYOUM_MEDIA = [
@@ -60,31 +60,20 @@ function FieldAlbum({ location, country = 'Egypt', items }: {
   );
 }
 
-/** Non-album field slots load a saved photo or show a drop zone for a local preview. */
+/** Each field slot is one of our photo albums; a single-photo slot shows public/field/<slot>.jpg, or nothing if it is missing. */
 function FieldSlot({ slot, prompt }: { slot: string; prompt: string }) {
   const [missing, setMissing] = useState(false);
-  const [local, setLocal] = useState<string | null>(null);
-  const take = (f?: File) => f && f.type.startsWith('image/') && setLocal(URL.createObjectURL(f));
   if (slot === 'fayoum') return <FieldAlbum location="Fayoum, Egypt" items={FAYOUM_MEDIA} />;
   if (slot === 'pavement') return <FieldAlbum location="Dahab, Egypt" items={DAHAB_MEDIA} />;
   if (slot === 'dustdevil') return <FieldAlbum location="Al Madinah Al Munawwarah" country="Saudi Arabia" items={MADINA_MEDIA} />;
   if (slot === 'deserts') return <FieldAlbum location="Egyptian deserts" items={DESERTS_MEDIA} />;
   if (slot === 'wind') return <FieldAlbum location="White Desert, Egypt" items={WHITE_DESERT_MEDIA} />;
-  if (!missing || local) {
-    return (
-      <div className="field__img">
-        <img src={local ?? `field/${slot}.jpg`} alt={prompt} onError={() => setMissing(true)} />
-        <span className="field__tag">Egypt · our photo{local ? ' (preview)' : ''}</span>
-      </div>
-    );
-  }
+  if (missing) return null;
   return (
-    <label className="field__drop" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); take(e.dataTransfer.files[0]); }}>
-      <input type="file" accept="image/*" hidden onChange={(e) => take(e.target.files?.[0])} />
-      <span className="field__plus">+</span>
-      <span>{prompt}</span>
-      <em>Drop a photo to preview. To keep it, save it as public/field/{slot}.jpg</em>
-    </label>
+    <div className="field__img">
+      <img src={`field/${slot}.jpg`} alt={prompt} onError={() => setMissing(true)} />
+      <span className="field__tag">Egypt · our photo</span>
+    </div>
   );
 }
 
@@ -127,20 +116,25 @@ export function Boots() {
           </div>
         ))}
       </div>
+      <Credits />
     </section>
   );
 }
 
-export function Footer() {
+/** Sources and credits, folded away at the very bottom of the page. */
+function Credits() {
   return (
-    <footer className="foot" id="sources">
-      <div className="foot__top">
-        <div>
-          <div className="brand brand--big"><img className="brand__logo" src="logo.svg" alt="" /><span>Twin<br />Sands</span></div>
-          <p className="foot__team">Team Phobos &amp; Deimos · NASA Space Apps Cairo 2026</p>
-          <p className="foot__note">A similarity score is a ranking aid, not a probability, and nothing here identifies a safe landing or habitat site. Earth twin coordinates are approximate unless they come from our measured windows. Independent student project; not affiliated with or endorsed by NASA, ESA or USGS.</p>
-        </div>
+    <details className="credits" id="sources">
+      <summary>Sources &amp; credits</summary>
+      <div className="credits__grid">
+        {SOURCES.map((g) => (
+          <div key={g.group}>
+            <h4>{g.group}</h4>
+            <ul>{g.items.map((it) => <li key={it.label}>{it.url ? <a href={it.url} target="_blank" rel="noreferrer">{it.label}</a> : it.label}</li>)}</ul>
+          </div>
+        ))}
       </div>
-    </footer>
+      <p className="credits__note">Team Deimos &amp; Phobos · NASA Space Apps Cairo 2026. A Twin Score is a ranking aid, not a probability, and nothing here picks a safe landing or habitat site. Independent student project, not affiliated with or endorsed by NASA, ESA, CSA, JAXA or USGS.</p>
+    </details>
   );
 }

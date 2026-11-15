@@ -172,7 +172,7 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
               <p>No place on Earth stays this cold all year. The closest are Antarctica’s high plateau and Dry Valleys, which is why they top this list.</p>
             </div>
           )}
-            <div className="score__radar"><Radar axes={d.axes} labels={plain} ghost={[]} series={[{ label: earthLabel(e), color: '#7ec8ff', values: d.axes.map((a) => chosen.axes[a]) }]} /></div>
+            <div className="score__radar"><Radar axes={d.axes} labels={plain} series={[{ label: earthLabel(e), color: '#7ec8ff', values: d.axes.map((a) => chosen.axes[a]) }]} /></div>
             <p className="score__explain"><b>Why they match:</b> each line is one thing we measured, like how steep or bumpy the ground is. Further out = more alike.</p>
             <div className="feat__wrap"><h4 className="feat__h">The numbers</h4>
           <table className="feat">

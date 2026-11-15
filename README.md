@@ -29,7 +29,7 @@ Everything the site shows is already in `public/`, so no backend and no API keys
 
 ## Adding your field photos
 
-The Fayoum album in `public/photos/fayoum/` is paired with the Curiosity panorama; the Dahab album in `public/photos/dahab/` appears in the next card, paired with Curiosity at Rocknest. The Al Madinah Al Munawwarah, Saudi Arabia album in `public/photos/madina/` is paired with the Mars dust-devil image. The White Desert album in `public/photos/white-desert/` is paired with the wind-carved terrain comparison. Use the arrows to browse the albums; videos have playback controls. Other field slots can use `public/field/<slot>.jpg`; JPG is fine there. The slots are `concretion` and `shadow` (prompts are in `src/content.ts`, `FIELD_PAIRS`). Until a photo exists, the slot shows a drop zone; dropping a photo there only previews it in your browser.
+The Fayoum album in `public/photos/fayoum/` is paired with the Curiosity panorama; the Dahab album in `public/photos/dahab/` appears in the next card, paired with Curiosity at Rocknest. The Al Madinah Al Munawwarah, Saudi Arabia album in `public/photos/madina/` is paired with the Mars dust-devil image. The White Desert album in `public/photos/white-desert/` is paired with the wind-carved terrain comparison. Use the arrows to browse the albums; videos have playback controls. The Egyptian deserts album is in `public/photos/deserts/`, and the team-shadow photo is `public/field/shadow.jpg` (paired with Opportunity's shadow). Every slot has photos; a single-photo slot that is missing is simply not shown.
 
 ## Data pipeline (Python, run once; outputs are committed in `public/`)
 
@@ -70,14 +70,14 @@ Findings worth putting in the proposal:
 | NASA LRO Diviner | Polar Resource Product → ice-stable area and temperatures for every Moon site; shown in Twin Score's "NASA LRO Diviner" panel |
 | CSA RADARSAT-1 | Radar image of Haughton crater taken in polar night (3 Jan 2001), Water story (`pipeline/fetch_radar.py`) |
 | CSA SAR Python tutorial | Followed for reading and displaying the RADARSAT scene (GCP reprojection, dB stretch) |
-| CSA RADARSAT Constellation Mission | Not used: RCM open data is limited to a few sample scenes, none over our sites |
+| CSA RADARSAT Constellation Mission | The one resource not used: RCM open data is limited to a few sample scenes, none over our sites |
 | ESA Copernicus | Copernicus DEM GLO-30 = all Earth heights in the score; Sentinel-2 cloudless (EOX) = Earth photos in Twin Score |
 | ESA Open Science Catalog | Found ESA CCI Permafrost there → Water trail Earth map (`pipeline/fetch_permafrost.py`) |
 | JAXA G-Portal | GCOM-C SGLI land surface temperature (day and night) → Soil trail "day-to-night swing" map (`pipeline/fetch_jaxa_lst.py`); AMSR2 soil moisture tested, not shown (see script) |
 
 ## Credits and sources
 
-- **Measured terrain, thermal and mineral windows:** the Terrestrial Analog Finder project (Space Apps 2026). We reuse its published processed measurements (Copernicus DEM GLO-30, LOLA and CTX DTMs, ECOSTRESS, VIIRS, EMIT, TES, Diviner); the scoring code is ours. *Add their repository URL in `src/content.ts` (`SOURCES`) and in the proposal's literature review.*
+- **Measured terrain, thermal and mineral windows:** our own Terrestrial Analog Finder pipeline (the parent folder of this site), which measures terrain, thermal and mineral windows from Copernicus DEM GLO-30, LOLA and CTX DTMs, ECOSTRESS, MODIS/VIIRS albedo, EMIT, TES and Diviner. The Twin Score ranks those measurements.
 - **Earth layers:** NASA GIBS (Blue Marble, MODIS LST and snow cover, MERRA-2 dust, ASTER GDEM), OSM land mask.
 - **Mars layers:** Viking MDIM 2.1, MGS MOLA, MGS TES thermal inertia (Putzig et al. 2005) and dust cover index (Ruff & Christensen 2002), via NASA Mars Trek.
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.

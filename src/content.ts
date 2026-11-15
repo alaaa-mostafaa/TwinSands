@@ -229,23 +229,31 @@ export const FIELD_PAIRS: { slot: string; prompt: string; rover: string; caption
 
 export const SOURCES: { group: string; items: { label: string; url: string }[] }[] = [
   { group: 'Earth', items: [
-    { label: 'NASA GIBS: Blue Marble, MODIS LST and snow cover, MERRA-2 dust, ASTER GDEM', url: 'https://nasa-gibs.github.io/gibs-api-docs/' },
+    { label: 'NASA Earthdata Search (CMR) and LP DAAC: EMIT minerals, ECOSTRESS land temperature, MODIS albedo', url: 'https://search.earthdata.nasa.gov/' },
+    { label: 'NASA GIBS / Worldview: Blue Marble, MODIS land temperature and snow, MERRA-2 dust, ASTER GDEM', url: 'https://nasa-gibs.github.io/gibs-api-docs/' },
+    { label: 'ESA Copernicus DEM GLO-30: heights of every Earth place in the Twin Score', url: 'https://registry.opendata.aws/copernicus-dem/' },
+    { label: 'Sentinel-2 cloudless by EOX (Copernicus Sentinel data): Earth photos in the Twin Score', url: 'https://s2maps.eu/' },
+    { label: 'ESA CCI Permafrost, found through the ESA Open Science Catalog: Water trail map', url: 'https://opensciencedata.esa.int/' },
+    { label: 'JAXA GCOM-C SGLI land temperature (G-Portal, via JAXA Earth API): Soil trail map', url: 'https://data.earth.jaxa.jp/' },
+    { label: 'CSA RADARSAT-1 open data and SAR Python tutorial: Haughton Crater radar image', url: 'https://donnees-data.asc-csa.gc.ca/en/dataset/radarsat1' },
     { label: 'Smithsonian Global Volcanism Program, Volcanoes of the World', url: 'https://volcano.si.edu/' },
-    { label: 'NASA EMIT minerals, ECOSTRESS LST, VIIRS albedo (processed by Terrestrial Analog Finder)', url: 'https://earth.jpl.nasa.gov/emit/' },
-    { label: 'Copernicus DEM GLO-30 (ESA), terrain windows', url: 'https://registry.opendata.aws/copernicus-dem/' },
   ] },
   { group: 'Mars', items: [
-    { label: 'NASA Mars Trek: Viking MDIM 2.1, MOLA, TES thermal inertia & dust', url: 'https://trek.nasa.gov/mars/' },
-    { label: 'USGS Astrogeology CTX DTMs (analysis-ready data)', url: 'https://stac.astrogeology.usgs.gov/' },
+    { label: 'NASA Planetary Data System: MGS TES thermal inertia, Mars Odyssey GRS water map', url: 'https://pds-geosciences.wustl.edu/' },
+    { label: 'NASA Mars Trek: Viking MDIM 2.1, MOLA, TES dust cover', url: 'https://trek.nasa.gov/mars/' },
+    { label: 'USGS Astrogeology: MRO CTX elevation models, MOLA/HRSC blend', url: 'https://stac.astrogeology.usgs.gov/' },
   ] },
   { group: 'Moon', items: [
-    { label: 'NASA Moon Trek: LROC WAC, LOLA, Clementine FeO, Lunar Prospector H, Diviner', url: 'https://trek.nasa.gov/moon/' },
-    { label: 'Barker et al. LOLA south-polar DTMs (USGS analysis-ready data)', url: 'https://stac.astrogeology.usgs.gov/' },
+    { label: 'NASA LRO: LOLA heights, LROC WAC mosaic, Diviner temperatures (via PDS and USGS)', url: 'https://lunar.gsfc.nasa.gov/' },
+    { label: 'NASA Moon Trek: Clementine iron, Lunar Prospector hydrogen, Diviner rock abundance', url: 'https://trek.nasa.gov/moon/' },
+    { label: 'Barker et al. LOLA south-polar elevation models (USGS analysis-ready data)', url: 'https://stac.astrogeology.usgs.gov/' },
   ] },
-  { group: 'Images and prior work', items: [
-    { label: 'NASA Image and Video Library (public domain)', url: 'https://images.nasa.gov/' },
-    { label: 'Terrestrial Analog Finder (Space Apps 2026): the measured terrain, thermal and mineral windows our Twin Score ranks', url: '' },
+  { group: 'Images, sounds and models', items: [
+    { label: 'NASA Image and Video Library (public domain photos)', url: 'https://images.nasa.gov/' },
+    { label: 'NASA 3D Resources: Perseverance, Ingenuity, Viking, Apollo LM, habitat and dish models', url: 'https://github.com/nasa/NASA-3D-Resources' },
+    { label: 'Perseverance microphone and Apollo audio (NASA); Earth field recordings from Wikimedia Commons', url: 'https://commons.wikimedia.org/' },
     { label: 'USGS: Known Terrestrial Analog Sites for Planetary Science (Hunter 2020)', url: 'https://www.usgs.gov/data/known-terrestrial-analog-sites-planetary-science' },
+    { label: 'Cormorant Garamond typeface (SIL Open Font License)', url: 'https://fonts.google.com/specimen/Cormorant+Garamond' },
   ] },
 ];
 
