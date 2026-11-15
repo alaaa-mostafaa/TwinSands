@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REGIONS, WORLDS, type Region } from '../content';
 import { useJSON, type PhotoMeta } from '../data';
 import TerrainWalk, { loadTerrain, styleFor, type Keys, type Terrain } from '../three/TerrainWalk';
-import { QUESTS, type QuestState } from '../three/walk/Quest';
+import { BASE, QUESTS, type QuestState } from '../three/walk/Quest';
 
 /** Ambient + footsteps through Web Audio. Mars: real Perseverance wind, crunchy steps.
  *  Moon: no air, so no wind; steps are muffled, as if felt through your suit. */
@@ -98,6 +98,48 @@ function robotSay(text: string, onEnd: () => void, moon = false) {
   u.onend = () => { blip(true, moon); onEnd(); }; u.onerror = onEnd;
   speechSynthesis.speak(u);
 }
+/** A postcard of your current view: the 3D picture on cream card, a stamp and a postmark, saved as a PNG. */
+function postcard(region: Region, found: string, secs: number) {
+  const src = document.querySelector('.walk__canvas canvas') as HTMLCanvasElement | null;
+  if (!src) return;
+  shutter();
+  const W = 1600, H = 1120, P = 56, PH = 820, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d')!;
+  x.fillStyle = '#efe6d2'; x.fillRect(0, 0, W, H);
+  // the view, cropped to fill the photo area
+  const pw = W - P * 2, r = Math.max(pw / src.width, PH / src.height), sw = pw / r, sh = PH / r;
+  x.drawImage(src, (src.width - sw) / 2, (src.height - sh) / 2, sw, sh, P, P, pw, PH);
+  x.strokeStyle = 'rgba(40,30,20,.35)'; x.lineWidth = 2; x.strokeRect(P, P, pw, PH);
+  // text
+  const world = region.world === 'mars' ? 'Mars' : 'the Moon';
+  x.fillStyle = '#8a6b45'; x.font = '600 26px "TS Serif", Georgia, serif'; x.textBaseline = 'alphabetic';
+  x.fillText('GREETINGS FROM', P, PH + P + 66);
+  x.fillStyle = '#22190f'; x.font = '600 76px "TS Serif", Georgia, serif';
+  x.fillText(`${region.name}, ${world}`, P, PH + P + 146);
+  x.fillStyle = '#4a3b2a'; x.font = 'italic 32px "TS Serif", Georgia, serif';
+  x.fillText(`Found ${found}${secs ? ` in ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}` : ''} · Twin Sands`, P, PH + P + 196);
+  // stamp, top right of the photo
+  const sx = W - P - 190, sy = P + 26, swd = 160, shd = 196;
+  x.fillStyle = '#efe6d2'; x.fillRect(sx - 8, sy - 8, swd + 16, shd + 16);
+  x.fillStyle = region.world === 'mars' ? '#b5532c' : '#5d6a80'; x.fillRect(sx, sy, swd, shd);
+  x.fillStyle = '#efe6d2'; x.beginPath(); x.arc(sx + swd / 2, sy + 80, 46, 0, Math.PI * 2); x.fill();
+  x.fillStyle = region.world === 'mars' ? '#b5532c' : '#5d6a80'; x.beginPath(); x.arc(sx + swd / 2 + 14, sy + 70, 40, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#efe6d2'; x.font = '600 26px "TS Serif", Georgia, serif'; x.textAlign = 'center';
+  x.fillText(region.world === 'mars' ? 'MARS' : 'MOON', sx + swd / 2, sy + 160);
+  x.font = '600 15px "TS Serif", Georgia, serif'; x.fillText('TWIN SANDS', sx + swd / 2, sy + 184);
+  // postmark: two rings and a date, slightly over the stamp
+  const mx = sx - 30, my = sy + 150;
+  x.strokeStyle = 'rgba(30,25,40,.55)'; x.lineWidth = 3;
+  x.beginPath(); x.arc(mx, my, 70, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.arc(mx, my, 54, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = 'rgba(30,25,40,.6)'; x.font = '600 17px "TS Serif", Georgia, serif';
+  x.fillText(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase(), mx, my + 6);
+  for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(mx - 80, my - 24 + i * 16); x.bezierCurveTo(mx - 120, my - 40 + i * 16, mx - 150, my - 8 + i * 16, mx - 190, my - 24 + i * 16); x.stroke(); }
+  x.textAlign = 'start';
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png'); a.download = `twin-sands-postcard-${region.id}.png`; a.click();
+}
+
 /** camera shutter: two quick clicks of filtered noise */
 function shutter() {
   try {
@@ -148,10 +190,14 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
   const [cheer, setCheer] = useState<string | null>(null);
   const [factOpen, setFactOpen] = useState(false);
   const wasFound = useRef(false);
+  const t0 = useRef(0);
+  const [took, setTook] = useState(0);
+  useEffect(() => { if (t) t0.current = performance.now(); }, [t]);
   const onQuest = (s: QuestState) => {
     setQs(s);
     if (s.found && !wasFound.current && quest) {
       wasFound.current = true;
+      setTook(Math.round((performance.now() - t0.current) / 1000));
       setFactOpen(true); setCheer(quest.say);
       stopTalking();
       if (sound) { const moon = region.world === 'moon'; blip(false, moon); window.setTimeout(() => robotSay(quest.say, () => {}, moon), moon ? 380 : 260); }
@@ -202,12 +248,20 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
         <div>
           <b>{WORLDS[region.world].name} · {region.name}</b>
           <span>{t?.far ? `Real ${region.world === 'mars' ? 'NASA + ESA' : 'NASA'} elevation data · 12 km to walk, 120 km in view` : 'Real NASA elevation data · 12 × 12 km'}</span>
+          {BASE[region.id] && (
+            <span className="base">
+              <span className="base__meters">{BASE[region.id].meters.map(([k, v]) => (
+                <span key={k} className="base__m">{k} <i aria-label={`${v} of 3`}>{[0, 1, 2].map((n) => <em key={n} className={n < v ? 'on' : ''} />)}</i></span>
+              ))}</span>
+              <span className="base__v"><b>Base site?</b> {BASE[region.id].verdict}</span>
+            </span>
+          )}
         </div>
         <button className="walk__x" onClick={onExit} aria-label="Leave">✕</button>
       </div>
       {t && quest && qs && (
         <div className={`quest${qs.found ? ' is-found' : ''}`}>
-          <span className="quest__tag">Field task</span>
+          <span className="quest__tag">{qs.found && took ? `Field task · found in ${Math.floor(took / 60)}:${String(took % 60).padStart(2, '0')}` : 'Field task'}</span>
           <b>{quest.task}</b>
           {!qs.found ? (
             <span className="quest__nav">
@@ -218,7 +272,10 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
             <>
               <span className="quest__stamp" aria-label="Found">Found</span>
               <button className={`quest__fact${factOpen ? " is-open" : ""}`} onClick={() => setFactOpen((v) => !v)}>{factOpen ? quest.found : 'Read the note'}</button>
-              <button className="quest__act" onClick={doAct}>{quest.actLabel} <kbd>E</kbd></button>
+              <span className="quest__btns">
+                <button className="quest__act" onClick={doAct}>{quest.actLabel} <kbd>E</kbd></button>
+                <button className="quest__act quest__act--card" onClick={() => postcard(region, quest.task.replace(/^Find (the )?/, ''), took)}>Send a postcard</button>
+              </span>
             </>
           )}
         </div>

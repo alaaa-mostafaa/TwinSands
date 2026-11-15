@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Radar from '../components/Radar';
 import { plain, REGION_NAME, TARGET_NICK } from '../content';
 import { useJSON, useTwins, type Ranked, type Site } from '../data';
@@ -84,11 +84,15 @@ function Hill({ site, label, tone, view, views }: { site?: Site; label: string; 
 export default function TwinScore({ target, setTarget }: { target: string; setTarget: (t: string) => void }) {
   const d = useTwins();
   const [pick, setPick] = useState<string | null>(null);
-  const [view, setView] = useState<'photo' | 'height'>('photo');
+  const [view, setView] = useState<'photo' | 'height' | 'swipe'>('photo');
+  const [swipe, setSwipe] = useState(50);
+  // "find the Mars nearest you": nearest measured Earth window that ranks as a twin, from the browser's location
+  const [near, setNear] = useState<{ id: string; target: string; km: number; score: number } | 'asking' | 'denied' | null>(null);
+  const pendingPick = useRef<string | null>(null);
   const views = useJSON<Views>('data/views.json');
   const profiles = useJSON<Record<string, number[]>>('data/profiles.json');
   // Moon: photos don't compare (the pole is in deep shadow, its Earth twins are snow-covered), so show height maps
-  useEffect(() => setPick(null), [target]);
+  useEffect(() => { setPick(pendingPick.current); pendingPick.current = null; }, [target]);
 
   const earthById = useMemo(() => new Map((d?.earth ?? []).map((e) => [e.id, e])), [d]);
   if (!d) return <section className="score" id="score"><p className="loading">Loading measurements…</p></section>;
@@ -102,7 +106,27 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
   const rankOf = (id: string) => d.answer_key[t.id]?.[id];
   const mars = d.targets.filter((x) => x.body === 'mars'), moon = d.targets.filter((x) => x.body === 'moon');
   const col = t.body === 'mars' ? 'var(--mars)' : 'var(--moon)';
-  const shown: 'photo' | 'height' = t.body === 'moon' ? 'height' : view;
+  const shown: 'photo' | 'height' = t.body === 'moon' || view === 'height' ? 'height' : 'photo';
+  const findNear = () => {
+    if (!navigator.geolocation) { setNear('denied'); return; }
+    setNear('asking');
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude: la, longitude: lo } = pos.coords, rad = Math.PI / 180;
+      const km = (a: number, b: number) => { const h = Math.sin((a - la) * rad / 2) ** 2 + Math.cos(la * rad) * Math.cos(a * rad) * Math.sin((b - lo) * rad / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
+      let best: { id: string; target: string; km: number; score: number } | null = null;
+      const bestFor = new Map<string, { target: string; score: number }>();
+      for (const tg of d.targets) for (const x of [...d.rankings[tg.id].top, ...(d.rankings[tg.id].extra ?? [])]) {
+        const cur = bestFor.get(x.id); if (!cur || x.score > cur.score) bestFor.set(x.id, { target: tg.id, score: x.score });
+      }
+      bestFor.forEach((v, id) => { const s = earthById.get(id); if (!s) return; const k = km(s.lat, s.lon); if (!best || k < best.km) best = { id, target: v.target, km: k, score: v.score }; });
+      setNear(best);
+    }, () => setNear('denied'), { timeout: 12000, maximumAge: 600000 });
+  };
+  const showNear = () => {
+    if (!near || typeof near === 'string') return;
+    if (near.target === t.id) setPick(near.id); else { pendingPick.current = near.id; setTarget(near.target); }
+    document.querySelector('.sstep--twin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const measured = d.axes.map((a) => [a, chosen.axes[a]] as const).filter(([, v]) => v != null && v !== 50).sort((x, y) => (y[1] as number) - (x[1] as number));
   const alikeText = measured.slice(0, 2).map(([a]) => plain(a).toLowerCase()).join(' and ') || 'other measures';
   const minerals = d.target_minerals[t.id];
@@ -125,18 +149,39 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
         <div><span className="kicker">Mars</span>{mars.map((x) => <button key={x.id} className={`chip chip--mars${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
         <div><span className="kicker">Moon south pole</span>{moon.map((x) => <button key={x.id} className={`chip chip--moon${x.id === t.id ? ' is-on' : ''}`} onClick={() => setTarget(x.id)}>{TARGET_NICK[x.id] ?? x.name}</button>)}</div>
       </div>
+        <p className="near">
+          {near === null && <button className="near__btn" onClick={findNear}>Or find the Mars nearest you →</button>}
+          {near === 'asking' && <span>Looking for you… (your location stays in your browser)</span>}
+          {near === 'denied' && <span>No location, no problem: pick a place above. <button className="near__btn" onClick={findNear}>Try again</button></span>}
+          {near && typeof near === 'object' && (() => {
+            const tg = d.targets.find((x) => x.id === near.target);
+            return <span>The nearest twin we measured is <b>{earthLabel(earthById.get(near.id)).split(' · ')[0]}</b>, {Math.round(near.km).toLocaleString()} km from you. It scores <b>{Math.round(near.score)}/100</b> as a twin of {tg?.body === 'moon' ? 'the Moon\u2019s' : 'Mars\u2019'} <b>{TARGET_NICK[near.target] ?? tg?.name}</b>. <button className="near__btn" onClick={showNear}>Show me →</button></span>;
+          })()}
+        </p>
       </div>
 
       <div className="sstep sstep--twin">
         <h3 className="sstep__h"><span>2</span> Its closest twin on Earth</h3>
         <div className="sstep__cols">
           <div className="score__pair">
-            {t.body === 'mars' && <div className="score__viewtoggle" role="tablist" aria-label="What to show">
-            <button role="tab" aria-selected={view === 'photo'} className={view === 'photo' ? 'is-on' : ''} onClick={() => setView('photo')}>Real photos</button>
-            <button role="tab" aria-selected={view === 'height'} className={view === 'height' ? 'is-on' : ''} onClick={() => setView('height')}>Height maps</button>
-          </div>}
+            <div className="score__viewtoggle" role="tablist" aria-label="What to show">
+            {t.body === 'mars' && <button role="tab" aria-selected={view === 'photo'} className={view === 'photo' ? 'is-on' : ''} onClick={() => setView('photo')}>Real photos</button>}
+            <button role="tab" aria-selected={view === 'height' || (t.body === 'moon' && view === 'photo')} className={view === 'height' || (t.body === 'moon' && view === 'photo') ? 'is-on' : ''} onClick={() => setView('height')}>Height maps</button>
+            <button role="tab" aria-selected={view === 'swipe'} className={view === 'swipe' ? 'is-on' : ''} onClick={() => setView('swipe')}>Swipe</button>
+          </div>
+            {view !== 'swipe' ? (<>
             <Hill site={t} label={`${t.body === 'mars' ? 'Mars' : 'Moon'} · ${t.name.replace(/\s*\(.*\)$/, '')}`} tone={t.body} view={shown} views={views} />
           <Hill site={e} label={`Earth · ${earthLabel(e)}`} tone="earth" view={shown} views={views} />
+            </>) : (
+              <div className="swipe" style={{ ['--x' as string]: `${swipe}%` }}>
+                <Hill site={t} label="" tone={t.body} view={shown} views={views} />
+                <div className="swipe__top"><Hill site={e} label="" tone="earth" view={shown} views={views} /></div>
+                <span className="swipe__line" aria-hidden><i>⇆</i></span>
+                <span className="swipe__lab swipe__lab--l">{t.body === 'mars' ? 'Mars' : 'Moon'}</span>
+                <span className="swipe__lab swipe__lab--r">Earth</span>
+                <input type="range" min={0} max={100} value={swipe} onChange={(ev) => setSwipe(+ev.target.value)} aria-label="Drag to compare" />
+              </div>
+            )}
             <Profile a={profiles?.[t.id]} b={e ? profiles?.[e.id] : undefined} aColor={t.body === 'mars' ? '#ff8a5c' : '#cfd6e6'}
               aLabel={t.body === 'mars' ? 'Mars' : 'Moon'} alike={alikeText} />
             <p className="score__pairnote">{shown === 'photo'
@@ -150,6 +195,13 @@ export default function TwinScore({ target, setTarget }: { target: string; setTa
               <span className="score__num">{chosen.score.toFixed(0)}</span>
               <span className="score__of">out of 100<br /><em>{earthLabel(e)}</em></span>
             </div>
+            {(() => {
+              // plain-language verdict: a word for the score, and how many Earth places it beats
+              const rank = allRanked.findIndex((x) => x.id === chosen.id) + 1, pct = rank > 0 ? Math.floor(100 * (1 - rank / r.pool)) : null;
+              const word = chosen.score >= 85 ? 'Excellent twin' : chosen.score >= 75 ? 'Strong twin' : chosen.score >= 65 ? 'Good twin' : 'Partial twin';
+              return <p className="score__verdict"><b>{word}</b>{pct != null && <> · closer than {pct}% of the {r.pool} places on Earth we measured</>}</p>;
+            })()}
+
             {(() => {
             // 50 means "not measured" in our method, so those spokes are left out here
             const m = d.axes.map((a) => [a, chosen.axes[a]] as const).filter(([, v]) => v != null && v !== 50).sort((x, y) => (y[1] as number) - (x[1] as number));

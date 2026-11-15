@@ -264,3 +264,18 @@ export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate, a
     </group>
   );
 }
+
+/* Base-site check for each walk: three rough 0-3 ratings and a one-line verdict, so every place answers
+   "would a base work here?". Ratings are our simple reading of the sources:
+   sunlight from latitude and, at the lunar pole, LRO LOLA illumination maps; water ice from Mars Odyssey GRS
+   and LRO (Diviner / LOLA) polar ice studies; air shield from height (thicker air above you = less radiation;
+   Curiosity's RAD measured about 0.7 mSv a day at Gale); Earth in view from where the place faces Earth. */
+export type BaseCheck = { meters: [string, number][]; verdict: string };
+export const BASE: Record<string, BaseCheck> = {
+  'mars-gale': { meters: [['Sunlight', 3], ['Water ice', 1], ['Air shield', 2]], verdict: 'Sunny and low, so the air blocks some radiation. But there is little ice to drink: water would have to come from the clays.' },
+  'mars-jezero': { meters: [['Sunlight', 2], ['Water ice', 1], ['Air shield', 2]], verdict: 'An old lake with rich science, fair sunlight and fair shielding. Ice is scarce this close to the equator.' },
+  'mars-olympus': { meters: [['Sunlight', 3], ['Water ice', 0], ['Air shield', 0]], verdict: 'Above most of the dust, so the sky is clear. But up here almost no air shields you from radiation, and there is no ice. A poor base.' },
+  'moon-shackleton-rim': { meters: [['Sunlight', 3], ['Water ice', 3], ['Earth in view', 1]], verdict: 'One of the best: the rim gets sunlight most of the year, and ice sits in the dark crater next door. Earth is often below the horizon.' },
+  'moon-malapert-massif': { meters: [['Sunlight', 2], ['Water ice', 2], ['Earth in view', 3]], verdict: 'Earth is almost always in view, perfect for talking home, with good sunlight and polar ice within reach.' },
+  'moon-highlands': { meters: [['Sunlight', 1], ['Water ice', 0], ['Earth in view', 3]], verdict: 'Earth hangs in the sky, but two weeks of daylight follow two weeks of night, and there is no ice. Fine for a visit, hard for a base.' },
+};

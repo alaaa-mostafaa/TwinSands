@@ -261,7 +261,14 @@ const cellSeed = (cx: number, cz: number, salt: number) => (Math.imul(cx | 0, 73
 /** Rocks and outcrops, generated cell by cell around you so the ground stays rocky wherever you walk.
  *  The same cell always gets the same rocks. Sizes follow the measured Mars/Moon rock size laws: many small
  *  stones, few big ones, in clusters. Stones smaller than 13 cm are drawn by the ground shader instead. */
-function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mars' | 'moon'; pos: React.MutableRefObject<THREE.Vector3> }) {
+/** Distance from (x, z) to the walkway between the landing spot and the task object (Infinity if there is none). */
+type Walkway = { ax: number; az: number; bx: number; bz: number; r: number } | null;
+function fromWalkway(w: Walkway, x: number, z: number) {
+  if (!w) return Infinity;
+  const vx = w.bx - w.ax, vz = w.bz - w.az, k = Math.max(0, Math.min(1, ((x - w.ax) * vx + (z - w.az) * vz) / (vx * vx + vz * vz)));
+  return Math.hypot(x - (w.ax + vx * k), z - (w.az + vz * k));
+}
+function Rocks({ t, st, world, pos, walkway = null }: { walkway?: Walkway; t: Terrain; st: GroundStyle; world: 'mars' | 'moon'; pos: React.MutableRefObject<THREE.Vector3> }) {
   const moon = world === 'moon';
   const geos = useMemo(() => LODS.map((l, li) => Array.from({ length: VARIANTS }, (_, v) =>
     makeRock(li * 31 + v * 7 + (moon ? 100 : 0), l.detail, moon && v % 2 ? 'rounded' : 'angular'))), [moon]);
@@ -304,6 +311,7 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
       const dist = Math.hypot(x - px, z - pz);
       if (D < dist * CULL) return;
       if (D > 0.45 && Math.hypot(x, z) < 10) return;                // keep the landing spot clear
+      if (D > 0.8 && fromWalkway(walkway, x, z) < 5) return;          // keep the walk to the task object open
       const li = D < LODS[0].upTo ? 0 : D < LODS[1].upTo ? 1 : 2, v = Math.floor(rnd() * VARIANTS), m = meshes[li][v];
       if (counts[li][v] >= LODS[li].cap) return;
       o.position.set(x, meshHeightAt(t, x, z) - D * (0.04 + rnd() * 0.08), z);
@@ -354,6 +362,7 @@ function Rocks({ t, st, world, pos }: { t: Terrain; st: GroundStyle; world: 'mar
         const n = Math.min(4 + Math.floor(rnd() * 11), 2 + Math.floor(w / 1.6)), rot = rnd() * Math.PI * 2;
         const sx = Math.cos(rot), sz = -Math.sin(rot), tilt = (rnd() - 0.5) * 0.14;
         if (Math.hypot(x, z) < w * 0.6 + 8) continue;   // keep the landing spot clear
+        if (walkway && (fromWalkway(walkway, x, z) < w * 0.6 + 12 || Math.hypot(x - walkway.bx, z - walkway.bz) < w * 0.6 + walkway.r)) continue;   // and the way to the task object
         let y = heightAt(t, x, z) - 0.4, ww = w, d = w * (0.35 + rnd() * 0.45), off = 0;
         for (let k = 0; k < n; k++) {
           const th = (0.3 + rnd() * 0.7) * thick;
@@ -909,6 +918,12 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, on
   const yaw0 = useMemo(() => look.current.yaw, []);   // the direction you face when you land
   const groundAt = useMemo(() => (x: number, z: number) => meshHeightAt(t, x, z), [t]);
   const quest = QUESTS[id];
+  // a clear walkway from where you land to the task object (same placement as QuestTarget)
+  const walkway = useMemo(() => {
+    if (!quest) return null;
+    const a = yaw0 - quest.angle;
+    return { ax: start.x, az: start.z, bx: start.x - Math.sin(a) * quest.dist, bz: start.z - Math.cos(a) * quest.dist, r: quest.size * 0.9 + 10 };
+  }, [quest, yaw0, start]);
   // the bootprint waiting in front of you when you land
   const firstPrint = useMemo(() => {
     const y = look.current.yaw, x = start.x - Math.sin(y) * 5.5 - Math.cos(y) * 0.4, z = start.z - Math.cos(y) * 5.5 + Math.sin(y) * 0.4;
@@ -978,7 +993,7 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, on
       onPointerUp={() => { drag.current = null; setGrab(false); }}>
       <Safe3D fallback={<div className="no3d">3D view unavailable in this browser</div>}>
         <Canvas dpr={[1, 1.5]} shadows="soft" camera={{ fov: 70, near: 0.5, far: 160000 }}
-          gl={{ antialias: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: exposure }}>
+          gl={{ antialias: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: exposure, preserveDrawingBuffer: true }}>
           <Exposure world={world} exposure={exposure} />
           <SkyLight groundRad={groundRad} intensity={atm.env} />
           <SunLight sun={sun} intensity={atm.sunI} color={atm.sunCol} shadow={atm.shadow} />
@@ -987,7 +1002,7 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, on
           <Suspense fallback={null}>
             <Ground t={t} world={world} st={st} />
             {t.far && <Backdrop t={t} world={world} st={st} />}
-            <Rocks t={t} st={st} world={world} pos={pos} />
+            <Rocks t={t} st={st} world={world} pos={pos} walkway={walkway} />
           </Suspense>
           {world === 'moon' && <Footprints t={t} first={firstPrint} />}
           {world === 'moon' && <Suspense fallback={null}><Astronaut t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} /></Suspense>}

@@ -130,6 +130,7 @@ function PosterSky() {
 export default function Hero() {
   const recover = useContextRecovery();
   const [i, setI] = useState(1);
+  const [kg, setKg] = useState(70);   // your weight, for the 'you would weigh' line under Gravity
   const cur = ORDER[i];
   const prev = ORDER[(i + 2) % 3];
   const next = ORDER[(i + 1) % 3];
@@ -231,6 +232,12 @@ export default function Hero() {
             <div key={f.label}>
               <dt>{f.label}</dt>
               {f.value.map((v) => <dd key={v}>{v}</dd>)}
+              {f.label === 'Gravity' && cur !== 'earth' && (
+                <dd className="hero__weigh">
+                  <input type="number" min={1} max={300} value={kg} onChange={(e) => setKg(Math.max(1, Math.min(300, +e.target.value || 0)))} aria-label="Your weight on Earth in kg" /> kg on Earth
+                  = <b>{Math.round(kg * (cur === 'mars' ? 3.71 : 1.62) / 9.81)} kg</b> here
+                </dd>
+              )}
             </div>
           ))}
         </motion.dl>

@@ -1276,3 +1276,46 @@ details[open] > summary::before { content: '− '; }
 .credits { margin: 70px auto 0; padding: 22px 28px 26px; border-top: 0; border-radius: 6px; background: rgba(8, 9, 16, .82); color: #ddd8cf; text-shadow: none; }
 .credits__note { color: #b9b4ab; }
 @media (max-width: 760px) { .credits { margin: 50px 16px 0; padding: 18px 18px 22px; } }
+
+/* Twin Score: "find the Mars nearest you", one quiet line under the place picker */
+.near { margin: 14px 0 0; font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+.near b { color: #f3ebdc; font-weight: 600; }
+.near__btn { color: #f0c89a; font: 600 15px/1.4 var(--body); text-decoration: underline; text-decoration-color: rgba(240, 200, 154, .4); text-underline-offset: 4px; }
+.near__btn:hover { color: #ffd9a0; text-decoration-color: currentColor; }
+/* Twin Score: swipe one picture over the other */
+.swipe { grid-column: 1 / -1; position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1; border-radius: 12px; overflow: hidden; touch-action: none; }
+.swipe > .hill, .swipe__top > .hill { position: absolute; inset: 0; border-radius: 0; }
+.swipe .hill__tag, .swipe .hill__slice { display: none; }
+.swipe__top { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--x)); }
+.swipe__line { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #f3ebdc; box-shadow: 0 0 10px rgba(0, 0, 0, .6); pointer-events: none; }
+.swipe__line i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #f3ebdc; color: #1a140c; font-style: normal; font-size: 18px; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.swipe__lab { position: absolute; top: 10px; padding: 5px 9px; border-radius: 5px; background: rgba(8, 9, 16, .7); font: 600 12px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; pointer-events: none; }
+.swipe__lab--l { left: 10px; color: var(--mars); } .swipe__lab--r { right: 10px; color: var(--earth); }
+.swipe input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.quest__btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.quest__act--card { border-style: dashed; }
+.hero__facts .hero__weigh { margin-top: 6px; font-size: 13.5px; color: #e3c9a6; pointer-events: auto; white-space: nowrap; }
+.hero__weigh input { width: 3.2em; padding: 0 2px; border: 0; border-bottom: 1px dashed rgba(227, 201, 166, .7); background: none; color: #fbf6ee; font: inherit; text-align: center; -moz-appearance: textfield; }
+.hero__weigh input::-webkit-outer-spin-button, .hero__weigh input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.hero__weigh input:focus { outline: none; border-bottom-color: #fff; }
+.hero__weigh b { color: #fff; font-weight: 600; }
+.hero__facts { pointer-events: auto; }
+
+/* walk: base-site check under the place name (three dot meters + one-line verdict) */
+.walk__top div { max-width: 380px; }
+.base { display: grid; gap: 6px; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(243, 233, 214, .15); pointer-events: auto; }
+.base__meters { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.base__m { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--cond) !important; letter-spacing: .12em; text-transform: uppercase; color: #e3c9a6 !important; }
+.base__m i { display: inline-flex; gap: 3px; }
+.base__m em { width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(243, 233, 214, .55); }
+.base__m em.on { background: #f0c89a; border-color: #f0c89a; }
+.base__v { font-size: 13.5px !important; line-height: 1.4; color: #ddd8cf !important; }
+.base__v b { color: #fbf6ee; font-weight: 600; margin-right: 4px; }
+@media (max-width: 760px) { .base__v { display: none !important; } .walk__top div { max-width: 60vw; } }
+/* Twin Score: plain verdict under the big number */
+.score__verdict { margin: 4px 0 6px; font-size: 15.5px; color: var(--ink-2); }
+.score__verdict b { color: #ffd27a; font-weight: 600; }
+.score__card .score__verdict { grid-area: ver; }
+.score__card { grid-template-areas: "big chart" "ver chart" "alike chart" "div div" "exp exp" "num num"; }
+@media (max-width: 1200px) { .score__card { grid-template-areas: "big" "ver" "alike" "div" "chart" "exp" "num"; } }
+.score__verdict { text-shadow: 0 1px 10px rgba(0,0,0,.9); }
