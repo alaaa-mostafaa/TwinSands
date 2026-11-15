@@ -492,12 +492,16 @@ function Rover({ t, pos, look, say, onTap, gear }: { gear?: boolean; t: Terrain;
       if (e < rr && e > 0.001) { r.position.x = k.x + (ex / e) * rr; r.position.z = k.z + (ez / e) * rr; }
     }
     const x = r.position.x, z = r.position.z;
-    r.position.y = meshHeightAt(t, x, z);
-    // tilt with the ground under its wheels
-    const ax = Math.sin(yaw.current), az = Math.cos(yaw.current);
-    const pitch = Math.atan2(meshHeightAt(t, x - ax * 1.5, z - az * 1.5) - meshHeightAt(t, x + ax * 1.5, z + az * 1.5), 3);
+    // stand on its four wheels: sample the ground under each one, tilt to match (front/back and side to side),
+    // and sit on the highest so no wheel ever sinks below the surface on bumps or cross-slopes
+    const ax = Math.sin(yaw.current), az = Math.cos(yaw.current), bx = Math.cos(yaw.current), bz = -Math.sin(yaw.current);
+    const W = (f: number, s: number) => meshHeightAt(t, x + ax * f + bx * s, z + az * f + bz * s);
+    const fl = W(1.5, -1.3), fr = W(1.5, 1.3), bl = W(-1.5, -1.3), br = W(-1.5, 1.3), mid = meshHeightAt(t, x, z);
+    const pitch = Math.atan2((bl + br) / 2 - (fl + fr) / 2, 3);
+    const roll = Math.atan2((fr + br) / 2 - (fl + bl) / 2, 2.6);
+    r.position.y = Math.max(mid, (fl + fr + bl + br) / 4) + 0.03;
     r.rotation.set(0, 0, 0);
-    r.rotateY(yaw.current); r.rotateX(pitch);
+    r.rotateY(yaw.current); r.rotateX(pitch); r.rotateZ(roll);
   });
   return (
     <group ref={g}>
@@ -612,7 +616,13 @@ function Astronaut({ t, pos, look, say, onTap }: { t: Terrain; pos: React.Mutabl
       const want = Math.atan2(P.x - r.position.x, P.z - r.position.z), diff = ((want - yaw.current + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
       yaw.current += diff * (1 - Math.exp(-dt * 2));
     }
-    r.position.y = meshHeightAt(t, r.position.x, r.position.z);
+    for (const k of ROCKS) {                                     // walk around big rocks, not through them
+      const ex = r.position.x - k.x, ez = r.position.z - k.z, e = Math.hypot(ex, ez), rr = k.r + 0.6;
+      if (e < rr && e > 0.001) { r.position.x = k.x + (ex / e) * rr; r.position.z = k.z + (ez / e) * rr; }
+    }
+    // stand on the highest ground under the boots, so feet never sink into a bump or slope
+    { const X = r.position.x, Z = r.position.z, q = 0.35;
+      r.position.y = Math.max(meshHeightAt(t, X, Z), meshHeightAt(t, X + q, Z), meshHeightAt(t, X - q, Z), meshHeightAt(t, X, Z + q), meshHeightAt(t, X, Z - q)) + 0.02; }
     r.rotation.set(0, yaw.current, 0);
     // the bunny hop: a slow, floaty bounce while moving
     const moving = speed > 0.5;
