@@ -6,7 +6,7 @@ Input: measured 12 km windows on a 30 m grid (backend/):
   data/processed/environment.json  ECOSTRESS/VIIRS thermal inertia, EMIT minerals,
                                    MGS TES thermal inertia, LRO Diviner ice stability
 
-Method (deliberately simple so it can be explained in one breath)
+Method
   For each axis we measure how far an Earth window is from the target, then
   express that distance as a percentile among all Earth windows:
       closeness = 100 * (share of Earth windows that are farther away)
