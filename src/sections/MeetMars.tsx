@@ -45,8 +45,20 @@ void main(){
   float land = texture2D(uMask, vUv).r;
   float d = texture2D(uDist, vUv).r;                    // 0 at the coast, 1 far out to sea
   float grown = max(land, 1.0 - smoothstep(uGrow - 0.02, uGrow, d));
-  vec3 sea = (texture2D(uEarth, vUv).rgb * vec3(0.9, 1.2, 1.9) + vec3(0.02, 0.05, 0.14)) * (1.0 - 0.55*uWrap);
-  vec3 col = mix(sea, vec3(0.94, 0.95, 0.97), grown);
+  // old printed map look: ink-navy sea, cream parchment land, inked coasts, shore ripples, faint grid, paper grain
+  float grain = fract(sin(dot(floor(vUv * vec2(1400.0, 700.0)), vec2(12.9898, 78.233))) * 43758.5453);
+  float mottle = sin(vUv.x * 37.0 + sin(vUv.y * 23.0) * 2.0) * sin(vUv.y * 29.0 + sin(vUv.x * 17.0) * 2.0);
+  vec3 sea = vec3(0.075, 0.11, 0.22) + 0.03 * mottle + (grain - 0.5) * 0.035;
+  float ripple = (1.0 - smoothstep(0.0, 0.07, d)) * smoothstep(0.55, 0.8, abs(fract(d * 70.0) - 0.5) * 2.0);
+  sea += vec3(0.55, 0.6, 0.7) * ripple * 0.22;
+  vec2 g = abs(fract(vUv * vec2(12.0, 6.0)) - 0.5);
+  float grid = 1.0 - smoothstep(0.0, 0.012, min(g.x / 1.0, g.y / 1.0) * 0.5);
+  sea = mix(sea, vec3(0.85, 0.82, 0.74), grid * 0.09 * (1.0 - uWrap));
+  sea *= (1.0 - 0.45 * uWrap);
+  vec3 paper = vec3(0.95, 0.89, 0.76) + 0.025 * mottle + (grain - 0.5) * 0.05;
+  vec3 col = mix(sea, paper, grown);
+  float coast = (1.0 - land) * (1.0 - smoothstep(0.0, 0.006, d)) * (1.0 - uWrap * 0.6);
+  col = mix(col, vec3(0.16, 0.12, 0.1), coast * 0.85);
   col = mix(col, texture2D(uMarsMap, vUv).rgb * 1.3, uMars);
   float light = mix(1.0, 0.5 + 0.75*max(dot(normalize(vN), normalize(vec3(-0.4,0.5,0.8))), 0.0), uWrap);
   gl_FragColor = vec4(col * light, uAlpha);
@@ -227,6 +239,16 @@ export default function MeetMars() {
       <div className="meet__sticky">
         <div className="meet__bg" aria-hidden style={{ ['--meet-img' as string]: `url(${new URL('photos/meet_bg.webp', document.baseURI).href})` }}>
           <div className="meet__dust" />
+          {/* poster sky: a few peach stars twinkling over the Mars evening, and a shooting star now and then */}
+          <svg className="meet__sky" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+            {[[140, 90, 5], [420, 210, 3.5], [690, 70, 4.5], [980, 160, 3], [1230, 60, 5.5], [1480, 220, 3.5], [300, 330, 3], [1120, 300, 4], [820, 260, 2.6], [1560, 110, 3]].map(([x, y, sz], i) => (
+              <g key={i} transform={`translate(${x} ${y}) scale(${sz * 1.7})`}>
+                <path className="hero__spark" style={{ animationDelay: `${(i * 0.7) % 4}s`, animationDuration: `${3 + (i % 4)}s` }} d="M0 -1 C0.08 -0.25 0.25 -0.08 1 0 C0.25 0.08 0.08 0.25 0 1 C-0.08 0.25 -0.25 0.08 -1 0 C-0.25 -0.08 -0.08 -0.25 0 -1Z" fill={i % 3 ? '#f0b88a' : '#f6ead8'} />
+              </g>
+            ))}
+          </svg>
+          <div className="hero__meteors meet__meteors"><i /><i /></div>
+          <div className="meet__paper" />
         </div>
         <header className="chapter-head">
           <h2>Meet Mars</h2>

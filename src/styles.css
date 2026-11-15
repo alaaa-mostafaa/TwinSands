@@ -1,10 +1,15 @@
+/* One classic serif for the whole site (Cormorant Garamond, SIL Open Font License), shipped with the site.
+   It draws small, so size-adjust scales it up to match the sizes the layout was designed for. */
+@font-face { font-family: 'TS Serif'; src: url('./assets/fonts/cormorant.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; size-adjust: 116%; }
+@font-face { font-family: 'TS Serif'; src: url('./assets/fonts/cormorant-italic.woff2') format('woff2'); font-weight: 300 700; font-style: italic; font-display: swap; size-adjust: 116%; }
+
 :root {
   --bg: #040406;
   --bg-2: #0b0b10;
   --panel: #0e0e14;
   --ink: #efece6;
-  --ink-2: #b9b6b0;
-  --muted: #7d7b84;
+  --ink-2: #ddd8cf;
+  --muted: #aca8b0;
   --line: rgba(255, 255, 255, 0.1);
   --line-2: rgba(255, 255, 255, 0.18);
   --accent: #ff5a3c;
@@ -14,15 +19,15 @@
   --ok: #7ee0a3;
   --no: #ff7a6b;
   --go: #ffd27a;
-  --display: 'Syncopate', 'Arial Black', sans-serif;
-  --cond: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --body: 'Barlow', system-ui, sans-serif;
+  --display: 'TS Serif', Georgia, serif;
+  --cond: 'TS Serif', Georgia, serif;
+  --body: 'TS Serif', Georgia, serif;
   --gutter: clamp(16px, 4vw, 64px);
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 img { max-width: 100%; display: block; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
 a { color: inherit; }
@@ -736,7 +741,7 @@ details[open] > summary::before { content: '− '; }
 @keyframes labradorGlow { 0%, 100% { box-shadow: 0 8px 30px rgba(0,0,0,.5); } 50% { box-shadow: 0 0 34px rgba(70,150,255,.55), 0 8px 30px rgba(0,0,0,.5); } }
 
 /* Explore section background: the team's image, exactly as given */
-.explore { background: url(/photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
+.explore { background: var(--explore-img) center / cover no-repeat, #141b33; }
 
 /* Explore: pick a world. The planets themselves; the picked one grows and lights up, the other shrinks into shadow */
 .explore__worlds { display: flex !important; justify-content: center; align-items: center; gap: clamp(24px, 8vw, 120px); padding-top: 10px; padding-bottom: 10px; }
@@ -822,7 +827,8 @@ details[open] > summary::before { content: '− '; }
   var(--trails-img) center 70% / cover no-repeat, #0a0608; }
 .explore { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
-  url(/photos/explore_bg.webp) center / cover no-repeat, #1a1830; }
+  linear-gradient(180deg, rgba(8,12,28,.78), rgba(8,12,28,.72) 40%, rgba(8,12,28,.85)),
+  var(--explore-img) center / cover no-repeat, #141b33; }
 .score { background:
   linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
   linear-gradient(90deg, rgba(4,6,14,.55), rgba(4,6,14,.25) 45%, rgba(4,6,14,.5)),
@@ -1048,3 +1054,161 @@ details[open] > summary::before { content: '− '; }
 .profile figcaption .is-yes { color: #7ee0a3; } .profile figcaption .is-no { color: #ff9a6b; }
 .profile__note { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-2); }
 .feat__h { margin: 6px 0 4px; font: 600 11px/1 var(--cond); letter-spacing: .18em; text-transform: uppercase; color: #ffd27a; }
+
+/* landing title: classic serif, warm cream, no red/blue glow */
+.hero .hero__title { font: 500 clamp(56px, 10.5vw, 152px)/0.9 var(--display); text-transform: none; letter-spacing: 0.02em; color: #f3ebdc; text-shadow: 0 8px 50px rgba(0,0,0,.6); }
+.hero .hero__tag { font: italic 400 clamp(18px, 2vw, 28px)/1.2 var(--display); letter-spacing: 0.04em; text-transform: none; color: #e3c9a6; text-shadow: 0 2px 18px rgba(0,0,0,.8); }
+.hero .hero__side { font: 500 clamp(18px, 1.7vw, 26px)/1 var(--display); letter-spacing: 0.04em; text-transform: none; color: #f3ebdc; }
+/* star-chart background is busy: give the region cards a solid-ish backing so their text stays readable */
+.explore .xregion { background: rgba(10, 14, 32, .78); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.explore .chapter-head p { text-shadow: 0 1px 12px rgba(8, 12, 28, 1), 0 0 4px rgba(8, 12, 28, 1); }
+.explore .chapter-head { position: relative; isolation: isolate; }
+.explore .chapter-head::before { content: ''; position: absolute; inset: -40px -10% -30px -10%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 55% 75% at 28% 55%, rgba(8, 12, 28, .85), transparent 75%); }
+.explore .chapter-head p { color: #e6e2da; }
+
+/* serif clean-ups: even-height numbers everywhere (data site), and room for the longer picker label */
+* { font-variant-numeric: lining-nums !important; }
+.score .score__targets .kicker { width: 170px; letter-spacing: .18em; white-space: nowrap; }
+
+/* landing background: old astronomy poster (navy paper, pastel stars) behind the 3D planets */
+.hero.hero--poster { background:
+  radial-gradient(ellipse 50% 38% at 20% 24%, rgba(46, 72, 120, .55), transparent 70%),
+  radial-gradient(ellipse 40% 34% at 84% 20%, rgba(30, 52, 98, .6), transparent 70%),
+  radial-gradient(ellipse 70% 40% at 50% 62%, rgba(22, 38, 74, .7), transparent 75%),
+  radial-gradient(ellipse 30% 22% at 66% 44%, rgba(70, 60, 110, .22), transparent 70%),
+  #0c1427 !important; }
+.hero--poster::before { opacity: 1; animation: none; inset: 0; z-index: 4; mix-blend-mode: overlay; opacity: .26;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E"); background-size: auto; }
+.hero__sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.hero__spark { transform-box: fill-box; animation: twinkle 4.5s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .hero__spark { animation: none; } }
+.hero--poster .hero__facts dt, .hero--poster .hero__facts dd { text-shadow: 0 0 4px rgba(6, 10, 24, 1), 0 0 10px rgba(6, 10, 24, 1), 0 1px 18px rgba(6, 10, 24, .9); }
+.hero--poster .hero__facts dt { color: #f6dcbc; }
+.hero--poster .hero__facts dd { color: #fbf6ee; }
+
+/* ---- landing poster: alive + papery ---- */
+.hero--poster::before { opacity: .36; }
+/* breathing light: warm glow under the big planet, cool glow up left */
+.hero__glow { position: absolute; inset: 0; z-index: 0; pointer-events: none; animation: breathe 9s ease-in-out infinite;
+  background: radial-gradient(ellipse 60% 45% at 50% 100%, rgba(255, 168, 110, .22), transparent 70%),
+              radial-gradient(ellipse 35% 30% at 18% 28%, rgba(120, 170, 255, .16), transparent 70%),
+              radial-gradient(ellipse 30% 26% at 85% 22%, rgba(233, 176, 127, .12), transparent 70%); }
+@keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+/* stars drift very slowly, two speeds for depth */
+.hero__drift { animation: skydrift 50s ease-in-out infinite alternate; }
+.hero__drift--slow { animation-duration: 80s; animation-direction: alternate-reverse; }
+@keyframes skydrift { to { transform: translate(-22px, -10px); } }
+/* sparkles twinkle with a little pulse */
+.hero__spark { transform-box: fill-box; transform-origin: center; animation: twinkle2 4s ease-in-out infinite; }
+@keyframes twinkle2 { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+.hero__flare { transform-box: fill-box; transform-origin: center; animation: flarepulse 6s ease-in-out infinite; }
+@keyframes flarepulse { 0%, 100% { opacity: .55; transform: scale(.75) rotate(0deg); } 50% { opacity: 1; transform: scale(1.08) rotate(6deg); } }
+/* shooting stars: each one flashes across once per cycle, at different times */
+.hero__meteors { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.hero__meteors i { position: absolute; width: 190px; height: 2px; border-radius: 2px; opacity: 0; rotate: 155deg;
+  background: linear-gradient(90deg, rgba(255, 244, 224, 0), rgba(255, 244, 224, .95)); filter: drop-shadow(0 0 6px rgba(255, 230, 200, .8));
+  animation: shoot 11s linear infinite; }
+.hero__meteors i::after { content: ''; position: absolute; right: -2px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #fffaf0; box-shadow: 0 0 10px 3px rgba(255, 236, 205, .9); }
+.hero__meteors i:nth-child(1) { left: 78%; top: 6%; animation-duration: 9s; animation-delay: 1.5s; }
+.hero__meteors i:nth-child(2) { left: 46%; top: 2%; animation-duration: 13s; animation-delay: 5s; }
+.hero__meteors i:nth-child(3) { left: 96%; top: 30%; animation-duration: 17s; animation-delay: 9s; }
+.hero__meteors i:nth-child(4) { left: 30%; top: 12%; animation-duration: 21s; animation-delay: 13s; }
+@keyframes shoot {
+  0% { opacity: 0; translate: 0 0; }
+  1% { opacity: 1; }
+  7% { opacity: 0; translate: -520px 245px; }
+  100% { opacity: 0; translate: -520px 245px; } }
+/* paper: blotchy watercolour wash + darker, slightly warm aged edges, over everything */
+.hero__paper { position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background:
+    radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgba(30, 18, 10, .32) 88%, rgba(10, 6, 4, .55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000' preserveAspectRatio='none'%3E%3Cfilter id='w' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035' numOctaves='4' seed='12'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .66 0 0 0 0 .78 0 0 0 1.3 -.45'/%3E%3C/filter%3E%3Crect width='1600' height='1000' filter='url(%23w)'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  mix-blend-mode: soft-light; opacity: .9; }
+@media (prefers-reduced-motion: reduce) { .hero__glow, .hero__drift, .hero__spark, .hero__flare, .hero__meteors i { animation: none; } }
+
+/* constellations drawn like a pen on paper, then glowing, then fading, on a loop */
+.hero__const { --cd: 0s; }
+.hero__constLine { stroke: #f3e9d6; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 3px rgba(255, 236, 205, .9)); animation: constDraw 12s ease-in-out infinite; animation-delay: var(--cd); }
+@keyframes constDraw {
+  0% { stroke-dashoffset: 1; opacity: .9; }
+  22% { stroke-dashoffset: 0; opacity: .9; }
+  70% { stroke-dashoffset: 0; opacity: .55; }
+  85%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+.hero__constStar { fill: #fff6e6; opacity: .25; transform-box: fill-box; transform-origin: center;
+  filter: drop-shadow(0 0 4px rgba(255, 230, 190, 1)) drop-shadow(0 0 9px rgba(233, 176, 127, .8)); animation: constStar 12s ease-out infinite; }
+@keyframes constStar {
+  0% { opacity: .25; transform: scale(.6); }
+  3% { opacity: 1; transform: scale(1.7); }
+  10% { opacity: 1; transform: scale(1); }
+  70% { opacity: .8; transform: scale(1); }
+  85%, 100% { opacity: .25; transform: scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .hero__constLine { animation: none; stroke-dashoffset: 0; opacity: .5; } .hero__constStar { animation: none; opacity: .8; } }
+
+/* planets: softer, slightly faded colours to match the poster (filter only, the 3D is unchanged) */
+.hero--poster .hero__canvas { filter: saturate(.72) sepia(.2) contrast(.94) brightness(.97); }
+/* facts row: a dark see-through band behind it so it reads over the planet */
+/* facts row: no box, just the bottom of the landing darkening softly upward behind it */
+.hero__shade { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; z-index: 2; pointer-events: none;
+  background: linear-gradient(0deg, rgba(6, 9, 20, .9) 0%, rgba(6, 9, 20, .7) 35%, rgba(6, 9, 20, .3) 70%, transparent 100%); }
+.hero--poster.hero--mars .hero__canvas { filter: saturate(1.05) sepia(.12) hue-rotate(-10deg) contrast(.98) brightness(.98); transition: filter .8s; }
+.hero--poster .hero__canvas { transition: filter .8s; }
+
+/* Meet Mars: same old-poster feel as the landing (filter on the photo, paper grain, aged edges, a few stars) */
+.meet__bg { filter: saturate(.8) sepia(.2) contrast(.96) brightness(.98); }
+.meet__sky { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 0 3px rgba(255, 220, 180, .8)); }
+.meet__meteors i:nth-child(1) { left: 70%; top: 4%; animation-duration: 12s; animation-delay: 3s; }
+.meet__meteors i:nth-child(2) { left: 35%; top: 10%; animation-duration: 19s; animation-delay: 10s; }
+.meet__paper { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgba(30, 14, 6, .35) 90%, rgba(10, 5, 2, .55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay; opacity: .55; }
+
+/* Explore: drawn orbit sky (dotted orbits, travelling planets, warm sun) */
+.explore { position: relative; background:
+  linear-gradient(180deg, var(--seam-c) 0, transparent var(--seam), transparent calc(100% - var(--seam)), var(--seam-c) 100%),
+  #06070d !important; }
+.orbits { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.orbits__pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.orbits__pin::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 80% at 30% 55%, rgba(6, 7, 13, .55), transparent 75%); }
+.orbits svg { width: 100%; height: 100%; display: block; }
+.orbits__path { fill: none; stroke: #f0c89a; stroke-width: 1.7; stroke-linecap: round; stroke-dasharray: 0.01 6.5; }
+.orbits__planet { filter: drop-shadow(0 0 4px rgba(255, 220, 170, .9)); }
+.orbits__sun { animation: sunbreath 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes sunbreath { 0%, 100% { opacity: .85; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } }
+.explore > *:not(.orbits):not(.xmodal) { position: relative; z-index: 1; }
+
+/* ---- Explore regions as round portholes sitting on a dotted orbit arc ---- */
+.explore .explore__regions { position: relative; grid-template-columns: repeat(3, minmax(0, 250px)); gap: clamp(20px, 5vw, 70px); margin-top: 26px !important; padding-bottom: 30px; }
+.explore .explore__regions::before { content: ''; position: absolute; left: 4%; right: 4%; top: 52px; height: 90px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 90' preserveAspectRatio='none'%3E%3Cpath d='M0 28 Q500 112 1000 28' fill='none' stroke='%23f0c89a' stroke-opacity='.55' stroke-width='2.2' stroke-linecap='round' stroke-dasharray='0.1 9' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.explore .xregion { justify-items: center; text-align: center; gap: 6px; padding: 0 0 6px; background: none !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none; }
+.explore .xregion:nth-child(2) { margin-top: 34px; }
+.explore .xregion:hover, .explore .xregion:focus-visible { transform: translateY(-4px); }
+.explore .xregion__img { position: relative; width: 150px; height: 150px; border-radius: 50% !important; overflow: visible; margin-bottom: 8px; }
+.explore .xregion__img img { width: 100%; height: 100%; aspect-ratio: 1; border-radius: 50%; object-fit: cover; filter: sepia(.45) saturate(1.1) contrast(1.1) brightness(.95);
+  box-shadow: inset 0 0 0 1px rgba(243, 233, 214, .5), 0 0 0 4px rgba(6, 7, 13, .9), 0 10px 30px rgba(0, 0, 0, .6); }
+/* inner shadow so it reads as a round window, not a flat crop */
+.explore .xregion__img::before { content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: 1; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 240, 215, .18), transparent 45%), radial-gradient(circle, transparent 58%, rgba(6, 7, 13, .55) 100%); }
+/* dotted orbit ring around each porthole, slowly turning; glows on hover */
+.explore .xregion__img::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; border: 2px dotted rgba(240, 200, 154, .6);
+  animation: portSpin 26s linear infinite, portGlow 4.5s ease-in-out infinite; animation-delay: 0s, calc(var(--k, 0) * 1.5s); transition: border-color .3s, inset .3s; }
+@keyframes portSpin { to { transform: rotate(360deg); } }
+@keyframes portGlow { 0%, 70%, 100% { box-shadow: 0 0 0 0 rgba(255, 170, 110, 0); } 85% { box-shadow: 0 0 22px 4px rgba(255, 170, 110, .45); } }
+.explore .xregion:hover .xregion__img::after, .explore .xregion:focus-visible .xregion__img::after { inset: -16px; border-color: rgba(255, 190, 130, 1); box-shadow: 0 0 26px 6px rgba(255, 160, 100, .45); animation-duration: 6s, 4.5s; }
+.explore .xregion:hover .xregion__img img { transform: scale(1.06); }
+.explore .xregion b { font-size: 17px; letter-spacing: .04em; }
+.explore .xregion > span:not(.xregion__img) { max-width: 230px; font-size: 14px; line-height: 1.4; text-shadow: 0 1px 10px rgba(6, 7, 13, 1); }
+.explore .xregion__go { justify-self: center; margin-top: 6px; }
+@media (max-width: 760px) {
+  .explore .explore__regions { grid-template-columns: 1fr; gap: 26px; }
+  .explore .explore__regions::before { display: none; }
+  .explore .xregion { grid-template-columns: 104px 1fr; justify-items: start; text-align: left; column-gap: 22px; }
+  .explore .xregion:nth-child(2) { margin-top: 0; }
+  .explore .xregion__img { width: 96px; height: 96px; grid-row: span 3; margin: 6px 0 0 6px; }
+  .explore .xregion__go { justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { .explore .xregion__img::after { animation: none; } }

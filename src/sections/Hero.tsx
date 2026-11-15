@@ -1,7 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { WORLDS, type WorldId } from '../content';
 import { Atmosphere, Surface } from '../three/Globe';
@@ -43,8 +42,88 @@ function HeroPlanet({ id, slot }: { id: WorldId; slot: Slot }) {
           <Surface tex={w.tex} hiTex={slot === 'center' ? w.tex.replace('.webp', '_4k.webp') : undefined} shade={0.22} segments={128} />
         </group>
       </group>
-      <Atmosphere color={w.glow} scale={slot === 'center' ? 1.07 : 1.1} strength={slot === 'center' ? 1.1 : 0.8} power={3} />
+      <Atmosphere color={w.glow} scale={slot === 'center' ? 1.035 : 1.05} strength={slot === 'center' ? 0.35 : 0.28} power={4} />
     </group>
+  );
+}
+
+/* Poster sky behind the planets, like an old classroom astronomy poster: navy paper, peach sparkle stars,
+   dotted star dust, a little constellation, falling stars and thin orbit lines. Drawn once from a fixed seed. */
+function rand(seed: number) {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const SPARK = 'M0 -1 C0.08 -0.25 0.25 -0.08 1 0 C0.25 0.08 0.08 0.25 0 1 C-0.08 0.25 -0.25 0.08 -1 0 C-0.25 -0.08 -0.08 -0.25 0 -1Z';
+const CONSTELLATIONS: number[][][] = [
+  [[1270, 120], [1318, 96], [1366, 112], [1402, 150], [1452, 140], [1470, 92]],
+  [[300, 172], [350, 140], [398, 168], [446, 132], [500, 158]],
+  [[1340, 760], [1386, 724], [1440, 738], [1476, 786], [1424, 812], [1386, 724]],
+];
+function PosterSky() {
+  const art = useMemo(() => {
+    const r = rand(7);
+    const dots = Array.from({ length: 320 }, () => ({ x: r() * 1600, y: r() * 1000, s: 0.5 + r() ** 3 * 2.2, o: 0.25 + r() * 0.7 }));
+    const dust: { x: number; y: number; s: number; o: number }[] = [];
+    for (let c = 0; c < 9; c++) {
+      const cx = r() * 1600, cy = r() * 760, n = 14 + Math.floor(r() * 18);
+      for (let i = 0; i < n; i++) dust.push({ x: cx + (r() - 0.5) * 120, y: cy + (r() - 0.5) * 70, s: 0.6 + r() * 1.6, o: 0.3 + r() * 0.5 });
+    }
+    // keep stars off the logo, the menu and the title
+    const clear = (x: number, y: number) => !(y < 110 && (x < 320 || x > 640)) && !(x > 420 && x < 1180 && y > 150 && y < 470);
+    const sparks: { x: number; y: number; s: number; peach: boolean; d: number; t: number }[] = [];
+    while (sparks.length < 22) { const x = 40 + r() * 1520, y = 30 + r() * 700; if (clear(x, y)) sparks.push({ x, y, s: 3 + r() ** 2 * 7, peach: sparks.length % 3 !== 0, d: r() * 5, t: 2.8 + r() * 4 }); }
+    const flares = [[260, 300, 0], [1330, 520, 2.5], [1200, 140, 4.2], [150, 720, 1.2]].map(([x, y, d]) => ({ x, y, d }));
+    return { dots, dust, sparks, flares };
+  }, []);
+  return (
+    <svg className="hero__sky" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden>
+      <defs>
+        <linearGradient id="meteor" x1="0" x2="1"><stop offset="0" stopColor="#f3e9d6" stopOpacity="0" /><stop offset="1" stopColor="#f3e9d6" stopOpacity=".85" /></linearGradient>
+        <filter id="sparkGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.6" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+        <radialGradient id="flareCore"><stop offset="0" stopColor="#fffaf0" /><stop offset=".25" stopColor="#ffe9c8" stopOpacity=".8" /><stop offset="1" stopColor="#ffd9a8" stopOpacity="0" /></radialGradient>
+        <linearGradient id="ray" x1="0" x2="1"><stop offset="0" stopColor="#fff4e0" stopOpacity="0" /><stop offset=".5" stopColor="#fff4e0" stopOpacity=".9" /><stop offset="1" stopColor="#fff4e0" stopOpacity="0" /></linearGradient>
+      </defs>
+      {[620, 760, 930, 1120].map((rx, i) => (
+        <ellipse key={rx} cx="800" cy="1180" rx={rx} ry={rx * 0.62} fill="none" stroke="#f3e9d6" strokeOpacity={0.16 - i * 0.025} strokeWidth="1.2" strokeDasharray={i % 2 ? '2 7' : undefined} />
+      ))}
+      <g className="hero__drift">
+        {art.dots.map((d, i) => <circle key={i} cx={d.x} cy={d.y} r={d.s} fill="#f3e9d6" opacity={d.o} />)}
+      </g>
+      <g className="hero__drift hero__drift--slow">
+        {art.dust.map((d, i) => <circle key={'d' + i} cx={d.x} cy={d.y} r={d.s} fill="#dfe6f2" opacity={d.o} />)}
+      </g>
+      {/* constellations: the lines draw themselves like a pen, the stars light up as the line reaches them */}
+      {CONSTELLATIONS.map((c, ci) => (
+        <g key={ci} className="hero__const" style={{ ['--cd' as string]: `${ci * 2.2}s` }}>
+          <polyline className="hero__constLine" points={c.map((p) => p.join(',')).join(' ')} pathLength={1} fill="none" />
+          {c.map(([x, y], i) => (
+            <circle key={i} className="hero__constStar" cx={x} cy={y} r="2.4" style={{ animationDelay: `calc(var(--cd) + ${(i / (c.length - 1)) * 2.4}s)` }} />
+          ))}
+        </g>
+      ))}
+      {[[180, 120, 120], [1130, 330, 90], [520, 60, 70]].map(([x, y, l], i) => (
+        <g key={i} transform={`translate(${x} ${y}) rotate(-24)`}>
+          <rect x={-l} y="-0.9" width={l} height="1.8" fill="url(#meteor)" />
+          <circle r="2.4" fill="#f3e9d6" />
+        </g>
+      ))}
+      <g filter="url(#sparkGlow)">
+        {art.sparks.map((s, i) => (
+          <g key={'s' + i} transform={`translate(${s.x} ${s.y}) scale(${s.s})`}>
+            <path className="hero__spark" style={{ animationDelay: `${s.d}s`, animationDuration: `${s.t}s` }} d={SPARK} fill={s.peach ? '#e9b07f' : '#f3e9d6'} />
+          </g>
+        ))}
+      </g>
+      {/* a few bright stars with long rays, like 90s space art */}
+      {art.flares.map((f, i) => (
+        <g key={'f' + i} transform={`translate(${f.x} ${f.y})`}>
+          <g className="hero__flare" style={{ animationDelay: `${f.d}s` }}>
+            <circle r="5" fill="url(#flareCore)" />
+            <rect x="-24" y="-0.45" width="48" height="0.9" fill="url(#ray)" />
+            <rect x="-0.45" y="-16" width="0.9" height="32" fill="url(#ray)" />
+          </g>
+        </g>
+      ))}
+    </svg>
   );
 }
 
@@ -92,16 +171,17 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero" id="top">
+    <section className={`hero hero--poster hero--${cur}`} id="top">
+      <div className="hero__glow" aria-hidden />
+      <PosterSky />
+      <div className="hero__meteors" aria-hidden>{[0, 1, 2, 3].map((i) => <i key={i} />)}</div>
+      <div className="hero__shade" aria-hidden />
+      <div className="hero__paper" aria-hidden />
       <div className="hero__canvas">
         <Safe3D>
         <Canvas key={recover.key} onCreated={recover.onCreated} dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 30 }} gl={{ antialias: true, alpha: true }}>
           <ambientLight intensity={0.18} />
           <directionalLight position={[-1.5, 6, 5]} intensity={2.2} />
-          {/* three star layers: many faint, some tinted, a few bright */}
-          <Stars radius={70} depth={40} count={6000} factor={1.6} saturation={0} fade speed={0.3} />
-          <Stars radius={55} depth={25} count={1200} factor={2.6} saturation={0.6} fade speed={0.5} />
-          <Stars radius={40} depth={10} count={180} factor={4.5} saturation={0.2} fade speed={0.8} />
           <Suspense fallback={null}>
             {ORDER.map((id) => <HeroPlanet key={id} id={id} slot={slotOf(id)} />)}
           </Suspense>

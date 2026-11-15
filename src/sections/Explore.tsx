@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import OrbitSky from '../components/OrbitSky';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REGIONS, WORLDS, type Region } from '../content';
 import { useJSON, type PhotoMeta } from '../data';
@@ -267,6 +268,7 @@ export default function Explore() {
 
   return (
     <section className="explore" id="explore">
+      <OrbitSky />
       <header className="chapter-head">
         <h2>Explore</h2>
         <p>Walk on real ground. Each place is built from NASA elevation data, 12 km across. Before you land, see its twin on Earth.</p>
