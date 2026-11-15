@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FIELD_PAIRS, SOURCES } from '../content';
+import { FIELD_PAIRS } from '../content';
 import { usePhotos } from '../data';
 
 const FAYOUM_MEDIA = [
@@ -116,25 +116,6 @@ export function Boots() {
           </div>
         ))}
       </div>
-      <Credits />
     </section>
-  );
-}
-
-/** Sources and credits, folded away at the very bottom of the page. */
-function Credits() {
-  return (
-    <details className="credits" id="sources">
-      <summary>Sources &amp; credits</summary>
-      <div className="credits__grid">
-        {SOURCES.map((g) => (
-          <div key={g.group}>
-            <h4>{g.group}</h4>
-            <ul>{g.items.map((it) => <li key={it.label}>{it.url ? <a href={it.url} target="_blank" rel="noreferrer">{it.label}</a> : it.label}</li>)}</ul>
-          </div>
-        ))}
-      </div>
-      <p className="credits__note">Team Deimos &amp; Phobos · NASA Space Apps Cairo 2026. A Twin Score is a ranking aid, not a probability, and nothing here picks a safe landing or habitat site. Independent student project, not affiliated with or endorsed by NASA, ESA, CSA, JAXA or USGS.</p>
-    </details>
   );
 }
