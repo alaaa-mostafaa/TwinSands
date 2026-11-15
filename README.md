@@ -37,7 +37,7 @@ The Fayoum album in `public/photos/fayoum/` is paired with the Curiosity panoram
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python pillow numpy requests
 .venv/bin/python pipeline/fetch_textures.py   # globe textures: NASA GIBS (Earth), Mars Trek, Moon Trek
 .venv/bin/python pipeline/fetch_extras.py     # NASA photos, Smithsonian volcanoes, GIBS legends, land mask
-.venv/bin/python pipeline/build_twins.py ..        # Twin Score (path to the Terrestrial Analog Finder data)
+.venv/bin/python pipeline/build_twins.py ..        # Twin Score (path to the project root with the measurements)
 .venv/bin/python pipeline/optimize_assets.py       # convert everything to WebP (fast loading)
 .venv/bin/python pipeline/fetch_postcards.py       # Neighborhood postcard photos (Wikimedia Commons + NASA)
 .venv/bin/python pipeline/land_distance.py         # distance-to-coast map for the Meet Mars ball animation
@@ -63,7 +63,7 @@ Findings worth putting in the proposal:
 
 | Resource (from the challenge page) | Where it is used in Twin Sands |
 |---|---|
-| NASA Earthdata Search (CMR) | Analog finder backend: finds EMIT mineral, ECOSTRESS temperature and MODIS albedo granules for every Earth window (`backend/pipeline/earthdata.py`) → Twin Score "minerals" spoke, Rust trail map |
+| NASA Earthdata Search (CMR) | Measurement backend: finds EMIT mineral, ECOSTRESS temperature and MODIS albedo granules for every Earth window (`backend/pipeline/earthdata.py`) → Twin Score "minerals" spoke, Rust trail map |
 | NASA Worldview (GIBS) | Twin Trails Earth maps: dust (Wind), snow, land temperature, relief (`pipeline/fetch_textures.py`) |
 | NASA Planetary Data System | TES thermal inertia (Mars) and Diviner (Moon) in the score; CTX / LOLA DEMs via USGS Astrogeology (PDS-derived) for height maps, Explore terrain and Twin Score photos |
 | NASA LRO (LROC, LOLA) | LOLA heights for Moon twins and the Explore walks; LROC WAC photos in Twin Score (`pipeline/fetch_views.py`); LRO south-pole mosaic in the South Pole story |
@@ -77,7 +77,7 @@ Findings worth putting in the proposal:
 
 ## Credits and sources
 
-- **Measured terrain, thermal and mineral windows:** our own Terrestrial Analog Finder pipeline (the parent folder of this site), which measures terrain, thermal and mineral windows from Copernicus DEM GLO-30, LOLA and CTX DTMs, ECOSTRESS, MODIS/VIIRS albedo, EMIT, TES and Diviner. The Twin Score ranks those measurements.
+- **Measured terrain, thermal and mineral windows:** the measurement pipeline in `backend/` (parent folder), which measures terrain, thermal and mineral windows from Copernicus DEM GLO-30, LOLA and CTX DTMs, ECOSTRESS, MODIS/VIIRS albedo, EMIT, TES and Diviner. The Twin Score ranks those measurements.
 - **Earth layers:** NASA GIBS (Blue Marble, MODIS LST and snow cover, MERRA-2 dust, ASTER GDEM), OSM land mask.
 - **Mars layers:** Viking MDIM 2.1, MGS MOLA, MGS TES thermal inertia (Putzig et al. 2005) and dust cover index (Ruff & Christensen 2002), via NASA Mars Trek.
 - **Moon layers:** LRO LROC WAC, LRO LOLA, Clementine FeO, Lunar Prospector hydrogen, LRO Diviner, via NASA Moon Trek.

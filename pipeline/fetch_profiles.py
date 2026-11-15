@@ -1,10 +1,10 @@
 """Side view of every Twin Score place -> public/data/profiles.json
 
 For each place we read the same 12 km x 12 km height window the score uses (Copernicus DEM GLO-30 on Earth,
-MRO CTX DTMs on Mars, LOLA south-pole DTMs on the Moon, via the Terrestrial Analog Finder's window readers) and
+MRO CTX DTMs on Mars, LOLA south-pole DTMs on the Moon, via the backend's window readers) and
 keep one west-to-east slice through the middle: 100 heights, one every 120 m, each the average of a 300 m wide
 strip so single pixels don't spike. Heights are stored relative to the slice's lowest point, in metres.
-Run: .venv/bin/python pipeline/fetch_profiles.py [path/to/terrestrial-analog-finder]
+Run: .venv/bin/python pipeline/fetch_profiles.py [path/to/project root]
 """
 import json
 import sys

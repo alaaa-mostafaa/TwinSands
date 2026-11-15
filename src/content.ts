@@ -65,7 +65,7 @@ export const TRAILS: Trail[] = [
     id: 'rust', title: 'Rust', kicker: 'Iron and minerals',
     question: 'Where does iron turn red, and what did water have to do with it?',
     summary: 'Opportunity landed on plains strewn with hematite "blueberries", grey iron-oxide balls that grew in groundwater. On Earth, acid, iron-rich water still builds the same minerals today.',
-    earth: { tex: 'tex/earth_base.webp', title: 'Iron oxides seen by EMIT', source: 'NASA EMIT mineral classes per 12 km window (via Terrestrial Analog Finder) on Blue Marble', pins: [
+    earth: { tex: 'tex/earth_base.webp', title: 'Iron oxides seen by EMIT', source: 'NASA EMIT mineral classes per 12 km window, on Blue Marble', pins: [
       { name: 'Río Tinto, Spain', at: [37.69, -6.59], tone: 'twin', note: 'acid iron river' },
       { name: 'Bahariya Oasis, Egypt', at: [28.35, 28.86], tone: 'new', note: 'ferricretes, little studied' },
       { name: 'Dallol, Ethiopia', at: [14.24, 40.3], tone: 'twin' },

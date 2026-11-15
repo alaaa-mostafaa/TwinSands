@@ -4,7 +4,7 @@
 - Moon targets: LRO LROC WAC global mosaic, 100 m/px (USGS Astrogeology).
 - Earth sites (every site shown in a top-12 list or in the test-site list): Sentinel-2 cloudless 2016 by EOX
   (CC BY 4.0, contains modified Copernicus Sentinel data 2016), via its public WMS.
-Run: .venv/bin/python pipeline/fetch_views.py [path/to/terrestrial-analog-finder]
+Run: .venv/bin/python pipeline/fetch_views.py [path/to/project root]
 """
 import io
 import json

@@ -1,13 +1,12 @@
 """Twin Score: rank Earth windows against Mars and Moon reference sites.
 
-Input (credited, not copied code): the processed, openly licensed measurements
-published by the Terrestrial Analog Finder project (Space Apps 2026):
+Input: measured 12 km windows on a 30 m grid (backend/):
   data/processed/locations.json    terrain features from Copernicus DEM GLO-30,
-                                   LOLA south-polar DTMs and CTX DTMs (12 km windows, 30 m grid)
+                                   LOLA south-polar DTMs and CTX DTMs
   data/processed/environment.json  ECOSTRESS/VIIRS thermal inertia, EMIT minerals,
                                    MGS TES thermal inertia, LRO Diviner ice stability
 
-Method (ours; deliberately simple so it can be explained in one breath)
+Method (deliberately simple so it can be explained in one breath)
   For each axis we measure how far an Earth window is from the target, then
   express that distance as a percentile among all Earth windows:
       closeness = 100 * (share of Earth windows that are farther away)
@@ -24,7 +23,7 @@ Method (ours; deliberately simple so it can be explained in one breath)
 Answer key: the USGS-listed analogs (Atacama, Haughton, Death Valley, ...) are
 ranked like any other window; we report where they land.
 
-Run:  .venv/bin/python pipeline/build_twins.py [path/to/terrestrial-analog-finder]
+Run:  .venv/bin/python pipeline/build_twins.py [path/to/project root with data/processed]
 """
 from __future__ import annotations
 
@@ -185,7 +184,7 @@ def main():
 
     out = {
         "method": __doc__.split("Run:")[0].strip(),
-        "source": "Terrestrial Analog Finder processed measurements (Space Apps 2026), built "
+        "source": "Measurements from Copernicus DEM, LOLA, CTX, ECOSTRESS, VIIRS, EMIT, TES and Diviner, built "
                   + json.loads((PROC / "manifest.json").read_text()).get("built_at", "?"),
         "axes": [v[0] for v in TERRAIN.values()] + ["Thermal inertia", "Minerals"],
         "unmeasured_axes": ["Dust", "Ice", "Sunlight"],

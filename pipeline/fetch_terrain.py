@@ -2,11 +2,11 @@
 
 Reads a 12 km x 12 km elevation window (30 m grid) around each region straight from the USGS Astrogeology
 analysis-ready archive (MRO CTX DTMs for Mars, Barker et al. LOLA south-pole DEMs for the Moon), using the
-Terrestrial Analog Finder's window reader (only the needed bytes are downloaded). Each window is saved as a
+the backend's window reader (only the needed bytes are downloaded). Each window is saved as a
 256 x 256 grid of uint16 heights; heights = min + value / 65535 * (max - min) metres.
 
 Needs: uv pip install rasterio==1.5.2 pyproj==3.8.0
-Run:   .venv/bin/python pipeline/fetch_terrain.py [path/to/terrestrial-analog-finder]
+Run:   .venv/bin/python pipeline/fetch_terrain.py [path/to/project root]
 """
 import json
 import sys
@@ -18,13 +18,13 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT.parent
 sys.path.insert(0, str(SRC / "backend"))
-from pipeline import sources  # noqa: E402  (Terrestrial Analog Finder)
+from pipeline import sources  # noqa: E402  (backend/)
 
 OUT = ROOT / "public" / "terrain"
 OUT.mkdir(parents=True, exist_ok=True)
 REGIONS = ["mars-gale", "mars-jezero", "mars-olympus",
            "moon-shackleton-rim", "moon-malapert-massif", "moon-highlands"]
-# Sites that are not in the analog finder's locations.json: (body, lat, lon, DEM url, source resolution m).
+# Sites that are not in the backend's locations.json: (body, lat, lon, DEM url, source resolution m).
 # Olympus Mons: the south wall of the summit caldera, where the rim drops ~3.2 km to the caldera floor.
 # CTX DTMs only cover ~40% of this wall, so we use the gap-free NASA MOLA + ESA HRSC blended global DEM (200 m).
 MOLA_HRSC = "https://planetarymaps.usgs.gov/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
@@ -79,7 +79,7 @@ for rid in REGIONS:
                   "valid_fraction": round(valid, 4), "source": url}
     print(rid, f"relief {hi - lo:.0f} m, valid {valid:.1%}", flush=True)
     hs_path = ROOT / "public" / "hillshade" / f"{rid}.webp"
-    if not hs_path.exists():                      # card thumbnail for regions the analog finder has no hillshade for
+    if not hs_path.exists():                      # card thumbnail for regions the backend has no hillshade for
         from PIL import Image
         gy, gx = np.gradient(z, 12000 / N)
         shade = np.clip(0.55 + (-gx + gy) * 0.35, 0, 1)
