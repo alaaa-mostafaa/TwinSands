@@ -113,6 +113,10 @@ if (typeof document !== 'undefined') {
     else if (!muted) ac.resume().catch(() => {});
   });
   window.addEventListener('pagehide', () => { ac?.suspend().catch(() => {}); });
+  // Browsers sometimes leave the sound paused (after a tab switch, sleep, or a reload while developing).
+  // Any click, tap or key press wakes it up again, so the sound never silently stays off.
+  const wake = () => { if (ac && !muted && ac.state !== 'running') ac.resume().catch(() => {}); };
+  ['pointerdown', 'keydown', 'touchend'].forEach((g) => window.addEventListener(g, wake, { passive: true }));
 }
 
 // While developing: when this file is hot-reloaded, shut down the old sound instead of leaving it playing.

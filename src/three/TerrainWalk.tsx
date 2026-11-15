@@ -877,7 +877,7 @@ function Exposure({ world, exposure }: { world: 'mars' | 'moon'; exposure: numbe
   return null;
 }
 
-export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, onQuest }: { onQuest?: (s: QuestState) => void; say?: string | null; onTap?: () => void; t: Terrain; id: string; world: 'mars' | 'moon'; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void }) {
+export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, onQuest, questAction = 0 }: { questAction?: number; onQuest?: (s: QuestState) => void; say?: string | null; onTap?: () => void; t: Terrain; id: string; world: 'mars' | 'moon'; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void }) {
   const st = styleFor(id, world);
   const atm = ATMOS[world === 'moon' ? 'moon' : st.storm ? 'storm' : st.high ? 'high' : 'mars'];
   const exposure = st.exposure ?? atm.exposure;
@@ -982,7 +982,7 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, on
           {world === 'moon' && <Footprints t={t} first={firstPrint} />}
           {world === 'moon' && <Suspense fallback={null}><Astronaut t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} /></Suspense>}
           {world === 'mars' && <Suspense fallback={null}><Rover t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} gear={!!st.storm} /></Suspense>}
-          {quest && onQuest && <Suspense fallback={null}><QuestTarget quest={quest} start={start} yaw0={yaw0} pos={pos} look={look} height={groundAt} onUpdate={onQuest} /></Suspense>}
+          {quest && onQuest && <Suspense fallback={null}><QuestTarget quest={quest} start={start} yaw0={yaw0} pos={pos} look={look} height={groundAt} onUpdate={onQuest} action={questAction} /></Suspense>}
           <Walker t={t} keys={keys} onMove={onMove} look={look} pos={pos} />
         </Canvas>
       </Safe3D>

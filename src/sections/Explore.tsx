@@ -98,6 +98,15 @@ function robotSay(text: string, onEnd: () => void, moon = false) {
   u.onend = () => { blip(true, moon); onEnd(); }; u.onerror = onEnd;
   speechSynthesis.speak(u);
 }
+/** camera shutter: two quick clicks of filtered noise */
+function shutter() {
+  try {
+    const c = new AudioContext(), b = c.createBuffer(1, c.sampleRate * 0.25, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) { const t = i / c.sampleRate; d[i] = (Math.random() * 2 - 1) * (Math.exp(-t * 90) + (t > 0.09 ? Math.exp(-(t - 0.09) * 70) * 0.8 : 0)); }
+    const s = c.createBufferSource(), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 0.8;
+    s.buffer = b; s.connect(f).connect(c.destination); s.start(); s.onended = () => c.close();
+  } catch { /* no sound */ }
+}
 function stopTalking() { if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel(); }
 if (typeof speechSynthesis !== 'undefined') speechSynthesis.getVoices();   // voices load lazily in Chrome
 
@@ -149,6 +158,22 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
       window.setTimeout(() => setCheer(null), 7000);
     }
   };
+  // the button that makes the found object do something (fly, launch, grow, call Earth, lights, photo)
+  const [act, setAct] = useState(0);
+  const doAct = () => {
+    if (!quest || !qs?.found) return;
+    setAct((n) => n + 1); setFactOpen(false);
+    stopTalking(); setCheer(quest.actSay);
+    if (quest.act === 'photo') shutter();
+    if (sound) { const moon = region.world === 'moon'; blip(false, moon); window.setTimeout(() => robotSay(quest.actSay, () => {}, moon), moon ? 380 : 260); }
+    window.clearTimeout(cheerT.current); cheerT.current = window.setTimeout(() => setCheer(null), 8000);
+  };
+  const cheerT = useRef(0);
+  const doActRef = useRef(doAct); doActRef.current = doAct;
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.code === 'KeyE') doActRef.current(); };
+    addEventListener('keydown', k); return () => removeEventListener('keydown', k);
+  }, []);
   const say = cheer ?? (showing && li >= 0 ? lines[li] : null);
 
   useEffect(() => { loadTerrain(region.id).then(setT).catch(() => setT(null)); }, [region.id]);
@@ -171,7 +196,7 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
         <TerrainWalk t={t} id={region.id} world={region.world} keys={keys} say={say}
           onTap={() => { stopTalking(); setLi((i) => (i + 1) % lines.length); setShowing(true); }}
           onMove={(s) => { setHud({ elev: s.elev, x: s.x, z: s.z }); setStep(s.moving, keys.current.run); }}
-          onQuest={quest ? onQuest : undefined} />
+          onQuest={quest ? onQuest : undefined} questAction={act} />
       ) : <div className="walk__loading">Loading real terrain…</div>}
       <div className="walk__top">
         <div>
@@ -182,25 +207,23 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
       </div>
       {t && quest && qs && (
         <div className={`quest${qs.found ? ' is-found' : ''}`}>
+          <span className="quest__tag">Field task</span>
+          <b>{quest.task}</b>
           {!qs.found ? (
-            <>
-              <span className="quest__tag">Your task</span>
-              <b>{quest.task}</b>
-              <span className="quest__nav">
-                <i className="quest__arrow" style={{ transform: `rotate(${qs.rel - Math.PI / 2}rad)` }} aria-hidden>➤</i>
-                {qs.dist >= 1000 ? `${(qs.dist / 1000).toFixed(1)} km` : `${Math.round(qs.dist)} m`} · follow the beam of light
-              </span>
-            </>
+            <span className="quest__nav">
+              <svg className="quest__arrow" viewBox="0 0 24 24" style={{ transform: `rotate(${qs.rel}rad)` }} aria-hidden><path d="M12 20V5M6 10l6-6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {qs.dist >= 1000 ? `${(qs.dist / 1000).toFixed(1)} km` : `${Math.round(qs.dist)} m`} away. Follow the beam of light.
+            </span>
           ) : (
-            <button className="quest__done" onClick={() => setFactOpen((v) => !v)}>
-              <span className="quest__tag">✓ Found it!</span>
-              <b>{quest.task.replace(/^Find /, '')}</b>
-              {factOpen && <span className="quest__fact">{quest.found}</span>}
-            </button>
+            <>
+              <span className="quest__stamp" aria-label="Found">Found</span>
+              <button className={`quest__fact${factOpen ? " is-open" : ""}`} onClick={() => setFactOpen((v) => !v)}>{factOpen ? quest.found : 'Read the note'}</button>
+              <button className="quest__act" onClick={doAct}>{quest.actLabel} <kbd>E</kbd></button>
+            </>
           )}
-          {qs.found && <span className="quest__burst" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ ['--a' as string]: `${i * 25.7}deg`, ['--d' as string]: `${(i % 3) * 0.08}s` }} />)}</span>}
         </div>
       )}
+      {quest?.act === 'photo' && act > 0 && <div className="walk__flash" key={act} aria-hidden />}
       {t && (
         <div className="walk__hud">
           <span>Elevation <b>{Math.round(hud.elev).toLocaleString()} m</b></span>

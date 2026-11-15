@@ -1,6 +1,6 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { patchMaterial } from './shading';
 
@@ -14,6 +14,9 @@ export type Quest = {
   size: number;            // metres across (largest side) after scaling
   lift?: number;           // metres to raise above the ground (e.g. a hovering helicopter)
   lamps?: boolean;         // floodlights, for places in permanent shadow
+  act: 'fly' | 'launch' | 'grow' | 'call' | 'lights' | 'photo';   // what the button does once you find it
+  actLabel: string;        // the button
+  actSay: string;          // what the rover / astronaut says when you press it
   angle: number;           // radians from your first view direction (+ = to the right)
   dist: number;            // metres from where you land
   task: string;            // the task card
@@ -23,37 +26,37 @@ export type Quest = {
 
 export const QUESTS: Record<string, Quest> = {
   'mars-gale': {
-    kind: 'greenhouse', size: 22, angle: 0.32, dist: 380,
+    kind: 'greenhouse', size: 34, angle: 0.32, dist: 170, act: 'grow', actLabel: 'Water the plants', actSay: 'Look at them grow! Mars soil plus a little water and light.',
     task: 'Find the greenhouse dome',
     found: 'Gale Crater was once a lake, and its old mud is full of clay minerals that hold water. One day, food could grow on Mars under glass like this.',
     say: 'A greenhouse on Mars! I would water it, but all I have is dust.',
   },
   'mars-jezero': {
-    kind: 'model', urls: ['models/quest/ingenuity.glb'], size: 6, lift: 4, angle: -0.3, dist: 360,
+    kind: 'model', urls: ['models/quest/ingenuity.glb'], size: 10, lift: 5, angle: -0.3, dist: 140, act: 'fly', actLabel: 'Fly Ingenuity', actSay: 'Up, up and away! Flying on Mars is hard: the air is a hundred times thinner than on Earth.',
     task: 'Find Ingenuity, the Mars helicopter',
     found: 'Ingenuity made the first powered flight on another world, right here in Jezero, in April 2021. It flew 72 times before it retired.',
     say: 'Ingenuity, my little buddy! It flew 72 times over this crater.',
   },
   'mars-olympus': {
-    kind: 'model', urls: ['models/quest/viking.glb'], size: 9, angle: 0.28, dist: 420,
+    kind: 'model', urls: ['models/quest/viking.glb'], size: 14, angle: 0.28, dist: 160, act: 'photo', actLabel: 'Take a photo', actSay: 'Say cheese! Viking sent home the very first colour photos from the surface of Mars.',
     task: 'Find the Viking lander',
     found: 'In 1976 the two Viking landers were the first US spacecraft to work on the surface of Mars. They landed far from here, on the plains of Chryse and Utopia.',
     say: 'Viking! The grandparent of every Mars lander, me included.',
   },
   'moon-shackleton-rim': {
-    kind: 'model', urls: ['models/quest/habitat1.glb', 'models/quest/habitat2.glb'], size: 16, angle: 0.3, dist: 360, lamps: true,
+    kind: 'model', urls: ['models/quest/habitat1.glb', 'models/quest/habitat2.glb'], size: 24, angle: 0.3, dist: 160, lamps: true, act: 'lights', actLabel: 'Switch the lights on', actSay: 'Power on! Here the Sun only skims the horizon, so a base needs its own light.',
     task: 'Find the base camp habitat',
     found: 'NASA tested this Habitat Demonstration Unit in the Arizona desert, an Earth analog for the Moon. Artemis plans a base camp near Shackleton’s rim.',
     say: 'Home sweet habitat. Tested in Arizona, ready for the Moon.',
   },
   'moon-malapert-massif': {
-    kind: 'model', urls: ['models/quest/dish.glb'], size: 34, angle: -0.3, dist: 480,
+    kind: 'model', urls: ['models/quest/dish.glb'], size: 50, angle: -0.3, dist: 220, act: 'call', actLabel: 'Call Earth', actSay: 'Message sent! It takes about 1.3 seconds to reach Earth.',
     task: 'Find the giant radio dish',
     found: 'Malapert Mountain can see Earth almost all the time, so it is a top pick for a radio station to talk home. This is NASA’s 70-metre Deep Space Network dish.',
     say: 'Calling Earth! From up here, home is almost always in view.',
   },
   'moon-highlands': {
-    kind: 'model', urls: ['models/quest/apollo_lm.glb'], size: 9, angle: 0.3, dist: 380,
+    kind: 'model', urls: ['models/quest/apollo_lm.glb'], size: 14, angle: 0.3, dist: 160, act: 'launch', actLabel: 'Launch it', actSay: 'Liftoff! With one sixth of Earth\u2019s gravity, a small engine is enough to leave the Moon.',
     task: 'Find the Apollo lunar module',
     found: 'Apollo 16 landed in the lunar highlands in April 1972. Its astronauts trained for the trip at Sudbury crater in Canada, an Earth twin of these old rocks.',
     say: 'Orion, Apollo 16’s lander! John Young and Charlie Duke lived here for three days.',
@@ -101,7 +104,7 @@ function NasaModel({ urls, size }: { urls: string[]; size: number }) {
 }
 
 /** A glass greenhouse: geodesic frame, faint glass, glowing green plants inside, warm light. */
-function Greenhouse({ size }: { size: number }) {
+function Greenhouse({ size, grow }: { size: number; grow: React.MutableRefObject<number> }) {
   const r = size / 2;
   const parts = useMemo(() => {
     const frame = new THREE.WireframeGeometry(new THREE.SphereGeometry(r, 18, 9, 0, Math.PI * 2, 0, Math.PI / 2));
@@ -112,19 +115,26 @@ function Greenhouse({ size }: { size: number }) {
     });
     return { frame, plants };
   }, [r]);
+  const plantsG = useRef<THREE.Group>(null), light = useRef<THREE.PointLight>(null);
+  useFrame(() => {
+    if (plantsG.current) plantsG.current.scale.set(0.6 + 0.4 * grow.current, grow.current, 0.6 + 0.4 * grow.current);
+    if (light.current) light.current.intensity = 40 + 160 * grow.current;
+  });
   return (
     <group>
       <mesh position={[0, 0.15, 0]} receiveShadow><cylinderGeometry args={[r * 1.04, r * 1.08, 0.5, 48]} /><meshStandardMaterial color="#8d8478" roughness={0.9} /></mesh>
       <mesh position={[0, 0.42, 0]}><cylinderGeometry args={[r * 0.98, r * 0.98, 0.06, 48]} /><meshStandardMaterial color="#3b2a1c" roughness={1} /></mesh>
       <lineSegments geometry={parts.frame}><lineBasicMaterial color="#e8e2d6" transparent opacity={0.75} /></lineSegments>
       <mesh><sphereGeometry args={[r * 0.995, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} /><meshStandardMaterial color="#cfe8ff" transparent opacity={0.16} roughness={0.05} metalness={0.4} side={THREE.DoubleSide} depthWrite={false} /></mesh>
+      <group ref={plantsG} position={[0, 0.45, 0]}>
       {parts.plants.map((p, i) => (
-        <mesh key={i} position={[p.x, 0.45 + p.h / 2, p.z]} castShadow>
+        <mesh key={i} position={[p.x, p.h / 2, p.z]} castShadow>
           {i % 3 ? <coneGeometry args={[p.w, p.h, 6]} /> : <icosahedronGeometry args={[p.w * 0.9, 1]} />}
           <meshStandardMaterial color={p.c > 0.66 ? '#3d6e2e' : p.c > 0.33 ? '#557f36' : '#6c8f3a'} emissive="#1f4a18" emissiveIntensity={0.12} roughness={0.9} flatShading />
         </mesh>
       ))}
-      <pointLight position={[0, r * 0.5, 0]} color="#d8ffb8" intensity={60} distance={r * 3} decay={1.6} />
+      </group>
+      <pointLight ref={light} position={[0, r * 0.5, 0]} color="#d8ffb8" intensity={60} distance={r * 3} decay={1.6} />
     </group>
   );
 }
@@ -156,8 +166,8 @@ function Ring({ r, color, fade }: { r: number; color: string; fade: React.Mutabl
   return <mesh ref={m} rotation-x={-Math.PI / 2} position={[0, 0.3, 0]}><ringGeometry args={[r, r + 0.8, 64]} /><meshBasicMaterial color={color} transparent depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>;
 }
 
-export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate }: {
-  quest: Quest; start: THREE.Vector3; yaw0: number; height: (x: number, z: number) => number;
+export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate, action }: {
+  action: number; quest: Quest; start: THREE.Vector3; yaw0: number; height: (x: number, z: number) => number;
   pos: React.MutableRefObject<THREE.Vector3>; look: React.MutableRefObject<{ yaw: number; pitch: number }>;
   onUpdate: (s: QuestState) => void;
 }) {
@@ -170,13 +180,49 @@ export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate }:
   if (import.meta.env.DEV) (window as unknown as { __quest?: unknown }).__quest = at;   // for screenshot scripts
   const found = useRef(false), fade = useRef(1), last = useRef(0);
   const color = quest.kind === 'greenhouse' ? '#b8ffb0' : '#ffd9a0';
-  const g = useRef<THREE.Group>(null);
+  const g = useRef<THREE.Group>(null), flame = useRef<THREE.Group>(null), waves = useRef<THREE.Group>(null);
+  const lamps = useRef<(THREE.PointLight | null)[]>([]);
+  const grow = useRef(0.3), nowT = useRef(0), actT = useRef(-1);
+  useEffect(() => { if (action > 0) actT.current = nowT.current; }, [action]);
+  const S = quest.size;
   useFrame(({ clock }, dt) => {
+    nowT.current = clock.elapsedTime;
+    const e = actT.current < 0 ? -1 : clock.elapsedTime - actT.current;   // seconds since the button was pressed
+    const G = g.current;
+    if (G) {
+      const hover = quest.lift ? quest.lift + Math.sin(clock.elapsedTime * 1.3) * 0.6 : 0;
+      let x = 0, y = hover, z = 0, ry = G.rotation.y;
+      if (quest.act === 'fly' && e >= 0 && e < 10) {           // climb, fly a loop, come back down
+        const k = Math.sin(Math.PI * e / 10);
+        y += 30 * k; x = 18 * Math.sin(e * 0.9) * k; z = 18 * (Math.cos(e * 0.9) - 1) * k; ry += dt * 2 * k;
+      }
+      if (quest.act === 'launch' && e >= 0 && e < 9) y += 32 * Math.pow(Math.sin(Math.PI * e / 9), 1.4);   // lift off and settle back
+      if (quest.act === 'photo' && e >= 0 && e < 1.4) y += 1.6 * Math.abs(Math.sin(e * 7)) * (1 - e / 1.4);   // a happy hop
+      if (quest.act === 'call' && e >= 0) ry = Math.min(1, e / 4) * 1.4;                                     // turn toward Earth
+      G.position.set(x, y, z); G.rotation.y = ry;
+    }
+    if (flame.current) {
+      const on = quest.act === 'launch' && e >= 0 && e < 9;
+      flame.current.visible = on;
+      if (on) { flame.current.position.y = (G?.position.y ?? 0) - 0.4; flame.current.scale.set(1, 0.8 + Math.random() * 0.5, 1); }
+    }
+    if (waves.current) {
+      waves.current.children.forEach((m, i) => {
+        const ph = e < 0 || e > 14 ? -1 : ((e - i * 0.9) % 2.7) / 2.7;
+        m.visible = ph >= 0 && e - i * 0.9 > 0;
+        m.position.y = S * 0.8 + ph * S * 1.6; m.scale.setScalar(1 + ph * 5);
+        ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = (1 - ph) * 0.8;
+      });
+    }
+    if (quest.act === 'grow') grow.current = e < 0 ? 0.3 : 0.3 + 0.7 * Math.min(1, e / 3.5);
+    if (quest.lamps) {
+      const I = e < 0 ? 900 : e < 1.6 ? (Math.random() > 0.5 ? 2400 : 0) : 2400;   // flicker, then full power
+      lamps.current.forEach((l) => { if (l) l.intensity = I; });
+    }
     const P = pos.current, L = look.current;
     const dx = at.x - P.x, dz = at.z - P.z, dist = Math.hypot(dx, dz);
     if (!found.current && dist < Math.max(28, quest.size * 1.2)) found.current = true;
     if (found.current) fade.current = Math.max(0, fade.current - dt * 0.6);
-    if (quest.lift && g.current) g.current.position.y = quest.lift + Math.sin(clock.elapsedTime * 1.3) * 0.6;   // hovering
     const now = clock.elapsedTime;
     if (now - last.current > 0.15) {
       last.current = now;
@@ -187,8 +233,20 @@ export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate }:
   return (
     <group position={at}>
       <group ref={g}>
-        {quest.kind === 'greenhouse' ? <Greenhouse size={quest.size} /> : <NasaModel urls={quest.urls!} size={quest.size} />}
+        {quest.kind === 'greenhouse' ? <Greenhouse size={quest.size} grow={grow} /> : <NasaModel urls={quest.urls!} size={quest.size} />}
       </group>
+      {quest.act === 'launch' && (
+        <group ref={flame} visible={false}>
+          <mesh position={[0, -3, 0]} rotation-x={Math.PI}><coneGeometry args={[1.6, 6, 16, 1, true]} /><meshBasicMaterial color="#ffb050" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
+          <mesh position={[0, -1.8, 0]} rotation-x={Math.PI}><coneGeometry args={[0.8, 3.5, 12, 1, true]} /><meshBasicMaterial color="#fff2c0" transparent opacity={0.95} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
+          <pointLight color="#ffb060" intensity={3000} distance={80} decay={1.5} position={[0, -2, 0]} />
+        </group>
+      )}
+      {quest.act === 'call' && (
+        <group ref={waves}>
+          {[0, 1, 2].map((i) => <mesh key={i} rotation-x={-Math.PI / 2} visible={false}><ringGeometry args={[S * 0.3, S * 0.3 + 1.2, 64]} /><meshBasicMaterial color="#bfe0ff" transparent depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} /></mesh>)}
+        </group>
+      )}
       {quest.lamps && (
         <>
           {/* base-camp floodlights on two masts: warm light so the habitat shows up in the polar shadow */}
@@ -196,7 +254,7 @@ export function QuestTarget({ quest, start, yaw0, pos, look, height, onUpdate }:
             <group key={i} position={[sx * quest.size * 0.9, 0, sz * quest.size * 0.9]}>
               <mesh position={[0, 3, 0]}><cylinderGeometry args={[0.12, 0.15, 6, 8]} /><meshStandardMaterial color="#9a9a9a" /></mesh>
               <mesh position={[0, 6.2, 0]}><sphereGeometry args={[0.45, 12, 8]} /><meshBasicMaterial color="#fff1d6" /></mesh>
-              <pointLight position={[0, 6.2, 0]} color="#ffe6c0" intensity={900} distance={90} decay={1.6} />
+              <pointLight ref={(l) => { lamps.current[i] = l; }} position={[0, 6.2, 0]} color="#ffe6c0" intensity={900} distance={120} decay={1.6} />
             </group>
           ))}
         </>

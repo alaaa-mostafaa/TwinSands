@@ -90,5 +90,8 @@ export const meetSound = {
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => { if (document.hidden) ac?.suspend().catch(() => {}); else ac?.resume().catch(() => {}); });
+  // wake the sound on any click, tap or key press if the browser left it paused
+  const wake = () => { if (ac && !heroSound.isMuted() && ac.state !== 'running') ac.resume().catch(() => {}); };
+  ['pointerdown', 'keydown', 'touchend', 'wheel'].forEach((g) => window.addEventListener(g, wake, { passive: true }));
 }
 if (import.meta.hot) import.meta.hot.dispose(() => { cancelAnimationFrame(raf); ac?.close(); ac = null; });
