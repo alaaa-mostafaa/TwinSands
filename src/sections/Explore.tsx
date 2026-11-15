@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REGIONS, WORLDS, type Region } from '../content';
 import { useJSON, type PhotoMeta } from '../data';
 import TerrainWalk, { loadTerrain, styleFor, type Keys, type Terrain } from '../three/TerrainWalk';
+import { QUESTS, type QuestState } from '../three/walk/Quest';
 
 /** Ambient + footsteps through Web Audio. Mars: real Perseverance wind, crunchy steps.
  *  Moon: no air, so no wind; steps are muffled, as if felt through your suit. */
@@ -132,7 +133,23 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
     }
     return () => { clearTimeout(fallback); clearTimeout(start); clearTimeout(hide); stopTalking(); };
   }, [li, showing, sound, lines]);
-  const say = showing && li >= 0 ? lines[li] : null;
+  // the "find it" task: distance and direction from the 3D scene; when you reach it, a fact and a happy line
+  const quest = QUESTS[region.id];
+  const [qs, setQs] = useState<QuestState | null>(null);
+  const [cheer, setCheer] = useState<string | null>(null);
+  const [factOpen, setFactOpen] = useState(false);
+  const wasFound = useRef(false);
+  const onQuest = (s: QuestState) => {
+    setQs(s);
+    if (s.found && !wasFound.current && quest) {
+      wasFound.current = true;
+      setFactOpen(true); setCheer(quest.say);
+      stopTalking();
+      if (sound) { const moon = region.world === 'moon'; blip(false, moon); window.setTimeout(() => robotSay(quest.say, () => {}, moon), moon ? 380 : 260); }
+      window.setTimeout(() => setCheer(null), 7000);
+    }
+  };
+  const say = cheer ?? (showing && li >= 0 ? lines[li] : null);
 
   useEffect(() => { loadTerrain(region.id).then(setT).catch(() => setT(null)); }, [region.id]);
   useEffect(() => {
@@ -153,7 +170,8 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
       {t ? (
         <TerrainWalk t={t} id={region.id} world={region.world} keys={keys} say={say}
           onTap={() => { stopTalking(); setLi((i) => (i + 1) % lines.length); setShowing(true); }}
-          onMove={(s) => { setHud({ elev: s.elev, x: s.x, z: s.z }); setStep(s.moving, keys.current.run); }} />
+          onMove={(s) => { setHud({ elev: s.elev, x: s.x, z: s.z }); setStep(s.moving, keys.current.run); }}
+          onQuest={quest ? onQuest : undefined} />
       ) : <div className="walk__loading">Loading real terrain…</div>}
       <div className="walk__top">
         <div>
@@ -162,6 +180,27 @@ function Walk({ region, onExit }: { region: Region; onExit: () => void }) {
         </div>
         <button className="walk__x" onClick={onExit} aria-label="Leave">✕</button>
       </div>
+      {t && quest && qs && (
+        <div className={`quest${qs.found ? ' is-found' : ''}`}>
+          {!qs.found ? (
+            <>
+              <span className="quest__tag">Your task</span>
+              <b>{quest.task}</b>
+              <span className="quest__nav">
+                <i className="quest__arrow" style={{ transform: `rotate(${qs.rel - Math.PI / 2}rad)` }} aria-hidden>➤</i>
+                {qs.dist >= 1000 ? `${(qs.dist / 1000).toFixed(1)} km` : `${Math.round(qs.dist)} m`} · follow the beam of light
+              </span>
+            </>
+          ) : (
+            <button className="quest__done" onClick={() => setFactOpen((v) => !v)}>
+              <span className="quest__tag">✓ Found it!</span>
+              <b>{quest.task.replace(/^Find /, '')}</b>
+              {factOpen && <span className="quest__fact">{quest.found}</span>}
+            </button>
+          )}
+          {qs.found && <span className="quest__burst" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ ['--a' as string]: `${i * 25.7}deg`, ['--d' as string]: `${(i % 3) * 0.08}s` }} />)}</span>}
+        </div>
+      )}
       {t && (
         <div className="walk__hud">
           <span>Elevation <b>{Math.round(hud.elev).toLocaleString()} m</b></span>

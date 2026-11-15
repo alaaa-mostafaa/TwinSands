@@ -6,6 +6,7 @@ import Safe3D from '../components/Safe3D';
 import { cavity, litFraction, PLANET_R, sunHorizon } from './walk/horizon';
 import { fbm3, makeRock, mulberry32, vnoise } from './walk/rocks';
 import { makeDustSheetMaterial, makeSkyMaterial, patchMaterial, U } from './walk/shading';
+import { QUESTS, QuestTarget, type QuestState } from './walk/Quest';
 
 export type Terrain = { n: number; size: number; min: number; max: number; h: Float32Array; far?: Terrain };
 export type Keys = { f: boolean; b: boolean; l: boolean; r: boolean; tl: boolean; tr: boolean; run: boolean };
@@ -876,7 +877,7 @@ function Exposure({ world, exposure }: { world: 'mars' | 'moon'; exposure: numbe
   return null;
 }
 
-export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: { say?: string | null; onTap?: () => void; t: Terrain; id: string; world: 'mars' | 'moon'; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void }) {
+export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap, onQuest }: { onQuest?: (s: QuestState) => void; say?: string | null; onTap?: () => void; t: Terrain; id: string; world: 'mars' | 'moon'; keys: React.MutableRefObject<Keys>; onMove: (s: { elev: number; moving: boolean; x: number; z: number }) => void }) {
   const st = styleFor(id, world);
   const atm = ATMOS[world === 'moon' ? 'moon' : st.storm ? 'storm' : st.high ? 'high' : 'mars'];
   const exposure = st.exposure ?? atm.exposure;
@@ -895,6 +896,9 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
     return { yaw, pitch: st.high ? 0.06 : world === 'moon' ? -0.12 : 0.02 };
   }, [t, start]));
   const pos = useRef(start.clone());
+  const yaw0 = useMemo(() => look.current.yaw, []);   // the direction you face when you land
+  const groundAt = useMemo(() => (x: number, z: number) => meshHeightAt(t, x, z), [t]);
+  const quest = QUESTS[id];
   // the bootprint waiting in front of you when you land
   const firstPrint = useMemo(() => {
     const y = look.current.yaw, x = start.x - Math.sin(y) * 5.5 - Math.cos(y) * 0.4, z = start.z - Math.cos(y) * 5.5 + Math.sin(y) * 0.4;
@@ -978,6 +982,7 @@ export default function TerrainWalk({ t, id, world, keys, onMove, say, onTap }: 
           {world === 'moon' && <Footprints t={t} first={firstPrint} />}
           {world === 'moon' && <Suspense fallback={null}><Astronaut t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} /></Suspense>}
           {world === 'mars' && <Suspense fallback={null}><Rover t={t} pos={pos} look={look} say={say ?? null} onTap={onTap ?? (() => {})} gear={!!st.storm} /></Suspense>}
+          {quest && onQuest && <Suspense fallback={null}><QuestTarget quest={quest} start={start} yaw0={yaw0} pos={pos} look={look} height={groundAt} onUpdate={onQuest} /></Suspense>}
           <Walker t={t} keys={keys} onMove={onMove} look={look} pos={pos} />
         </Canvas>
       </Safe3D>

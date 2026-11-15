@@ -1212,3 +1212,23 @@ details[open] > summary::before { content: '− '; }
   .explore .xregion__go { justify-self: start; }
 }
 @media (prefers-reduced-motion: reduce) { .explore .xregion__img::after { animation: none; } }
+
+/* ---- walk task card: top centre, with a direction arrow; turns into "Found it!" with a burst ---- */
+.quest { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); z-index: 5; display: grid; justify-items: center; gap: 4px; min-width: 260px; max-width: min(440px, 80vw);
+  padding: 12px 20px 12px; border-radius: 16px; text-align: center; background: rgba(8, 10, 22, .62); border: 1px solid rgba(240, 200, 154, .35);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); animation: questIn .5s ease-out; }
+@keyframes questIn { from { opacity: 0; transform: translate(-50%, -10px); } }
+.quest__tag { font: 600 11px/1 var(--cond); letter-spacing: .24em; text-transform: uppercase; color: #f0c89a; }
+.quest b { font: 600 19px/1.2 var(--display); color: #fbf6ee; }
+.quest__nav { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.quest__arrow { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(240, 200, 154, .18); color: #ffd9a0; font-style: normal; font-size: 14px; transition: transform .15s linear; }
+.quest.is-found { border-color: rgba(150, 230, 160, .7); box-shadow: 0 0 30px rgba(140, 230, 150, .35), 0 10px 30px rgba(0, 0, 0, .35); }
+.quest.is-found .quest__tag { color: #9fe8a6; font-size: 13px; }
+.quest__done { display: grid; justify-items: center; gap: 6px; cursor: pointer; }
+.quest__fact { max-width: 400px; font-size: 14.5px; line-height: 1.45; color: #ece7dd; animation: questIn .4s ease-out; }
+.quest__burst { position: absolute; left: 50%; top: 18px; width: 0; height: 0; pointer-events: none; }
+.quest__burst i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #ffd9a0; box-shadow: 0 0 8px #ffd9a0; opacity: 0;
+  animation: burst 1.2s ease-out forwards; animation-delay: var(--d); transform: rotate(var(--a)) translateX(0); }
+.quest__burst i:nth-child(3n) { background: #9fe8a6; box-shadow: 0 0 8px #9fe8a6; }
+@keyframes burst { 0% { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(1); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(120px) scale(.4); } }
+@media (max-width: 760px) { .quest { top: 86px; min-width: 0; width: calc(100vw - 32px); padding: 10px 14px; } .quest b { font-size: 16px; } }
