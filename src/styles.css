@@ -1332,7 +1332,7 @@ details[open] > summary::before { content: '− '; }
 .score__card > * { min-width: 0; }
 .field__description a { overflow-wrap: anywhere; white-space: normal; }
 /* never let anything widen the page sideways on phones (the hanging rover peeks over the right edge on purpose) */
-html { overflow-x: hidden; }
+html, body { overflow-x: clip; }   /* clip, not hidden: hidden would make body a scroll box and break the sticky Meet Mars stage */
 @media (max-width: 900px) {
   .sstep__cols, .sstep--twin .sstep__cols { grid-template-columns: minmax(0, 1fr) !important; }
   .score__pair { grid-template-columns: 1fr 1fr !important; }
