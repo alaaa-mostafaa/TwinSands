@@ -1319,3 +1319,22 @@ details[open] > summary::before { content: '− '; }
 .score__card { grid-template-areas: "big chart" "ver chart" "alike chart" "div div" "exp exp" "num num"; }
 @media (max-width: 1200px) { .score__card { grid-template-areas: "big" "ver" "alike" "div" "chart" "exp" "num"; } }
 .score__verdict { text-shadow: 0 1px 10px rgba(0,0,0,.9); }
+
+/* phones and small laptops: the score card is one column (the 2-column rule above must not win here) */
+@media (max-width: 1200px) {
+  .score__card { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "big" "ver" "alike" "chart" "div" "exp" "num" !important; }
+  .score__card .score__radar { justify-self: center; width: 100%; max-width: 340px; }
+}
+.score__credit a, .credits a, .score__pairnote a { overflow-wrap: anywhere; }
+.feat__wrap { max-width: 100%; min-width: 0; }
+.feat { width: 100%; table-layout: fixed; }
+.feat th, .feat td { overflow-wrap: anywhere; }
+.score__card > * { min-width: 0; }
+.field__description a { overflow-wrap: anywhere; white-space: normal; }
+/* never let anything widen the page sideways on phones (the hanging rover peeks over the right edge on purpose) */
+html { overflow-x: hidden; }
+@media (max-width: 900px) {
+  .sstep__cols, .sstep--twin .sstep__cols { grid-template-columns: minmax(0, 1fr) !important; }
+  .score__pair { grid-template-columns: 1fr 1fr !important; }
+}
+.radar { overflow: visible; } @media (max-width: 900px) { .score__radar { padding: 0 18px; box-sizing: border-box; } }
